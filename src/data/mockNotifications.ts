@@ -29,7 +29,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 'n4',
     type: 'subscription',
     title: 'Subscription Renewal Warning',
-    message: 'Your Vipra Sathi Premium subscription will expire in 5 days. Tap here to renew and keep your data synced.',
+    message: 'Your Vipra Saarthi Premium subscription will expire in 5 days. Tap here to renew and keep your data synced.',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
     isRead: true,
   },

@@ -8,7 +8,6 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,31 +15,29 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width, height } = Dimensions.get('window');
 
 const BG_COLOR = '#FDF0E6';
+const PRIMARY_COLOR = '#800000'; // Maroon matching the icon
 
 const SLIDES = [
   {
     id: '1',
-    title: 'Welcome to',
-    brand: 'Vipra Sathi',
+    brand: 'Vipra Saarthi',
+    title: 'Panchang, Kundali\n& Shubh Muhurat',
     description:
-      'Your digital companion for daily spiritual practices, poojas, and panchang.',
-    image: require('../assets/images/onboarding_1.jpg'),
+      'Generate precise Vedic kundalis, check accurate daily panchang, and find auspicious timings in seconds.',
     isFirst: true,
   },
   {
     id: '2',
-    title: 'Daily Panchang\n& Muhurt',
+    title: 'Complete Pooja\n& Vedic Library',
     description:
-      'Stay updated with accurate daily panchang, auspicious timings, and personalized alerts.',
-    image: require('../assets/images/onboarding_2.jpg'),
+      'Step-by-step vidhis for every ritual alongside authentic aartis, stotras, and sacred mantras at your fingertips.',
     isFirst: false,
   },
   {
     id: '3',
-    title: 'Library of\nMantras & Poojas',
+    title: 'Smart Yajman\n& Ledger Manager',
     description:
-      'Access a vast library of aartis, stotrams, and complete pooja guidelines.',
-    image: require('../assets/images/onboarding_3.jpg'),
+      'Organize your yajman records, calculate fair dakshina, and track your ritual finances effortlessly.',
     isFirst: false,
   },
 ];
@@ -70,42 +67,26 @@ const OnboardingScreen = () => {
   const renderSlide = ({ item }: { item: (typeof SLIDES)[0] }) => {
     if (item.isFirst) {
       return (
-        <View style={[styles.slide, { width }]}>
-          <Text style={styles.skipPlaceholder} />
+        <View style={[styles.slide, { width, justifyContent: 'center' }]}>
           <Image
-            source={require('../../logo.png')}
+            source={require('../../assets/icon.png')}
             style={styles.slideLogo}
             resizeMode="contain"
           />
-          <Text style={styles.welcomeLabel}>{item.title}</Text>
-          <Text style={styles.brandName}>{item.brand}</Text>
+          <Text style={styles.brandName}>{item.title}</Text>
+          {/* <Text style={styles.brandName}>{item.brand}</Text> */}
           <Text style={styles.slideDescription}>{item.description}</Text>
-          <View style={styles.imageWrapper}>
-            <Image
-              source={item.image}
-              style={styles.slideImage}
-              resizeMode="cover"
-            />
-            {/* Curved bottom overlay */}
-            <View style={styles.curveContainer}>
-              <View style={styles.curve1} />
-              <View style={styles.curve2} />
-              <View style={styles.curve3} />
-            </View>
-          </View>
         </View>
       );
     }
 
     return (
-      <View style={[styles.slide, { width }]}>
-        <View style={styles.imageContainerOther}>
-          <Image
-            source={item.image}
-            style={styles.slideImageOther}
-            resizeMode="contain"
-          />
-        </View>
+      <View style={[styles.slide, { width, justifyContent: 'center' }]}>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.slideLogoOther}
+          resizeMode="contain"
+        />
         <Text style={styles.slideTitle}>{item.title}</Text>
         <Text style={styles.slideDescription}>{item.description}</Text>
       </View>
@@ -138,7 +119,7 @@ const OnboardingScreen = () => {
       />
 
       {/* Footer */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <View style={styles.pagination}>
           {SLIDES.map((_, index) => (
             <View
@@ -147,7 +128,7 @@ const OnboardingScreen = () => {
                 styles.dot,
                 {
                   backgroundColor:
-                    currentIndex === index ? '#C75B12' : '#E5D5C3',
+                    currentIndex === index ? PRIMARY_COLOR : '#E5D5C3',
                 },
                 currentIndex === index && styles.activeDot,
               ]}
@@ -167,9 +148,9 @@ const OnboardingScreen = () => {
             name={
               currentIndex === SLIDES.length - 1 ? 'log-in' : 'arrow-right'
             }
-            size={20}
+            size={16}
             color="#FFF"
-            style={{ marginLeft: 8 }}
+            style={{ marginLeft: 6 }}
           />
         </TouchableOpacity>
       </View>
@@ -184,154 +165,95 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: 'absolute',
-    right: 20,
+    left: 20,
     zIndex: 10,
     padding: 10,
   },
   skipText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#C75B12',
-  },
-  skipPlaceholder: {
-    height: 40,
+    color: PRIMARY_COLOR,
   },
   slide: {
     alignItems: 'center',
-    paddingTop: 10,
+    paddingHorizontal: 30,
   },
   slideLogo: {
-    width: 130,
-    height: 120,
-    marginBottom: 8,
+    width: 150,
+    height: 150,
+    marginBottom: 40,
+  },
+  slideLogoOther: {
+    width: 150,
+    height: 150,
+    marginBottom: 40,
   },
   welcomeLabel: {
     fontSize: 24,
     fontWeight: '500',
     color: '#1E293B',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   brandName: {
-    fontSize: 44,
-    fontWeight: 'bold',
-    color: '#C75B12',
-    marginBottom: 12,
+    fontSize: 25,
+    fontWeight: '500',
+    color: PRIMARY_COLOR,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   slideDescription: {
     fontSize: 16,
     textAlign: 'center',
     color: '#6B7280',
-    paddingHorizontal: 40,
     lineHeight: 24,
-    marginBottom: 8,
-  },
-  imageWrapper: {
-    width: width,
-    height: height * 0.46,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  slideImage: {
-    width: '100%',
-    height: '100%',
-  },
-  curveContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  curve1: {
-    width: width * 0.5,
-    height: 50,
-    backgroundColor: BG_COLOR,
-    borderTopLeftRadius: 100,
-    borderTopRightRadius: 100,
-    position: 'absolute',
-    bottom: 0,
-    left: -20,
-  },
-  curve2: {
-    width: width * 0.45,
-    height: 40,
-    backgroundColor: BG_COLOR,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    position: 'absolute',
-    bottom: 0,
-    right: -10,
-  },
-  curve3: {
-    width: width * 0.3,
-    height: 30,
-    backgroundColor: BG_COLOR,
-    borderTopLeftRadius: 60,
-    borderTopRightRadius: 60,
-    position: 'absolute',
-    bottom: 0,
-    left: width * 0.35,
-  },
-  imageContainerOther: {
-    width: width * 0.85,
-    height: height * 0.45,
-    marginBottom: 30,
-  },
-  slideImageOther: {
-    width: '100%',
-    height: '100%',
   },
   slideTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1E293B',
+    fontSize: 24,
+    fontWeight: '500',
+    color: PRIMARY_COLOR,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     lineHeight: 40,
   },
   footer: {
     paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
   },
   pagination: {
     flexDirection: 'row',
-    marginBottom: 24,
     alignItems: 'center',
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   activeDot: {
-    width: 28,
-    borderRadius: 5,
+    width: 24,
+    borderRadius: 4,
   },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 30,
-    backgroundColor: '#C75B12',
-    width: '100%',
-    shadowColor: '#C75B12',
-    shadowOffset: { width: 0, height: 6 },
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    backgroundColor: PRIMARY_COLOR,
+    shadowColor: PRIMARY_COLOR,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 5,
+    elevation: 5,
   },
   nextText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
 });
 

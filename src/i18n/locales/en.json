@@ -1,6 +1,6 @@
 {
   "welcome": "Welcome Back",
-  "login_subtitle": "Log in to Vipra Sathi to continue",
+  "login_subtitle": "Log in to Vipra Saarthi to continue",
   "email": "Email Address",
   "password": "Password",
   "login": "Log In",
@@ -25,6 +25,23 @@
     "title": "Menu"
   },
   "home": {
+    "namaste": "Namaste,",
+    "pandit_ji": "Pandit Ji",
+    "todays_pooja": "Today's Pooja",
+    "aaj_ka_karyakram": "Aaj Ka Karyakram",
+    "todays_panchang": "Today's Panchang",
+    "yajman_overview": "Yajman Overview",
+    "income": "Income",
+    "expense": "Expense",
+    "new_yajmans": "New Yajmans",
+    "today": "Today",
+    "last_30_days": "Last 30 Days",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "moonrise": "Moonrise",
+    "moonset": "Moonset",
+    "mock_month_paksha": "Phalguna, Krishna Paksha",
+    "mock_tithi": "Tritiya Tithi",
     "spiritual_card": "Daily Spiritual Card",
     "core_workflows": "Core Workflows",
     "todays_bookings": "Today's Bookings",
@@ -53,8 +70,52 @@
     "acharya_total": "Acharya Total (Days × Amt)",
     "pandit_total": "Pandit Total (Days × Amt)",
     "pooja_final": "Pooja Final Amount",
+    "book_puja": "Book Puja",
+    "consultation": "Consultation",
+    "learn_more": "Learn More",
     "samagri": "Samagri",
     "transportation": "Transportation",
     "grand_total": "Grand Total"
+  },
+  "panchang": {
+    "tithi": {
+      "pratipada": "Pratipada Tithi",
+      "dwitiya": "Dwitiya Tithi",
+      "tritiya": "Tritiya Tithi",
+      "chaturthi": "Chaturthi Tithi",
+      "panchami": "Panchami Tithi",
+      "shashthi": "Shashthi Tithi",
+      "saptami": "Saptami Tithi",
+      "ashtami": "Ashtami Tithi",
+      "navami": "Navami Tithi",
+      "dashami": "Dashami Tithi",
+      "ekadashi": "Ekadashi Tithi",
+      "dwadashi": "Dwadashi Tithi",
+      "trayodashi": "Trayodashi Tithi",
+      "chaturdashi": "Chaturdashi Tithi",
+      "purnima": "Purnima",
+      "amavasya": "Amavasya"
+    },
+    "paksha": {
+      "shukla": "Shukla Paksha",
+      "krishna": "Krishna Paksha"
+    },
+    "month": {
+      "phalguna": "Phalguna"
+    }
+  },
+  "quick_actions": {
+    "pooja": "Pooja",
+    "calendar": "Calendar",
+    "dakshina": "Dakshina",
+    "panchang": "Panchang",
+    "muhurat": "Muhurat",
+    "kundali": "Kundali",
+    "yajman": "Yajman",
+    "stotram": "Stotram",
+    "community": "Community",
+    "history": "History",
+    "account": "Account",
+    "subscription": "Subscription"
   }
 }

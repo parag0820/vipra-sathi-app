@@ -241,7 +241,7 @@ const SettingsScreen = () => {
         )}
 
         <View style={styles.footer}>
-          <Text style={[styles.versionText, { color: colors.textLight }]}>Vipra Sathi App v1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textLight }]}>Vipra Saarthi App v1.0.0</Text>
         </View>
       </ScrollView>
     </View>

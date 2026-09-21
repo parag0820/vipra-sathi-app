@@ -53,9 +53,9 @@ const LoginScreen = ({ navigation }: any) => {
         mobileNumber,
         password,
       });
-      
+
       const userData = response.data.data || response.data.user || response.data;
-      
+
       await login({
         id: userData.id || userData._id || 'unknown_id',
         fullName: userData.fullName || '',
@@ -102,7 +102,7 @@ const LoginScreen = ({ navigation }: any) => {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../logo.png')}
+              source={require('../../assets/icon.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -110,13 +110,13 @@ const LoginScreen = ({ navigation }: any) => {
 
           {/* Welcome Text */}
           <Text style={styles.welcomeText}>Welcome to</Text>
-          <Text style={styles.brandText}>Vipra Sathi</Text>
+          <Text style={styles.brandText}>Vipra Saarthi</Text>
 
           {/* Lotus Divider */}
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
             <View style={styles.lotusContainer}>
-              <Icon name="sun" size={16} color="#C75B12" />
+              <Icon name="sun" size={16} color="#800000" />
             </View>
             <View style={styles.dividerLine} />
           </View>
@@ -131,7 +131,7 @@ const LoginScreen = ({ navigation }: any) => {
             <Text style={styles.inputLabel}>Mobile Number</Text>
             <View style={styles.inputContainer}>
               <View style={styles.phoneIconContainer}>
-                <Icon name="phone" size={18} color="#C75B12" />
+                <Icon name="phone" size={18} color="#800000" />
               </View>
               <TextInput
                 style={styles.textInput}
@@ -153,7 +153,7 @@ const LoginScreen = ({ navigation }: any) => {
             <Text style={styles.inputLabel}>Password</Text>
             <View style={styles.inputContainer}>
               <View style={styles.phoneIconContainer}>
-                <Icon name="lock" size={18} color="#C75B12" />
+                <Icon name="lock" size={18} color="#800000" />
               </View>
               <TextInput
                 style={styles.textInput}
@@ -164,8 +164,8 @@ const LoginScreen = ({ navigation }: any) => {
                 value={password}
                 onChangeText={setPassword}
               />
-              <TouchableOpacity 
-                style={styles.eyeIconContainer} 
+              <TouchableOpacity
+                style={styles.eyeIconContainer}
                 onPress={() => setIsPasswordVisible(!isPasswordVisible)}
               >
                 <Icon name={isPasswordVisible ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
@@ -181,7 +181,7 @@ const LoginScreen = ({ navigation }: any) => {
             disabled={isLoading}
           >
             <LinearGradient
-              colors={['#C75B12', '#E8944A']}
+              colors={['#800000', '#A00000']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.otpButtonGradient}
@@ -269,9 +269,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   brandText: {
-    fontSize: 38,
+    fontSize: 25,
     fontWeight: 'bold',
-    color: '#C75B12',
+    color: '#800000',
     marginBottom: 14,
   },
   dividerContainer: {
@@ -338,14 +338,14 @@ const styles = StyleSheet.create({
   otpButton: {
     width: '100%',
     marginTop: 8,
-    borderRadius: 30,
+    borderRadius: 18,
     overflow: 'hidden',
   },
   otpButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
+    paddingVertical: 16,
     gap: 8,
   },
   otpButtonText: {

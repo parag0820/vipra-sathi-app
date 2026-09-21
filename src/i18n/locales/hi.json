@@ -25,6 +25,23 @@
     "title": "मेनू"
   },
   "home": {
+    "namaste": "नमस्ते,",
+    "pandit_ji": "पंडित जी",
+    "todays_pooja": "आज की पूजा",
+    "aaj_ka_karyakram": "आज का कार्यक्रम",
+    "todays_panchang": "आज का पंचांग",
+    "yajman_overview": "यजमान अवलोकन",
+    "income": "आय",
+    "expense": "व्यय",
+    "new_yajmans": "नए यजमान",
+    "today": "आज",
+    "last_30_days": "पिछले 30 दिन",
+    "sunrise": "सूर्योदय",
+    "sunset": "सूर्यास्त",
+    "moonrise": "चंद्रोदय",
+    "moonset": "चंद्रास्त",
+    "mock_month_paksha": "फाल्गुन, कृष्ण पक्ष",
+    "mock_tithi": "तृतीया तिथि",
     "spiritual_card": "दैनिक आध्यात्मिक कार्ड",
     "core_workflows": "मुख्य कार्यप्रवाह",
     "todays_bookings": "आज की बुकिंग",
@@ -55,6 +72,50 @@
     "pooja_final": "पूजा अंतिम राशि",
     "samagri": "सामग्री",
     "transportation": "परिवहन",
-    "grand_total": "कुल योग"
+    "grand_total": "कुल योग",
+    "book_puja": "पूजा बुक करें",
+    "consultation": "परामर्श",
+    "learn_more": "अधिक जानें"
+  },
+  "panchang": {
+    "tithi": {
+      "pratipada": "प्रतिपदा तिथि",
+      "dwitiya": "द्वितीया तिथि",
+      "tritiya": "तृतीया तिथि",
+      "chaturthi": "चतुर्थी तिथि",
+      "panchami": "पंचमी तिथि",
+      "shashthi": "षष्ठी तिथि",
+      "saptami": "सप्तमी तिथि",
+      "ashtami": "अष्टमी तिथि",
+      "navami": "नवमी तिथि",
+      "dashami": "दशमी तिथि",
+      "ekadashi": "एकादशी तिथि",
+      "dwadashi": "द्वादशी तिथि",
+      "trayodashi": "त्रयोदशी तिथि",
+      "chaturdashi": "चतुर्दशी तिथि",
+      "purnima": "पूर्णिमा",
+      "amavasya": "अमावस्या"
+    },
+    "paksha": {
+      "shukla": "शुक्ल पक्ष",
+      "krishna": "कृष्ण पक्ष"
+    },
+    "month": {
+      "phalguna": "फाल्गुन"
+    }
+  },
+  "quick_actions": {
+    "pooja": "पूजा",
+    "calendar": "कैलेंडर",
+    "dakshina": "दक्षिणा",
+    "panchang": "पंचांग",
+    "muhurat": "मुहूर्त",
+    "kundali": "कुंडली",
+    "yajman": "यजमान",
+    "stotram": "स्तोत्र",
+    "community": "समुदाय",
+    "history": "इतिहास",
+    "account": "खाता",
+    "subscription": "सदस्यता"
   }
 }
