@@ -11,11 +11,11 @@ export interface PanchangData {
 }
 
 const TITHI_KEYS = [
-  'pratipada', 'dwitiya', 'tritiya', 'chaturthi', 'panchami', 
-  'shashthi', 'saptami', 'ashtami', 'navami', 'dashami', 
+  'pratipada', 'dwitiya', 'tritiya', 'chaturthi', 'panchami',
+  'shashthi', 'saptami', 'ashtami', 'navami', 'dashami',
   'ekadashi', 'dwadashi', 'trayodashi', 'chaturdashi', 'purnima',
-  'pratipada', 'dwitiya', 'tritiya', 'chaturthi', 'panchami', 
-  'shashthi', 'saptami', 'ashtami', 'navami', 'dashami', 
+  'pratipada', 'dwitiya', 'tritiya', 'chaturthi', 'panchami',
+  'shashthi', 'saptami', 'ashtami', 'navami', 'dashami',
   'ekadashi', 'dwadashi', 'trayodashi', 'chaturdashi', 'amavasya'
 ];
 
@@ -33,31 +33,21 @@ export const calculatePanchang = (latitude: number, longitude: number, date: Dat
   const astroTime = new Astronomy.AstroTime(date);
 
   // 1. Calculate Sunrise & Sunset
-  const sunriseEvent = Astronomy.SearchRiseSet('Sun', observer, +1, astroTime, 300);
-  const sunsetEvent = Astronomy.SearchRiseSet('Sun', observer, -1, astroTime, 300);
+  const sunriseEvent = Astronomy.SearchRiseSet('Sun' as Astronomy.Body, observer, +1, astroTime, 300);
+  const sunsetEvent = Astronomy.SearchRiseSet('Sun' as Astronomy.Body, observer, -1, astroTime, 300);
 
   // 2. Calculate Moonrise & Moonset
-  const moonriseEvent = Astronomy.SearchRiseSet('Moon', observer, +1, astroTime, 300);
-  const moonsetEvent = Astronomy.SearchRiseSet('Moon', observer, -1, astroTime, 300);
+  const moonriseEvent = Astronomy.SearchRiseSet('Moon' as Astronomy.Body, observer, +1, astroTime, 300);
+  const moonsetEvent = Astronomy.SearchRiseSet('Moon' as Astronomy.Body, observer, -1, astroTime, 300);
 
   // 3. Calculate Tithi
   // Tithi depends on the angle (Moon Longitude - Sun Longitude).
-  // EclipticLongitude returns heliocentric longitude. For Sun's geocentric longitude, 
-  // we take Earth's heliocentric longitude and add 180 degrees.
-  const earthEcliptic = Astronomy.EclipticLongitude('Earth', astroTime);
-  const sunLon = (earthEcliptic + 180) % 360;
-  
-  const moonLon = Astronomy.EclipticLongitude('Moon', astroTime);
-  
-  let diff = moonLon - sunLon;
-  if (diff < 0) {
-    diff += 360;
-  }
-  
+  const diff = Astronomy.MoonPhase(astroTime);
+
   // Tithi is 0-indexed here (0 to 29)
   const tithiIndex = Math.floor(diff / 12);
   const tithiKey = TITHI_KEYS[tithiIndex];
-  
+
   // Paksha (0-14 is Shukla, 15-29 is Krishna)
   const pakshaKey = tithiIndex < 15 ? 'shukla' : 'krishna';
 

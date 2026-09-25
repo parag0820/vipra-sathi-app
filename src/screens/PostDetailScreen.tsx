@@ -162,7 +162,7 @@ const PostDetailScreen = () => {
         {/* Comments Section */}
         <Text style={[styles.commentsHeader, { color: colors.text }]}>Replies ({post.comments.length})</Text>
         
-        {post.comments.map(comment => (
+        {post.comments.map((comment: any) => (
           <View key={comment.id} style={[styles.commentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.authorContainer}>
               <View style={[styles.avatarSmall, { backgroundColor: colors.primary + '20' }]}>

@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message';
 
 const PanchangScreen = () => {
   const { colors, isDark } = useTheme();
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [panchangData, setPanchangData] = useState<PanchangDetails | null>(null);
   const [notes, setNotes] = useState('');
@@ -47,9 +47,9 @@ const PanchangScreen = () => {
     Toast.show({ type: 'info', text1: 'Sharing', text2: 'Preparing image to share...' });
   };
 
-  const renderTimingBox = (label: string, time: string, icon: string, color: string) => (
+  const renderTimingBox = (label: string, time: string, icon: any, color: string) => (
     <View style={styles.timingBox}>
-      <Icon name={icon} size={24} color={color} style={{ marginBottom: 4 }} />
+      <Icon name={icon} size={18} color={color} style={{ marginBottom: 2 }} />
       <Text style={[styles.timingLabel, { color: colors.textLight }]}>{label}</Text>
       <Text style={[styles.timingValue, { color: colors.text }]}>{time}</Text>
     </View>
@@ -73,7 +73,7 @@ const PanchangScreen = () => {
         <TouchableOpacity onPress={goToPreviousDay} style={styles.navBtn}>
           <Icon name="chevron-left" size={24} color={colors.primary} />
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={goToToday} style={styles.dateSelector}>
           <Text style={[styles.dateText, { color: colors.text }]}>{panchangData.date}</Text>
           <Text style={[styles.locationText, { color: colors.textLight }]}>
@@ -87,7 +87,7 @@ const PanchangScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Timings */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.timingsGrid}>
@@ -98,11 +98,24 @@ const PanchangScreen = () => {
           </View>
         </View>
 
+        {/* Hindu Calendar Details */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Icon name="calendar" size={16} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Calendar Details</Text>
+          </View>
+          {renderDataRow('Vikram Samvat', panchangData.vikramSamvat)}
+          {renderDataRow('Shaka Samvat', panchangData.shakaSamvat)}
+          {renderDataRow('Gujarati Samvat', panchangData.gujaratiSamvat)}
+          {renderDataRow('Amanta Month', panchangData.amantaMonth)}
+          {renderDataRow('Purnimanta Month', panchangData.purnimantaMonth)}
+        </View>
+
         {/* Core Panchang */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <Icon name="sun" size={20} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Panchang Details</Text>
+            <Icon name="sun" size={16} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Daily Panchang</Text>
           </View>
           {renderDataRow('Tithi', panchangData.tithi)}
           {renderDataRow('Paksha', panchangData.paksha)}
@@ -111,10 +124,38 @@ const PanchangScreen = () => {
           {renderDataRow('Karana', panchangData.karana)}
         </View>
 
+        {/* Astrological Details */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Icon name="compass" size={16} color={colors.secondary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Astrological Details</Text>
+          </View>
+          {renderDataRow('Sun Sign (Lagna)', panchangData.sunSign)}
+          {renderDataRow('Sun Nakshatra', panchangData.sunNakshatra)}
+          {renderDataRow('Moon Nakshatra', panchangData.moonNakshatra)}
+        </View>
+
+        {/* Pada / Charan */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Icon name="list" size={16} color={colors.primary} />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Pada / Charan Timings</Text>
+          </View>
+          {panchangData.padaCharan.map((pada, index) => (
+            <View key={index} style={[styles.dataRow, { borderBottomColor: index === panchangData.padaCharan.length - 1 ? 'transparent' : colors.border }]}>
+              <Text style={[styles.dataLabel, { color: colors.textLight }]}>Pada {pada.pada}</Text>
+              <View style={styles.padaRight}>
+                <Text style={[styles.padaName, { color: colors.text }]}>{pada.name}</Text>
+                <Text style={[styles.padaTime, { color: colors.primary }]}>{pada.time}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
         {/* Muhurats & Kaals */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <Icon name="clock" size={20} color={colors.secondary} />
+            <Icon name="clock" size={16} color={colors.secondary} />
             <Text style={[styles.cardTitle, { color: colors.text }]}>Auspicious & Inauspicious</Text>
           </View>
           {renderDataRow('Abhijit Muhurat', panchangData.abhijitMuhurat)}
@@ -126,9 +167,9 @@ const PanchangScreen = () => {
 
         {/* Festivals (if any) */}
         {panchangData.festivals.length > 0 && (
-          <View style={[styles.card, { backgroundColor: 'rgba(255, 153, 0, 0.1)', borderColor: colors.primary }]}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.cardHeader}>
-              <Icon name="star" size={20} color={colors.primary} />
+              <Icon name="star" size={16} color={colors.primary} />
               <Text style={[styles.cardTitle, { color: colors.text }]}>Festivals & Vrats</Text>
             </View>
             {panchangData.festivals.map((fest, index) => (
@@ -140,7 +181,7 @@ const PanchangScreen = () => {
         {/* Personal Notes */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
-            <Icon name="edit-3" size={20} color={colors.textLight} />
+            <Icon name="edit-3" size={16} color={colors.textLight} />
             <Text style={[styles.cardTitle, { color: colors.text }]}>Personal Notes</Text>
           </View>
           <TextInput
@@ -159,12 +200,12 @@ const PanchangScreen = () => {
             <Icon name="bookmark" size={20} color={colors.primary} />
             <Text style={[styles.actionBtnText, { color: colors.text }]}>Save</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleGeneratePDF}>
             <Icon name="file-text" size={20} color={colors.secondary} />
             <Text style={[styles.actionBtnText, { color: colors.text }]}>PDF</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={handleShare}>
             <Icon name="share-2" size={20} color="#FFF" />
             <Text style={[styles.actionBtnText, { color: '#FFF' }]}>Share</Text>
@@ -207,9 +248,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
     borderWidth: 1,
     elevation: 2,
     shadowColor: '#000',
@@ -225,52 +266,52 @@ const styles = StyleSheet.create({
   timingBox: {
     width: '48%',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(0,0,0,0.02)',
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   timingLabel: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
     fontWeight: '500',
   },
   timingValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
     marginTop: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   dataRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
   dataLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
   },
   dataValue: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'right',
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 12,
   },
   festivalText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   notesInput: {
     borderWidth: 1,
@@ -297,7 +338,19 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontWeight: 'bold',
     marginLeft: 6,
-    fontSize: 14,
+    fontSize: 13,
+  },
+  padaRight: {
+    alignItems: 'flex-end',
+  },
+  padaName: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  padaTime: {
+    fontSize: 11,
+    fontWeight: 'bold',
   }
 });
 

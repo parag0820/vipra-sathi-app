@@ -2,7 +2,7 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const SOURCE_IMAGE = 'logo.png';
+const SOURCE_IMAGE = path.join(__dirname, 'assets', 'icon.png');
 const ANDROID_RES_PATH = path.join(__dirname, 'android', 'app', 'src', 'main', 'res');
 const IOS_ICON_PATH = path.join(__dirname, 'ios', 'VipraSathi', 'Images.xcassets', 'AppIcon.appiconset');
 

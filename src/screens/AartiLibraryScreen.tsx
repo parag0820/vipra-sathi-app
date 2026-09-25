@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -15,46 +15,40 @@ const AartiLibraryScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredAartis = selectedCategory === 'All' 
-    ? MOCK_AARTIS 
-    : MOCK_AARTIS.filter(a => a.category === selectedCategory);
+  const filteredAartis = MOCK_AARTIS.filter(a => {
+    const matchesCategory = selectedCategory === 'All' || a.category === selectedCategory;
+    const matchesSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const renderAartiCard = ({ item }: { item: typeof MOCK_AARTIS[0] }) => (
     <TouchableOpacity
-      activeOpacity={0.9}
-      style={[styles.aartiCard, { borderColor: colors.border, backgroundColor: colors.surface }]}
+      activeOpacity={0.8}
+      style={[styles.aartiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => navigation.navigate('AartiDetail', { aartiId: item.id })}
     >
-      <ImageBackground
-        source={{ uri: item.imageUrl }}
-        style={styles.cardImage}
-        imageStyle={styles.cardImageStyle}
-      >
-        {/* Gradient Overlay for Text Readability */}
-        <View style={styles.cardOverlay}>
-          <View style={styles.cardHeader}>
-            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-              <Text style={styles.badgeText}>{item.category}</Text>
-            </View>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Icon name="heart" size={20} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.cardFooter}>
-            <View style={styles.cardTextContainer}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-            </View>
-            <TouchableOpacity 
-              style={[styles.playButton, { backgroundColor: colors.primary }]}
-              onPress={() => navigation.navigate('AartiDetail', { aartiId: item.id })}
-            >
-              <Icon name="play" size={24} color="#FFF" style={styles.playIcon} />
-            </TouchableOpacity>
+      <View style={styles.cardLeft}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
+          <Icon name="book-open" size={24} color={colors.primary} />
+        </View>
+        <View style={styles.cardTextContent}>
+          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+          <View style={[styles.badge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>{item.category}</Text>
           </View>
         </View>
-      </ImageBackground>
+      </View>
+
+      <View style={styles.cardRight}>
+        <TouchableOpacity style={styles.favoriteButton}>
+          <Icon name="heart" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+        <View style={[styles.playButtonSmall, { backgroundColor: colors.primary }]}>
+          <Icon name="play" size={16} color="#FFF" style={styles.playIconSmall} />
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
@@ -62,12 +56,30 @@ const AartiLibraryScreen = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CustomHeader title="Aarti Library" showBack={true} />
 
-      <View style={styles.dropdownContainer}>
-        <CustomDropdown
-          value={selectedCategory}
-          options={AARTI_CATEGORIES}
-          onSelect={setSelectedCategory}
-        />
+      <View style={styles.filtersRow}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search Aarti..."
+            placeholderTextColor={colors.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="x" size={20} color={colors.textLight} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.dropdownContainer}>
+          <CustomDropdown
+            value={selectedCategory}
+            options={AARTI_CATEGORIES}
+            onSelect={setSelectedCategory}
+          />
+        </View>
       </View>
 
       <FlatList
@@ -90,90 +102,97 @@ const AartiLibraryScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  dropdownContainer: {
-    paddingHorizontal: 16,
+  filtersRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 8,
     paddingTop: 16,
-    paddingBottom: 4,
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    height: 45,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+  },
+  dropdownContainer: {
+    flex: 1,
   },
   listContainer: { padding: 16, paddingBottom: 30 },
   aartiCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    overflow: 'hidden',
-  },
-  cardImage: {
-    height: 220,
-    justifyContent: 'flex-end',
-  },
-  cardImageStyle: {
-    borderRadius: 20,
-  },
-  cardOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)', // Dark overlay for text
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
-    justifyContent: 'space-between',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
-  cardHeader: {
+  cardLeft: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  favoriteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  cardTextContainer: {
     flex: 1,
-    marginRight: 16,
   },
-  cardTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  playButton: {
+  iconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  playIcon: {
-    marginLeft: 4, // Visual center for play icon
+  cardTextContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  cardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  favoriteButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  playButtonSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playIconSmall: {
+    marginLeft: 2,
   },
   emptyContainer: { padding: 32, alignItems: 'center' },
   emptyText: { fontSize: 16 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -15,10 +15,13 @@ const StotramLibraryScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredStotras = selectedCategory === 'All'
-    ? MOCK_STOTRAS
-    : MOCK_STOTRAS.filter(s => s.category === selectedCategory);
+  const filteredStotras = MOCK_STOTRAS.filter(s => {
+    const matchesCategory = selectedCategory === 'All' || s.category === selectedCategory;
+    const matchesSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const renderStotramCard = ({ item }: { item: typeof MOCK_STOTRAS[0] }) => (
     <TouchableOpacity
@@ -46,14 +49,30 @@ const StotramLibraryScreen = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CustomHeader title="Stotram Library" showBack={true} />
 
-      {/* Category Dropdown */}
-      <View style={styles.dropdownRow}>
-        <View style={styles.dropdownWrapper}>
+      {/* Filters */}
+      <View style={styles.filtersRow}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search Stotram..."
+            placeholderTextColor={colors.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="x" size={20} color={colors.textLight} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.dropdownContainer}>
           <CustomDropdown
             value={selectedCategory}
             options={STOTRAM_CATEGORIES}
             onSelect={setSelectedCategory}
-            placeholder="Select Category"
+            placeholder="Category"
           />
         </View>
       </View>
@@ -85,12 +104,31 @@ const StotramLibraryScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  dropdownRow: {
-    paddingHorizontal: 16,
-    marginBottom: 8,
+  filtersRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 8,
+    paddingTop: 16,
+    gap: 12,
   },
-  dropdownWrapper: {
-    // no extra margin needed, CustomDropdown handles it
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    height: 45,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+  },
+  dropdownContainer: {
+    flex: 1,
   },
   countRow: {
     paddingHorizontal: 20,

@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   brandName: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: '500',
     color: PRIMARY_COLOR,
     marginBottom: 20,
@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
     textAlign: 'center',
     marginBottom: 20,
-    lineHeight: 40,
   },
   footer: {
     paddingHorizontal: 24,

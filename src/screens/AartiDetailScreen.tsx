@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { MOCK_AARTIS } from '../data/mockLibrary';
@@ -13,10 +13,70 @@ type AartiDetailRouteProp = {
   params: { aartiId: string };
 };
 
+const MusicEqualizer = ({ color, isPlaying }: { color: string, isPlaying: boolean }) => {
+  const bars = [1, 2, 3, 4, 5, 6, 7];
+  
+  return (
+    <View style={styles.equalizerContainer}>
+      {bars.map((_, i) => {
+        const anim = useRef(new Animated.Value(20)).current;
+        
+        useEffect(() => {
+          let isMounted = true;
+          const animate = () => {
+            if (!isPlaying || !isMounted) return;
+            Animated.sequence([
+              Animated.timing(anim, {
+                toValue: Math.random() * 80 + 20,
+                duration: Math.random() * 400 + 300,
+                useNativeDriver: false,
+              }),
+              Animated.timing(anim, {
+                toValue: 20,
+                duration: Math.random() * 400 + 300,
+                useNativeDriver: false,
+              })
+            ]).start(({ finished }) => {
+              if (finished && isPlaying && isMounted) animate();
+            });
+          };
+          
+          if (isPlaying) {
+            animate();
+          } else {
+            anim.stopAnimation();
+            Animated.timing(anim, {
+              toValue: 20,
+              duration: 150, // fast collapse
+              useNativeDriver: false,
+            }).start();
+          }
+
+          return () => { isMounted = false; anim.stopAnimation(); };
+        }, [anim, isPlaying]);
+        
+        return (
+          <Animated.View 
+            key={i}
+            style={[
+              styles.bar,
+              {
+                height: anim,
+                backgroundColor: color,
+              }
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
+
 const AartiDetailScreen = () => {
   const route = useRoute<AartiDetailRouteProp>();
   const { aartiId } = route.params;
   const { colors, isDark } = useTheme();
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const aarti = MOCK_AARTIS.find(a => a.id === aartiId);
 
@@ -31,15 +91,16 @@ const AartiDetailScreen = () => {
   return (
     <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
       <CustomHeader title={aarti.title} showBack={true} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: aarti.imageUrl }} style={styles.heroImage} />
-          <TouchableOpacity style={[styles.favoriteButton, { backgroundColor: colors.surface }]}>
-            <Icon name="heart" size={24} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
+      
+      {/* Fixed top visualizer instead of scrollable */}
+      <View style={[styles.musicVisualizerContainer, { backgroundColor: colors.primary + '10' }]}>
+        <MusicEqualizer color={colors.primary} isPlaying={isPlaying} />
+        <TouchableOpacity style={[styles.favoriteButton, { backgroundColor: colors.surface }]}>
+          <Icon name="heart" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.textHeader}>
           <Text style={[styles.category, { color: colors.secondary }]}>{aarti.category}</Text>
         </View>
@@ -52,7 +113,11 @@ const AartiDetailScreen = () => {
       </ScrollView>
       
       {/* Sticky Audio Player */}
-      <AudioPlayerUI title={aarti.title} audioUrl={aarti.audioUrl} />
+      <AudioPlayerUI 
+        title={aarti.title} 
+        audioUrl={aarti.audioUrl} 
+        onPlaybackStatusUpdate={setIsPlaying}
+      />
     </View>
   );
 };
@@ -63,15 +128,23 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  imageContainer: {
+  musicVisualizerContainer: {
     width: '100%',
-    height: 300,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'relative',
   },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  equalizerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 100,
+    justifyContent: 'center',
+  },
+  bar: {
+    width: 12,
+    borderRadius: 6,
+    marginHorizontal: 6,
   },
   favoriteButton: {
     position: 'absolute',

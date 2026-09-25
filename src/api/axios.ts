@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 
-export const API_BASE_URL = 'https://backend.viprasaarthi.com';
+export const API_BASE_URL = 'http://backend.viprasaarthi.com';
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,

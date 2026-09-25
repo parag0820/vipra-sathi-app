@@ -41,6 +41,7 @@ export const darkColors = {
   dropdownBg: '#111111',
   dropdownBorder: '#1A1A1A',
   dropdownItemHover: '#1A1A1A',
+  aajkaBg: '#1A1A1A',
 };
 
 export const colors = lightColors;

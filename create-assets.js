@@ -19,7 +19,7 @@ const assetsDir = path.join(__dirname, 'assets');
 
 // Create placeholder files
 fs.writeFileSync(path.join(assetsDir, 'icon.png'), pngHeader);
-fs.writeFileSync(path.join(assetsDir, 'splash-icon.png'), pngHeader);
+fs.writeFileSync(path.join(assetsDir, 'icon.png'), pngHeader);
 fs.writeFileSync(path.join(assetsDir, 'adaptive-icon.png'), pngHeader);
 fs.writeFileSync(path.join(assetsDir, 'favicon.png'), pngHeader);
 

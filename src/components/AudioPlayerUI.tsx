@@ -7,9 +7,10 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 interface AudioPlayerUIProps {
   title: string;
   audioUrl?: string;
+  onPlaybackStatusUpdate?: (isPlaying: boolean) => void;
 }
 
-const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl }) => {
+const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlaybackStatusUpdate }) => {
   const { colors, isDark } = useTheme();
 
   const player = useAudioPlayer(audioUrl || null);
@@ -42,7 +43,6 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl }) => {
     }).start();
   }, [elapsed, duration]);
 
-  // Pulse animation for playing state
   useEffect(() => {
     if (isPlaying) {
       const loop = Animated.loop(
@@ -56,7 +56,13 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl }) => {
     } else {
       pulseAnim.setValue(1);
     }
-  }, [isPlaying]);
+  }, [isPlaying, pulseAnim]);
+
+  useEffect(() => {
+    if (onPlaybackStatusUpdate) {
+      onPlaybackStatusUpdate(isPlaying);
+    }
+  }, [isPlaying, onPlaybackStatusUpdate]);
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -219,9 +225,9 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 20,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    borderRadius: 16,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -236,22 +242,22 @@ const styles = StyleSheet.create({
   mainContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    paddingBottom: 8,
+    padding: 10,
+    paddingBottom: 4,
   },
   albumArt: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 10,
     borderWidth: 1.5,
   },
   albumArtInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -298,24 +304,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 4,
   },
   controlBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
   },
   slowText: {
-    fontSize: 12,
+    fontSize: 11,
   },
   playBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 8,

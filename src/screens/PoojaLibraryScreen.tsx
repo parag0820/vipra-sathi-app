@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -15,10 +15,13 @@ const PoojaLibraryScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredPoojas = selectedCategory === 'All' 
-    ? MOCK_POOJAS 
-    : MOCK_POOJAS.filter(p => p.category === selectedCategory);
+  const filteredPoojas = MOCK_POOJAS.filter(p => {
+    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const renderPoojaCard = ({ item }: { item: typeof MOCK_POOJAS[0] }) => (
     <TouchableOpacity
@@ -44,12 +47,30 @@ const PoojaLibraryScreen = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <CustomHeader title="Pooja Library" showBack={true} />
 
-      <View style={styles.dropdownContainer}>
-        <CustomDropdown
-          value={selectedCategory}
-          options={CATEGORIES}
-          onSelect={setSelectedCategory}
-        />
+      <View style={styles.filtersRow}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search Pooja..."
+            placeholderTextColor={colors.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="x" size={20} color={colors.textLight} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.dropdownContainer}>
+          <CustomDropdown
+            value={selectedCategory}
+            options={CATEGORIES}
+            onSelect={setSelectedCategory}
+          />
+        </View>
       </View>
 
       <FlatList
@@ -74,10 +95,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  dropdownContainer: {
-    paddingHorizontal: 16,
+  filtersRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 8,
     paddingTop: 16,
-    paddingBottom: 4,
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    height: 45,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+  },
+  dropdownContainer: {
+    flex: 1,
   },
   listContainer: {
     padding: 16,

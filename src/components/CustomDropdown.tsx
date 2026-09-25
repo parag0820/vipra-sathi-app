@@ -154,10 +154,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
-    height: 52,
+    height: 45,
   },
   triggerText: {
-    fontSize: 15,
+    fontSize: 14,
     flex: 1,
     fontWeight: '500',
   },
