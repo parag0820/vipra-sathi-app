@@ -16,6 +16,7 @@ import { Feather as Icon } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { axiosInstance } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -24,6 +25,9 @@ const BG_COLOR = '#FDF0E6';
 
 const LoginScreen = ({ navigation }: any) => {
   const { login, continueAsGuest } = useAuth();
+  const { i18n } = useTranslation();
+  const isHi = i18n.language === 'hi';
+
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,13 +93,9 @@ const LoginScreen = ({ navigation }: any) => {
       >
         {/* Background temple watermark */}
         <Image
-          source={require('../assets/images/onboarding_1.jpg')}
+          source={require('../assets/images/login_bg.jpg')}
           style={styles.bgTemple}
           resizeMode="cover"
-        />
-        <LinearGradient
-          colors={['transparent', BG_COLOR + 'DD', BG_COLOR]}
-          style={styles.bgOverlay}
         />
 
         <View style={styles.content}>
@@ -108,117 +108,115 @@ const LoginScreen = ({ navigation }: any) => {
             />
           </View>
 
-          {/* Welcome Text */}
-          <Text style={styles.welcomeText}>Welcome to</Text>
-          <Text style={styles.brandText}>Vipra Saarthi</Text>
+          {/* Brand Name */}
+          <Text style={styles.brandText}>{isHi ? 'विप्र सारथी' : 'Vipra Saarthi'}</Text>
 
           {/* Lotus Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <View style={styles.lotusContainer}>
-              <Icon name="sun" size={16} color="#800000" />
-            </View>
-            <View style={styles.dividerLine} />
-          </View>
+          {/* <View style={styles.lotusDivider}>
+            <Icon name="sun" size={14} color="#D4AF37" />
+          </View> */}
+
+          {/* Welcome Text */}
+          <Text style={styles.welcomeText}>{isHi ? 'आपका स्वागत है' : 'Welcome'}</Text>
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            Enter your mobile number{'\n'}to get started
+            {isHi ? 'अपना मोबाइल नंबर और पासवर्ड दर्ज कर आगे बढ़ें' : 'Enter your mobile number and password to proceed'}
           </Text>
 
           {/* Mobile Input */}
-          <View style={styles.inputSection}>
-            <Text style={styles.inputLabel}>Mobile Number</Text>
-            <View style={styles.inputContainer}>
-              <View style={styles.phoneIconContainer}>
-                <Icon name="phone" size={18} color="#800000" />
-              </View>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter 10-digit mobile number"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-                value={mobileNumber}
-                onChangeText={(text) =>
-                  setMobileNumber(text.replace(/[^0-9]/g, ''))
-                }
-                maxLength={10}
-              />
+          <View style={styles.inputContainer}>
+            <View style={styles.countryCodeContainer}>
+              <Text style={styles.flagEmoji}>🇮🇳</Text>
+              <Text style={styles.countryCode}>+91</Text>
             </View>
+            <View style={styles.verticalDivider} />
+            <TextInput
+              style={styles.textInput}
+              placeholder={isHi ? 'मोबाइल नंबर' : 'Mobile Number'}
+              placeholderTextColor="#9CA3AF"
+              keyboardType="phone-pad"
+              autoCapitalize="none"
+              value={mobileNumber}
+              onChangeText={(text) =>
+                setMobileNumber(text.replace(/[^0-9]/g, ''))
+              }
+              maxLength={10}
+            />
           </View>
 
           {/* Password Input */}
-          <View style={styles.inputSection}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <View style={styles.inputContainer}>
-              <View style={styles.phoneIconContainer}>
-                <Icon name="lock" size={18} color="#800000" />
-              </View>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry={!isPasswordVisible}
-                autoCapitalize="none"
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeIconContainer}
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-              >
-                <Icon name={isPasswordVisible ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
-              </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <View style={styles.iconOnlyContainer}>
+              <Icon name="lock" size={20} color="#800000" />
             </View>
+            <View style={styles.verticalDivider} />
+            <TextInput
+              style={styles.textInput}
+              placeholder={isHi ? 'पासवर्ड' : 'Password'}
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry={!isPasswordVisible}
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIconContainer}
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              <Icon name={isPasswordVisible ? "eye" : "eye-off"} size={18} color="#9CA3AF" />
+            </TouchableOpacity>
           </View>
 
           {/* Login Button */}
           <TouchableOpacity
-            style={styles.otpButton}
+            style={styles.loginButton}
             onPress={handleLogin}
             activeOpacity={0.85}
             disabled={isLoading}
           >
-            <LinearGradient
-              colors={['#800000', '#A00000']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.otpButtonGradient}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <Text style={styles.otpButtonText}>Login</Text>
-                  <Icon name="arrow-right" size={20} color="#FFF" />
-                </>
-              )}
-            </LinearGradient>
+            {isLoading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <Text style={styles.loginButtonText}>{isHi ? 'लॉगिन करें' : 'Login'}</Text>
+                <Icon name="arrow-right" size={20} color="#FFF" style={styles.loginButtonIcon} />
+              </>
+            )}
           </TouchableOpacity>
 
-          {/* Secure Badge */}
-          <View style={styles.secureContainer}>
-            <View style={styles.secureLine} />
-            <View style={styles.secureContent}>
-              <Icon name="shield" size={14} color="#16A34A" />
-              <Text style={styles.secureText}>Your data is secure with us</Text>
-            </View>
-            <View style={styles.secureLine} />
+          {/* OR Divider */}
+          <View style={styles.orDividerContainer}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>{isHi ? 'या' : 'or'}</Text>
+            <View style={styles.orLine} />
           </View>
 
-          {/* Guest option */}
-          <TouchableOpacity style={styles.guestBtn} onPress={continueAsGuest}>
-            <Text style={styles.guestText}>Continue as Guest</Text>
+          {/* Guest Login Button */}
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={continueAsGuest}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.guestButtonText}>{isHi ? 'अतिथि के रूप में जारी रखें' : 'Continue as Guest'}</Text>
+            <Icon name="user" size={18} color="#800000" style={styles.guestButtonIcon} />
           </TouchableOpacity>
 
-          {/* Bottom Temple Illustration */}
-          <View style={styles.bottomSection}>
-            <Image
-              source={require('../assets/images/onboarding_1.jpg')}
-              style={styles.templeBottom}
-              resizeMode="cover"
-            />
+          <View style={{ flex: 1 }} />
+
+          {/* Footer Terms */}
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>
+              {isHi ? 'जारी रखकर आप ' : 'By continuing, you agree to our '}
+              <Text style={styles.footerLink} onPress={() => { /* Navigate to Terms */ }}>{isHi ? 'नियम' : 'Terms'}</Text>
+              {isHi ? ' और ' : ' and '}
+              <Text style={styles.footerLink} onPress={() => { /* Navigate to Privacy Policy */ }}>{isHi ? 'गोपनीयता नीति' : 'Privacy Policy'}</Text>
+              {isHi ? ' से सहमत हैं।' : '.'}
+            </Text>
+
+            <View style={styles.omDivider}>
+              <Text style={styles.omText}>- ॐ -</Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -229,171 +227,213 @@ const LoginScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG_COLOR,
+    backgroundColor: '#F8E6CE',
   },
   scrollContent: {
     flexGrow: 1,
   },
   bgTemple: {
     position: 'absolute',
-    top: 20,
-    right: -30,
-    width: width * 0.7,
-    height: height * 0.42,
-    opacity: 0.1,
-  },
-  bgOverlay: {
-    position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 28,
-    paddingTop: 50,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    alignItems: 'center',
   },
   logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    shadowColor: '#800000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
+    borderRadius: 60,
+    backgroundColor: '#fff',
+    padding: 4,
   },
   logo: {
-    width: 90,
-    height: 90,
-  },
-  welcomeText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1E293B',
-    marginBottom: 2,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
   brandText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#800000',
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '50%',
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5A872',
-  },
-  lotusContainer: {
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 20,
+  lotusDivider: {
     marginBottom: 20,
   },
-  inputSection: {
-    width: '100%',
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#1E293B',
-    marginBottom: 6,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E8DDD4',
-    overflow: 'hidden',
+    marginBottom: 16,
+    width: '100%',
+    height: 45,
   },
-  phoneIconContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: '#FFF5EE',
-    borderRightWidth: 1,
-    borderRightColor: '#E8DDD4',
+  countryCodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  iconOnlyContainer: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flagEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  countryCode: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  verticalDivider: {
+    width: 1,
+    height: '50%',
+    backgroundColor: '#E8DDD4',
   },
   textInput: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: '#1E293B',
   },
   eyeIconContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 16,
   },
-  otpButton: {
+  loginButton: {
     width: '100%',
-    marginTop: 6,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  otpButtonGradient: {
+    height: 45,
+    backgroundColor: '#6A0000',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    gap: 8,
+    marginTop: 10,
+    shadowColor: '#6A0000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  otpButtonText: {
+  loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 'bold',
   },
-  secureContainer: {
+  loginButtonIcon: {
+    position: 'absolute',
+    right: 20,
+  },
+  orDividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
     width: '100%',
+    marginVertical: 24,
   },
-  secureLine: {
+  orLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5A872',
+    backgroundColor: '#D1D5DB',
   },
-  secureContent: {
+  orText: {
+    paddingHorizontal: 16,
+    color: '#6B7280',
+    fontSize: 14,
+  },
+  googleButton: {
+    width: '100%',
+    height: 55,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    gap: 6,
+    justifyContent: 'center',
   },
-  secureText: {
-    fontSize: 11,
-    color: '#6B7280',
-  },
-  guestBtn: {
+  guestButton: {
+    width: '100%',
+    height: 45,
+    backgroundColor: '#FFF5EE',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8D4B4',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    paddingVertical: 10,
+    justifyContent: 'center',
+    // marginTop: 5,
   },
-  guestText: {
-    fontSize: 13,
+  guestButtonText: {
+    color: '#800000',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  guestButtonIcon: {
+    position: 'absolute',
+    right: 20,
+  },
+  googleIconCircle: {
+    position: 'absolute',
+    left: 20,
+  },
+  googleG: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4285F4',
+  },
+  googleButtonText: {
+    color: '#1E293B',
+    fontSize: 16,
     fontWeight: '600',
+  },
+  footerContainer: {
+    marginTop: 10,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
     color: '#6B7280',
+    textAlign: 'center',
+  },
+  footerLink: {
+    color: '#800000',
     textDecorationLine: 'underline',
   },
-  bottomSection: {
-    alignItems: 'center',
-    marginTop: 16,
-    paddingBottom: 10,
+  omDivider: {
+    marginTop: 20,
   },
-  templeBottom: {
-    width: width,
-    height: 160,
-    opacity: 0.2,
+  omText: {
+    color: '#D4AF37',
+    fontSize: 20,
   },
 });
 

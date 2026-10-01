@@ -46,7 +46,24 @@
     "core_workflows": "Core Workflows",
     "todays_bookings": "Today's Bookings",
     "todays_tasks": "Today's Tasks",
-    "community_discussions": "Community Discussions"
+    "community_discussions": "Community Discussions",
+    "all_services": "All Services",
+    "sanatan": "Sanatan",
+    "seva_me_sadaiv": "Always in Service",
+    "daily_quote": "\"Inner peace begins when you choose not to allow another person or event to control your emotions.\"",
+    "todays_mantra": "Today's Mantra",
+    "mantra_om_gam": "Om Gam Ganapataye Namaha",
+    "view_all": "View All",
+    "griha_pravesh": "Griha Pravesh",
+    "sharma_family": "Sharma Family",
+    "upcoming_festivals": "Upcoming Festivals",
+    "ganesh_chaturthi": "Ganesh Chaturthi",
+    "view_details": "View Details",
+    "vikram_samvat": "Vikram Samvat",
+    "paksha": "Paksha",
+    "chaitra_shukla_paksha": "Chaitra Shukla Paksha",
+    "rahu_kaal": "Rahu Kaal",
+    "sarve_bhavantu": "May all be happy"
   },
   "calendar": {
     "monthly_summary": "Monthly Summary",
@@ -54,7 +71,7 @@
   },
   "dakshina_calc": {
     "title": "Dakshina Calculator",
-    "subtitle": "Easily calculate your pooja dakshina including acharya, pandit, and additional expenses.",
+    "subtitle": "Service, Devotion and Transparency.",
     "days": "Total Pooja Days",
     "days_placeholder": "e.g., 3",
     "acharya_amt": "Acharya Per Day Amount",
@@ -117,5 +134,52 @@
     "history": "History",
     "account": "Account",
     "subscription": "Subscription"
+  },
+  "panchang_screen": {
+    "title": "Daily Panchang",
+    "location_placeholder": "Select Location",
+    "tabs": {
+      "summary": "Summary",
+      "tithi": "Tithi",
+      "nakshatra": "Nakshatra",
+      "yoga": "Yoga",
+      "karana": "Karana"
+    },
+    "labels": {
+      "tithi": "Tithi",
+      "nakshatra": "Nakshatra",
+      "yoga": "Yoga",
+      "karana": "Karana",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset",
+      "rahukaal": "Rahukaal",
+      "yamaganda": "Yamaganda",
+      "choghadiya": "Choghadiya"
+    },
+    "festivals_title": "Today's Festivals / Specials",
+    "empty_tab": "Details for {{tab}} are coming soon...",
+    "change_location": "Change Location",
+    "mock_tithi": "Shukla Tritiya",
+    "mock_nakshatra": "Hasta",
+    "mock_yoga": "Shubh",
+    "mock_karana": "Bava",
+    "mock_fest1": "Ganesh Chaturthi Vrat",
+    "mock_fest2": "Sankashti Chaturthi"
+  },
+  "kundali_match": {
+    "excellent": "Excellent Match",
+    "good": "Good Match",
+    "poor": "Poor Match",
+    "title": "Kundali Matching",
+    "groom": "Groom",
+    "bride": "Bride",
+    "guna_milan": "Guna Milan",
+    "special_analysis": "Special Analysis",
+    "manglik_groom": "Manglik Groom",
+    "manglik_bride": "Manglik Bride",
+    "for_marriage": "For Marriage",
+    "auspicious": "Auspicious",
+    "inauspicious": "Inauspicious",
+    "detailed_report": "Detailed Report (PDF)"
   }
 }

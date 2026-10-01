@@ -1,96 +1,154 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import CustomHeader from '../components/CustomHeader';
 import { Feather as Icon } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { MOCK_KUNDALI_RESULT } from '../data/mockKundali';
 
+const { width } = Dimensions.get('window');
+
 const KundaliMatchingResultScreen = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
+  const { t } = useTranslation();
   const result = MOCK_KUNDALI_RESULT;
 
   const getScoreColor = (score: number) => {
-    if (score >= 28) return colors.primary; // Excellent
-    if (score >= 18) return '#25D366'; // Good
-    return colors.error; // Poor
+    if (score >= 28) return '#2E7D32'; // Excellent - Green
+    if (score >= 18) return '#F9A825'; // Good - Yellow/Orange
+    return '#B71C1C'; // Poor - Red
   };
 
+  const getMatchText = (score: number) => {
+    if (score >= 28) return t('kundali_match.excellent', 'Excellent Match');
+    if (score >= 18) return t('kundali_match.good', 'Good Match');
+    return t('kundali_match.poor', 'Poor Match');
+  };
+
+  const scoreColor = getScoreColor(result.totalScore);
+  const matchText = getMatchText(result.totalScore);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="Matching Results" showBack={true} />
+    <View style={[styles.container, { backgroundColor: '#F8E6CE' }]}>
+      <CustomHeader title={t('kundali_match.title', 'Kundali Matching')} showBack={true} headerBgColor="#800000" headerTextColor="#FFF" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Total Score Card */}
-        <View style={[styles.scoreCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.scoreTitle, { color: colors.text }]}>Ashta Koota Score</Text>
-          <View style={styles.scoreCircleContainer}>
-            <View style={[styles.scoreCircle, { borderColor: getScoreColor(result.totalScore) }]}>
-              <Text style={[styles.scoreText, { color: getScoreColor(result.totalScore) }]}>
-                {result.totalScore}
-              </Text>
-              <Text style={[styles.scoreDivider, { color: colors.textLight }]}>out of {result.maxScore}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Manglik Comparison */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.sectionHeader}>
-            <Icon name="shield" size={20} color={colors.secondary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Manglik Comparison</Text>
-          </View>
-          
-          <View style={styles.manglikRow}>
-            <View style={styles.manglikBox}>
-              <Text style={[styles.manglikLabel, { color: colors.textLight }]}>Bride</Text>
-              <Text style={[styles.manglikValue, { color: colors.text }]}>{result.manglikBride}</Text>
-            </View>
-            <View style={styles.manglikBox}>
-              <Text style={[styles.manglikLabel, { color: colors.textLight }]}>Groom</Text>
-              <Text style={[styles.manglikValue, { color: colors.text }]}>{result.manglikGroom}</Text>
-            </View>
-          </View>
-          
-          <Text style={[styles.conclusionText, { color: colors.primary }]}>{result.manglikConclusion}</Text>
-        </View>
-
-        {/* Detailed Scores List */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.sectionHeader}>
-            <Icon name="list" size={20} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Detailed Analysis</Text>
-          </View>
-
-          {result.ashtaKoota.map((koota, index) => (
-            <View key={index} style={[styles.kootaRow, { borderBottomColor: colors.border, borderBottomWidth: index === result.ashtaKoota.length - 1 ? 0 : 1 }]}>
-              <View style={styles.kootaInfo}>
-                <Text style={[styles.kootaName, { color: colors.text }]}>{koota.name}</Text>
-                <Text style={[styles.kootaDesc, { color: colors.textLight }]}>{koota.description}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.mainCard}>
+          {/* Couple Profiles */}
+          <View style={styles.coupleRow}>
+            <View style={styles.profileBox}>
+              <View style={styles.avatarContainer}>
+                <Image source={require('../assets/images/groom_avatar.jpg')} style={styles.avatar} />
               </View>
-              <Text style={[styles.kootaScore, { color: colors.primary }]}>
-                {koota.obtained} / {koota.maximum}
-              </Text>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileLabel}>{t('kundali_match.groom', 'Groom')}</Text>
+                <Text style={styles.profileName}>Amit</Text>
+                <Text style={styles.profileDate}>24 Sep 1990</Text>
+              </View>
             </View>
-          ))}
-        </View>
 
-        {/* Observations */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.sectionHeader}>
-            <Icon name="info" size={20} color={colors.secondary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Important Observations</Text>
+            <View style={styles.vsContainer}>
+              <View style={styles.dot} />
+            </View>
+
+            <View style={styles.profileBox}>
+              <View style={styles.avatarContainer}>
+                <Image source={require('../assets/images/bride_avatar.jpg')} style={styles.avatar} />
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileLabel}>{t('kundali_match.bride', 'Bride')}</Text>
+                <Text style={styles.profileName}>Priya</Text>
+                <Text style={styles.profileDate}>12 May 1994</Text>
+              </View>
+            </View>
           </View>
-          
-          {result.observations.map((obs, index) => (
-            <View key={index} style={styles.obsRow}>
-              <View style={[styles.bullet, { backgroundColor: colors.textLight }]} />
-              <Text style={[styles.obsText, { color: colors.text }]}>{obs}</Text>
-            </View>
-          ))}
-        </View>
 
-        <View style={{ height: 40 }} />
+          {/* Semi-Circle Score Gauge */}
+          <View style={styles.gaugeSection}>
+            <View style={styles.gaugeContainer}>
+              {/* Fake Arch for Semi-Circle */}
+              <View style={styles.archOuter} />
+
+              <View style={styles.scoreTextContainer}>
+                <Text style={styles.scoreMainText}>
+                  <Text style={styles.scoreNumberRed}>{result.totalScore}</Text>
+                  <Text style={styles.scoreNumberBlack}> / {result.maxScore}</Text>
+                </Text>
+                <Text style={styles.gunaText}>{t('kundali_match.guna_milan', 'Guna Milan')}</Text>
+              </View>
+            </View>
+
+            <View style={styles.matchStatusRow}>
+              <Icon name="heart" size={16} color="#E53935" />
+              <Text style={[styles.matchStatusText, { color: scoreColor }]}>{matchText}</Text>
+            </View>
+          </View>
+
+          {/* 8 Kootas Horizontal Scroll */}
+          <View style={styles.kootasContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kootasScroll}>
+              {result.ashtaKoota.map((koota, index) => (
+                <View key={index} style={styles.kootaBox}>
+                  <Text style={styles.kootaScoreText}>{koota.obtained}</Text>
+                  <Text style={styles.kootaLabelText}>{koota.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Special Analysis */}
+          <View style={styles.analysisSection}>
+            <Text style={styles.analysisTitle}>{t('kundali_match.special_analysis', 'Special Analysis')}</Text>
+
+            <View style={styles.analysisRow}>
+              <View style={styles.analysisLeft}>
+                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={styles.analysisLabel}>{t('kundali_match.manglik_groom', 'Manglik Groom')}</Text>
+              </View>
+              <Text style={styles.analysisValueGreen}>{result.manglikGroom}</Text>
+            </View>
+
+            <View style={styles.analysisRow}>
+              <View style={styles.analysisLeft}>
+                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={styles.analysisLabel}>{t('kundali_match.manglik_bride', 'Manglik Bride')}</Text>
+              </View>
+              <Text style={styles.analysisValueGreen}>{result.manglikBride}</Text>
+            </View>
+
+            <View style={styles.analysisRow}>
+              <View style={styles.analysisLeft}>
+                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={styles.analysisLabel}>{t('kundali_match.for_marriage', 'For Marriage')}</Text>
+              </View>
+              <Text style={styles.analysisValueGreen}>{result.totalScore >= 18 ? t('kundali_match.auspicious', 'Auspicious') : t('kundali_match.inauspicious', 'Inauspicious')}</Text>
+            </View>
+
+            {result.observations.map((obs, idx) => (
+              <View key={idx} style={[styles.analysisRow, idx === result.observations.length - 1 && { borderBottomWidth: 0 }]}>
+                <View style={styles.analysisLeft}>
+                  <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                  <Text style={[styles.analysisLabel, { flex: 1, paddingRight: 10 }]} numberOfLines={2}>{obs}</Text>
+                </View>
+              </View>
+            ))}
+
+          </View>
+
+        </View>
       </ScrollView>
+
+      {/* Bottom Action Bar */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity style={styles.pdfBtn}>
+          <Icon name="file-text" size={18} color="#FFF" />
+          <Text style={styles.pdfBtnText}>{t('kundali_match.detailed_report', 'Detailed Report (PDF)')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shareBtn}>
+          <Icon name="share-2" size={18} color="#800000" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -98,132 +156,246 @@ const KundaliMatchingResultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#800000',
   },
   scrollContent: {
+    // padding: 12,
+    paddingBottom: 100, // Space for bottom bar
+  },
+  mainCard: {
+    backgroundColor: '#F8E6CE',
+    borderRadius: 20,
     padding: 16,
-  },
-  scoreCard: {
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 1,
-    alignItems: 'center',
-    elevation: 2,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    minHeight: Dimensions.get('window').height * 0.8,
   },
-  scoreTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  scoreCircleContainer: {
+  coupleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  scoreDivider: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  sectionCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: '#F8E6CE',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 24,
     borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    borderColor: '#f5d9b4ff',
   },
-  sectionHeader: {
+  profileBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 18,
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FCE4EC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginRight: 10,
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  profileInfo: {
+    justifyContent: 'center',
+  },
+  profileLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#B71C1C',
+    marginBottom: 2,
+  },
+  profileName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1E293B',
+  },
+  profileDate: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  vsContainer: {
+    paddingHorizontal: 8,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D1D5DB',
+  },
+  gaugeSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  gaugeContainer: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: 80,
+    width: 160,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  archOuter: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 6,
+    borderColor: '#F9A825',
+    position: 'absolute',
+    top: 0,
+  },
+  scoreTextContainer: {
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: -2,
+  },
+  scoreMainText: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  scoreNumberRed: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#B71C1C',
+  },
+  scoreNumberBlack: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#424242',
+  },
+  gunaText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#424242',
+    marginTop: -4,
+  },
+  matchStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 6,
+  },
+  matchStatusText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 6,
+  },
+  kootasContainer: {
+    marginBottom: 10,
+    marginHorizontal: -8,
+  },
+  kootasScroll: {
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+  },
+  kootaBox: {
+    backgroundColor: '#F8E6CE',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f5d9b4ff',
+    minWidth: 70,
+    marginRight: 5,
+  },
+  kootaScoreText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#B71C1C',
+    marginBottom: 5,
+  },
+  kootaLabelText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#424242',
+  },
+  analysisSection: {
+    marginTop: 5,
+  },
+  analysisTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 6,
+  },
+  analysisRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5d9b4ff',
+  },
+  analysisLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#E53935',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  analysisLabel: {
+    fontSize: 14,
+    color: '#424242',
+    fontWeight: '500',
+  },
+  analysisValueGreen: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 8,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  pdfBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#B71C1C',
+    paddingVertical: 7,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  pdfBtnText: {
+    color: '#FFF',
+    fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
   },
-  manglikRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  manglikBox: {
-    flex: 1,
-  },
-  manglikLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  manglikValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  conclusionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    backgroundColor: 'rgba(255, 153, 0, 0.1)',
-    padding: 12,
-    borderRadius: 8,
-  },
-  kootaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  shareBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#B71C1C',
+    justifyContent: 'center',
+    alignSelf: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-  },
-  kootaInfo: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  kootaName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  kootaDesc: {
-    fontSize: 12,
-  },
-  kootaScore: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  obsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  bullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 6,
-    marginRight: 10,
-  },
-  obsText: {
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
+    backgroundColor: '#FFF',
   }
 });
 

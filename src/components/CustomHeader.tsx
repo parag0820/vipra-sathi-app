@@ -21,6 +21,8 @@ interface CustomHeaderProps {
   onNotificationPress?: () => void;
   showBack?: boolean;
   showThemeToggle?: boolean;
+  headerBgColor?: string;
+  headerTextColor?: string;
 }
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
@@ -31,12 +33,16 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   onNotificationPress,
   showBack = false,
   showThemeToggle = false,
+  headerBgColor,
+  headerTextColor,
+
 }) => {
   const { colors, isDark, setTheme } = useTheme();
   const navigation = useNavigation();
 
-  const iconColor = isDark ? '#FFF' : '#1E293B';
-  const textColor = isDark ? '#FFF' : '#1E293B';
+  const iconColor = headerTextColor || (isDark ? '#FFF' : '#1E293B');
+  const textColor = headerTextColor || (isDark ? '#FFF' : '#1E293B');
+  const bgColor = headerBgColor || colors.background;
 
   const insets = useSafeAreaInsets();
 
@@ -45,16 +51,16 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <View style={{ backgroundColor: colors.background, paddingTop: insets.top }}>
+    <View style={{ backgroundColor: bgColor, paddingTop: insets.top }}>
       <StatusBar
-        backgroundColor={colors.background}
-        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={bgColor}
+        barStyle={headerBgColor ? 'light-content' : (isDark ? 'light-content' : 'dark-content')}
         translucent={true}
       />
       <View
         style={[
           styles.container,
-          { backgroundColor: colors.background },
+          { backgroundColor: bgColor },
         ]}
       >
         {isHome ? (
@@ -77,7 +83,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
                 onPress={() => navigation.goBack()}
                 style={styles.backButton}
               >
-                <View style={[styles.backBtnCircle, { backgroundColor: isDark ? '#334155' : '#F3E8DB' }]}>
+                <View style={[styles.backBtnCircle, { backgroundColor: headerBgColor ? 'transparent' : (isDark ? '#334155' : '#F3E8DB') }]}>
                   <Icon name="arrow-left" size={20} color={textColor} />
                 </View>
               </TouchableOpacity>

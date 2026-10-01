@@ -115,55 +115,54 @@ const MainTabNavigator = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  
+
   return (
     <>
       <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        // eslint-disable-next-line react/no-unstable-nested-components
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = '';
-          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Library') iconName = focused ? 'flower' : 'flower-outline';
-          else if (route.name === 'Calendar') iconName = focused ? 'calendar' : 'calendar-outline';
-          else if (route.name === 'DakshinaCalculator') iconName = focused ? 'calculator' : 'calculator-outline';
-          else if (route.name === 'Menu') iconName = focused ? 'menu' : 'menu-outline';
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          // eslint-disable-next-line react/no-unstable-nested-components
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName = '';
+            if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+            else if (route.name === 'Library') iconName = focused ? 'flower' : 'flower-outline';
+            else if (route.name === 'Calendar') iconName = focused ? 'calendar' : 'calendar-outline';
+            else if (route.name === 'DakshinaCalculator') iconName = focused ? 'calculator' : 'calculator-outline';
+            else if (route.name === 'Menu') iconName = focused ? 'menu' : 'menu-outline';
 
-          return <Icon name={iconName as any} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textLight,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: 'transparent',
-          borderTopWidth: 0,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 62,
-          elevation: 12,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          position: 'absolute',
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('tabs.home', 'Home') }} />
-      <Tab.Screen name="Library" component={LibraryHubScreen} options={{ tabBarLabel: t('tabs.pooja', 'Pooja') }} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} options={{ tabBarLabel: t('tabs.calendar', 'Calendar') }} />
-      <Tab.Screen name="DakshinaCalculator" component={DakshinaCalculatorScreen} options={{ tabBarLabel: t('tabs.dakshina', 'Dakshina') }} />
-      <Tab.Screen name="Menu" component={MenuScreen} options={{ tabBarLabel: t('tabs.menu', 'Menu') }} />
-    </Tab.Navigator>
-    <SubscriptionReminderModal />
-  </>
+            return <Icon name={iconName as any} size={20} color={color} />;
+          },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textLight,
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopColor: 'transparent',
+            borderTopWidth: 0,
+            paddingBottom: 8,
+            height: 52,
+            elevation: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 12,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            position: 'absolute',
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+          },
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('tabs.home', 'Home') }} />
+        <Tab.Screen name="Library" component={LibraryHubScreen} options={{ tabBarLabel: t('tabs.pooja', 'Pooja') }} />
+        <Tab.Screen name="Calendar" component={CalendarScreen} options={{ tabBarLabel: t('tabs.calendar', 'Calendar') }} />
+        <Tab.Screen name="DakshinaCalculator" component={DakshinaCalculatorScreen} options={{ tabBarLabel: t('tabs.dakshina', 'Dakshina') }} />
+        <Tab.Screen name="Menu" component={MenuScreen} options={{ tabBarLabel: t('tabs.menu', 'Menu') }} />
+      </Tab.Navigator>
+      <SubscriptionReminderModal />
+    </>
   );
 };
 

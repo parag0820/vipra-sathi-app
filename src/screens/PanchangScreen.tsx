@@ -1,23 +1,109 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { Feather as Icon } from '@expo/vector-icons';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Modal, FlatList, ActivityIndicator } from 'react-native';
+import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
-import CustomHeader from '../components/CustomHeader';
 import { generateMockPanchang, PanchangDetails } from '../data/mockPanchang';
-import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import * as Location from 'expo-location';
+
+const formatLocalizedDate = (date: Date, lang: string) => {
+  if (lang === 'hi') {
+    const months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const LOCATIONS = [
+  { id: '1', name: { en: 'Ujjain, Madhya Pradesh', hi: 'उज्जैन, मध्य प्रदेश' } },
+  { id: '2', name: { en: 'Jaipur, Rajasthan', hi: 'जयपुर, राजस्थान' } },
+  { id: '3', name: { en: 'New Delhi, India', hi: 'नई दिल्ली, भारत' } },
+  { id: '4', name: { en: 'Mumbai, Maharashtra', hi: 'मुंबई, महाराष्ट्र' } },
+];
 
 const PanchangScreen = () => {
   const { colors, isDark } = useTheme();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { t, i18n } = useTranslation();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [panchangData, setPanchangData] = useState<PanchangDetails | null>(null);
-  const [notes, setNotes] = useState('');
+  const [activeTab, setActiveTab] = useState('summary');
+  const [location, setLocation] = useState(LOCATIONS[0]);
+  const [availableLocations, setAvailableLocations] = useState(LOCATIONS);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+
+  const TABS = [
+    { key: 'summary', label: t('panchang_screen.tabs.summary') },
+    { key: 'tithi', label: t('panchang_screen.tabs.tithi') },
+    { key: 'nakshatra', label: t('panchang_screen.tabs.nakshatra') },
+    { key: 'yoga', label: t('panchang_screen.tabs.yoga') },
+    { key: 'karana', label: t('panchang_screen.tabs.karana') }
+  ];
 
   useEffect(() => {
-    // Generate data for the selected date
+    (async () => {
+      try {
+        setIsFetchingLocation(true);
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Permission to access location was denied');
+          return;
+        }
+
+        const currentPos = await Location.getCurrentPositionAsync({});
+        const geocode = await Location.reverseGeocodeAsync({
+          latitude: currentPos.coords.latitude,
+          longitude: currentPos.coords.longitude,
+        });
+
+        if (geocode && geocode.length > 0) {
+          const currentGeo = geocode[0];
+          const city = currentGeo.city || currentGeo.district || currentGeo.subregion || 'Unknown City';
+          const region = currentGeo.region || 'Unknown Region';
+
+          const newLocText = `${city}, ${region}`;
+
+          const dynamicLocation = {
+            id: 'current',
+            name: {
+              en: newLocText,
+              hi: newLocText,
+            }
+          };
+
+          setAvailableLocations([dynamicLocation, ...LOCATIONS]);
+          setLocation(dynamicLocation);
+        }
+      } catch (error) {
+        console.error('Error fetching location:', error);
+      } finally {
+        setIsFetchingLocation(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     const data = generateMockPanchang(currentDate);
+    // Overriding mock data with translated mock strings
+    data.date = formatLocalizedDate(currentDate, i18n.language);
+    data.tithi = t('panchang_screen.mock_tithi');
+    data.nakshatra = t('panchang_screen.mock_nakshatra');
+    data.yoga = t('panchang_screen.mock_yoga');
+    data.karana = t('panchang_screen.mock_karana');
+    data.sunrise = '06:12 AM';
+    data.sunset = '06:28 PM';
+    data.rahuKaal = '01:30 PM - 03:00 PM';
+    data.yamaganda = '06:00 AM - 07:30 AM';
+    data.choghadiya = '08:00 AM - 09:30 AM';
+    data.festivals = [t('panchang_screen.mock_fest1'), t('panchang_screen.mock_fest2')];
     setPanchangData(data);
-  }, [currentDate]);
+  }, [currentDate, i18n.language]);
 
   const goToPreviousDay = () => {
     const prev = new Date(currentDate);
@@ -31,189 +117,154 @@ const PanchangScreen = () => {
     setCurrentDate(next);
   };
 
-  const goToToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleSave = () => {
-    Toast.show({ type: 'success', text1: 'Saved', text2: 'Panchang details saved to favorites' });
-  };
-
-  const handleGeneratePDF = () => {
-    Toast.show({ type: 'info', text1: 'Generating PDF', text2: 'Saving Panchang as PDF...' });
-  };
-
-  const handleShare = () => {
-    Toast.show({ type: 'info', text1: 'Sharing', text2: 'Preparing image to share...' });
-  };
-
-  const renderTimingBox = (label: string, time: string, icon: any, color: string) => (
-    <View style={styles.timingBox}>
-      <Icon name={icon} size={18} color={color} style={{ marginBottom: 2 }} />
-      <Text style={[styles.timingLabel, { color: colors.textLight }]}>{label}</Text>
-      <Text style={[styles.timingValue, { color: colors.text }]}>{time}</Text>
-    </View>
-  );
-
-  const renderDataRow = (label: string, value: string) => (
-    <View style={[styles.dataRow, { borderBottomColor: colors.border }]}>
-      <Text style={[styles.dataLabel, { color: colors.textLight }]}>{label}</Text>
-      <Text style={[styles.dataValue, { color: colors.text }]}>{value}</Text>
-    </View>
-  );
-
   if (!panchangData) return null;
 
+  const headerColor = '#9E2A2B';
+  const cardBg = isDark ? colors.surface : '#FFFFFF';
+  const textColor = isDark ? colors.text : '#333333';
+  const borderColor = isDark ? colors.border : '#F4F4F5';
+
+  const renderDataRow = (iconName: string, label: string, value: string, subValue?: string) => (
+    <View style={[styles.dataRow, { borderBottomColor: borderColor }]}>
+      <View style={styles.iconLabelContainer}>
+        <MaterialCommunityIcons name={iconName as any} size={20} color="#F59E0B" style={styles.rowIcon} />
+        <Text style={[styles.rowLabel, { color: textColor }]}>{label}</Text>
+      </View>
+      <View style={styles.valueContainer}>
+        <Text style={[styles.rowValue, { color: textColor }]}>{value}</Text>
+        {subValue && <Text style={styles.rowSubValue}>{subValue}</Text>}
+      </View>
+    </View>
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="Daily Panchang" showBack={true} />
+    <View style={[styles.container, { backgroundColor: headerColor }]}>
+      <StatusBar backgroundColor={headerColor} barStyle="light-content" translucent={true} />
 
-      {/* Date Navigator */}
-      <View style={[styles.dateNav, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={goToPreviousDay} style={styles.navBtn}>
-          <Icon name="chevron-left" size={24} color={colors.primary} />
+      {/* Red Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Icon name="arrow-left" size={24} color="#FFF" />
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={goToToday} style={styles.dateSelector}>
-          <Text style={[styles.dateText, { color: colors.text }]}>{panchangData.date}</Text>
-          <Text style={[styles.locationText, { color: colors.textLight }]}>
-            <Icon name="map-pin" size={12} /> {panchangData.location}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={goToNextDay} style={styles.navBtn}>
-          <Icon name="chevron-right" size={24} color={colors.primary} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('panchang_screen.title')}</Text>
+        <View style={{ width: 32 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* Main White Card Area */}
+      <View style={[styles.mainCard, { backgroundColor: cardBg }]}>
+        {/* Date Selector */}
+        <View style={styles.dateSelector}>
+          <TouchableOpacity onPress={goToPreviousDay}>
+            <Icon name="chevron-left" size={24} color={textColor} />
+          </TouchableOpacity>
+          <Text style={[styles.dateText, { color: textColor }]}>{panchangData.date}</Text>
+          <TouchableOpacity onPress={goToNextDay}>
+            <Icon name="chevron-right" size={24} color={textColor} />
+          </TouchableOpacity>
+        </View>
 
-        {/* Timings */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.timingsGrid}>
-            {renderTimingBox('Sunrise', panchangData.sunrise, 'sunrise', '#F59E0B')}
-            {renderTimingBox('Sunset', panchangData.sunset, 'sunset', '#EF4444')}
-            {renderTimingBox('Moonrise', panchangData.moonrise, 'moon', '#6366F1')}
-            {renderTimingBox('Moonset', panchangData.moonset, 'moon', '#8B5CF6')}
+        {/* Location Dropdown */}
+        <TouchableOpacity
+          style={[styles.locationSelector, { backgroundColor: isDark ? colors.background : '#FAFAFA', borderColor: isDark ? colors.border : '#E5E7EB' }]}
+          onPress={() => setShowLocationPicker(true)}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialCommunityIcons name="map-marker" size={18} color="#C53030" style={{ marginRight: 8 }} />
+            <Text style={[styles.locationText, { color: textColor }]}>
+              {i18n.language === 'hi' ? location.name.hi : location.name.en}
+            </Text>
+          </View>
+          <Icon name="chevron-down" size={20} color="#666" />
+        </TouchableOpacity>
+
+        {/* Custom Tab Bar */}
+        <View style={[styles.tabBar, { borderBottomColor: isDark ? colors.border : '#E5E7EB' }]}>
+          <View style={styles.tabContainer}>
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.key;
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[styles.tabBtn, isActive && styles.tabBtnActive, isActive && { backgroundColor: isDark ? '#2A1818' : '#FFF4EB' }]}
+                  onPress={() => setActiveTab(tab.key)}
+                >
+                  <Text style={[styles.tabText, isActive && styles.tabTextActive, isDark && !isActive && { color: colors.textLight }]}>{tab.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
-        {/* Hindu Calendar Details */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="calendar" size={16} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Calendar Details</Text>
-          </View>
-          {renderDataRow('Vikram Samvat', panchangData.vikramSamvat)}
-          {renderDataRow('Shaka Samvat', panchangData.shakaSamvat)}
-          {renderDataRow('Gujarati Samvat', panchangData.gujaratiSamvat)}
-          {renderDataRow('Amanta Month', panchangData.amantaMonth)}
-          {renderDataRow('Purnimanta Month', panchangData.purnimantaMonth)}
-        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {activeTab === 'summary' ? (
+            <>
+              {/* Panchang List */}
+              <View style={styles.listContainer}>
+                {renderDataRow('moon-waning-crescent', t('panchang_screen.labels.tithi'), panchangData.tithi, i18n.language === 'hi' ? '(11:20 PM तक)' : '(Till 11:20 PM)')}
+                {renderDataRow('star-four-points-outline', t('panchang_screen.labels.nakshatra'), panchangData.nakshatra, i18n.language === 'hi' ? '(04:15 PM तक)' : '(Till 04:15 PM)')}
+                {renderDataRow('meditation', t('panchang_screen.labels.yoga'), panchangData.yoga)}
+                {renderDataRow('hands-pray', t('panchang_screen.labels.karana'), panchangData.karana)}
 
-        {/* Core Panchang */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="sun" size={16} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Daily Panchang</Text>
-          </View>
-          {renderDataRow('Tithi', panchangData.tithi)}
-          {renderDataRow('Paksha', panchangData.paksha)}
-          {renderDataRow('Nakshatra', panchangData.nakshatra)}
-          {renderDataRow('Yoga', panchangData.yoga)}
-          {renderDataRow('Karana', panchangData.karana)}
-        </View>
+                {renderDataRow('weather-sunset-up', t('panchang_screen.labels.sunrise'), panchangData.sunrise)}
+                {renderDataRow('weather-sunset-down', t('panchang_screen.labels.sunset'), panchangData.sunset)}
 
-        {/* Astrological Details */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="compass" size={16} color={colors.secondary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Astrological Details</Text>
-          </View>
-          {renderDataRow('Sun Sign (Lagna)', panchangData.sunSign)}
-          {renderDataRow('Sun Nakshatra', panchangData.sunNakshatra)}
-          {renderDataRow('Moon Nakshatra', panchangData.moonNakshatra)}
-        </View>
-
-        {/* Pada / Charan */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="list" size={16} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Pada / Charan Timings</Text>
-          </View>
-          {panchangData.padaCharan.map((pada, index) => (
-            <View key={index} style={[styles.dataRow, { borderBottomColor: index === panchangData.padaCharan.length - 1 ? 'transparent' : colors.border }]}>
-              <Text style={[styles.dataLabel, { color: colors.textLight }]}>Pada {pada.pada}</Text>
-              <View style={styles.padaRight}>
-                <Text style={[styles.padaName, { color: colors.text }]}>{pada.name}</Text>
-                <Text style={[styles.padaTime, { color: colors.primary }]}>{pada.time}</Text>
+                {renderDataRow('clock-outline', t('panchang_screen.labels.rahukaal'), panchangData.rahuKaal)}
+                {renderDataRow('clock-outline', t('panchang_screen.labels.yamaganda'), panchangData.yamaganda)}
+                {renderDataRow('clock-outline', t('panchang_screen.labels.choghadiya'), panchangData.choghadiya)}
               </View>
+
+              {/* Festivals Section */}
+              {panchangData.festivals && panchangData.festivals.length > 0 && (
+                <View style={[styles.festivalsCard, { backgroundColor: isDark ? colors.background : '#FFF8F0' }]}>
+                  <Text style={styles.festivalsTitle}>{t('panchang_screen.festivals_title')}</Text>
+                  {panchangData.festivals.map((fest, index) => (
+                    <View key={index} style={styles.festivalItem}>
+                      <MaterialCommunityIcons name="play-circle" size={16} color="#E8A87C" style={{ marginRight: 8 }} />
+                      <Text style={[styles.festivalText, { color: textColor }]}>{fest}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={styles.emptyTabContent}>
+              <Text style={{ color: colors.textLight }}>{t('panchang_screen.empty_tab', { tab: TABS.find(t => t.key === activeTab)?.label })}</Text>
             </View>
-          ))}
-        </View>
+          )}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </View>
 
-        {/* Muhurats & Kaals */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="clock" size={16} color={colors.secondary} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Auspicious & Inauspicious</Text>
-          </View>
-          {renderDataRow('Abhijit Muhurat', panchangData.abhijitMuhurat)}
-          {renderDataRow('Choghadiya', panchangData.choghadiya)}
-          {renderDataRow('Rahu Kaal', panchangData.rahuKaal)}
-          {renderDataRow('Yamaganda', panchangData.yamaganda)}
-          {renderDataRow('Gulika Kaal', panchangData.gulikaKaal)}
-        </View>
-
-        {/* Festivals (if any) */}
-        {panchangData.festivals.length > 0 && (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.cardHeader}>
-              <Icon name="star" size={16} color={colors.primary} />
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Festivals & Vrats</Text>
+      {/* Location Picker Modal */}
+      <Modal visible={showLocationPicker} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: cardBg }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: borderColor }]}>
+              <Text style={[styles.modalTitle, { color: textColor }]}>{t('panchang_screen.change_location')}</Text>
+              <TouchableOpacity onPress={() => setShowLocationPicker(false)}>
+                <Icon name="x" size={24} color={textColor} />
+              </TouchableOpacity>
             </View>
-            {panchangData.festivals.map((fest, index) => (
-              <Text key={index} style={[styles.festivalText, { color: colors.primary }]}>• {fest}</Text>
-            ))}
+            <FlatList
+              data={availableLocations}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.locationOption, { borderBottomColor: borderColor }]}
+                  onPress={() => {
+                    setLocation(item);
+                    setShowLocationPicker(false);
+                  }}
+                >
+                  <Text style={[styles.locationOptionText, { color: item.id === location.id ? '#C53030' : textColor, fontWeight: item.id === location.id ? 'bold' : 'normal' }]}>
+                    {i18n.language === 'hi' ? item.name.hi : item.name.en}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
           </View>
-        )}
-
-        {/* Personal Notes */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <Icon name="edit-3" size={16} color={colors.textLight} />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Personal Notes</Text>
-          </View>
-          <TextInput
-            style={[styles.notesInput, { color: colors.text, borderColor: colors.border }]}
-            placeholder="Add any specific notes for today..."
-            placeholderTextColor={colors.textLight + '80'}
-            multiline
-            value={notes}
-            onChangeText={setNotes}
-          />
         </View>
-
-        {/* Actions */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleSave}>
-            <Icon name="bookmark" size={20} color={colors.primary} />
-            <Text style={[styles.actionBtnText, { color: colors.text }]}>Save</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleGeneratePDF}>
-            <Icon name="file-text" size={20} color={colors.secondary} />
-            <Text style={[styles.actionBtnText, { color: colors.text }]}>PDF</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={handleShare}>
-            <Icon name="share-2" size={20} color="#FFF" />
-            <Text style={[styles.actionBtnText, { color: '#FFF' }]}>Share</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+      </Modal>
     </View>
   );
 };
@@ -222,136 +273,175 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  dateNav: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    paddingBottom: 24,
   },
-  navBtn: {
-    padding: 8,
+  backBtn: {
+    padding: 4,
+  },
+  headerTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   dateSelector: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
+    paddingVertical: 16,
   },
   dateText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
   },
   locationText: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  card: {
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  timingsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  timingBox: {
-    width: '48%',
-    alignItems: 'center',
-    paddingVertical: 8,
-    backgroundColor: 'rgba(0,0,0,0.02)',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  timingLabel: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 14,
     fontWeight: '500',
   },
-  timingValue: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 2,
+  tabBar: {
+    borderBottomWidth: 1,
   },
-  cardHeader: {
+  tabContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
-  cardTitle: {
-    fontSize: 14,
+  tabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginHorizontal: 2,
+  },
+  tabBtnActive: {
+    borderBottomColor: '#C53030',
+  },
+  tabText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#C53030',
     fontWeight: 'bold',
-    marginLeft: 6,
+  },
+  scrollContent: {
+    padding: 12,
+  },
+  listContainer: {
+    paddingVertical: 8,
   },
   dataRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+    alignItems: 'center',
+    paddingVertical: 5,
     borderBottomWidth: 1,
   },
-  dataLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  dataValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'right',
-    flex: 1,
-    marginLeft: 12,
-  },
-  festivalText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    minHeight: 100,
-    textAlignVertical: 'top',
-    fontSize: 16,
-  },
-  actionContainer: {
+  iconLabelContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: 110,
   },
-  actionBtn: {
+  rowIcon: {
+    marginRight: 10,
+  },
+  rowLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  valueContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginHorizontal: 4,
   },
-  actionBtnText: {
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontSize: 13,
-  },
-  padaRight: {
-    alignItems: 'flex-end',
-  },
-  padaName: {
+  rowValue: {
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: 2,
   },
-  padaTime: {
-    fontSize: 11,
+  rowSubValue: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 6,
+  },
+  festivalsCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+  },
+  festivalsTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
-  }
+    color: '#C53030',
+    marginBottom: 12,
+  },
+  festivalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  festivalText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  emptyTabContent: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+    maxHeight: '50%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  locationOption: {
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  locationOptionText: {
+    fontSize: 16,
+  },
 });
 
 export default PanchangScreen;
+

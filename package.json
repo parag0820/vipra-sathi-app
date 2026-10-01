@@ -27,6 +27,8 @@
     "expo-audio": "~57.0.5",
     "expo-linear-gradient": "~57.0.1",
     "expo-location": "~57.0.19",
+    "expo-print": "^57.0.2",
+    "expo-sharing": "^57.0.22",
     "i18next": "^26.3.6",
     "react": "19.2.3",
     "react-i18next": "^17.0.11",

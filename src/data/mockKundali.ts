@@ -21,7 +21,7 @@ export const MOCK_KUNDALI_RESULT: KundaliMatchResult = {
     { name: 'Vashya', obtained: 2, maximum: 2, description: 'Dominance/Attraction' },
     { name: 'Tara', obtained: 1.5, maximum: 3, description: 'Health and well-being' },
     { name: 'Yoni', obtained: 3, maximum: 4, description: 'Biological compatibility' },
-    { name: 'Graha Maitri', obtained: 4, maximum: 5, description: 'Mental compatibility' },
+    { name: 'Graha\n Maitri', obtained: 4, maximum: 5, description: 'Mental compatibility' },
     { name: 'Gana', obtained: 6, maximum: 6, description: 'Temperament matching' },
     { name: 'Bhakoot', obtained: 7, maximum: 7, description: 'Love and family growth' },
     { name: 'Nadi', obtained: 8, maximum: 8, description: 'Health and genetics' },
