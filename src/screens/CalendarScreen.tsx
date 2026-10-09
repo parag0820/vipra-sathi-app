@@ -87,149 +87,186 @@ const CalendarScreen = () => {
   };
 
   return (
-    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
-      <CustomHeader title={t('tabs.calendar', 'Calendar')} icon="calendar" showThemeToggle={true} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+    <View style={[styles.mainContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader
+        title={t('tabs.calendar', 'Calendar')}
+        icon="calendar"
+        showThemeToggle={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-        {/* Calendar Grid */}
-        <View style={[styles.calendarWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Calendar
-            current={selectedDate}
-            onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
-            onMonthChange={(month: DateData) => setCurrentMonth(month.dateString.substring(0, 7))}
-            markingType={'multi-dot'}
-            markedDates={markedDates}
-            theme={{
-              calendarBackground: 'transparent',
-              textSectionTitleColor: colors.textLight,
-              dayTextColor: colors.text,
-              todayTextColor: colors.primary,
-              selectedDayTextColor: colors.primary,
-              monthTextColor: colors.text,
-              arrowColor: colors.primary,
-              textDayFontWeight: '500',
-              textMonthFontWeight: 'bold',
-              textDayHeaderFontWeight: '600',
-            }}
-            style={styles.calendar}
-          />
-        </View>
-
-        {/* Monthly Summary */}
-        <View style={styles.summaryContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('calendar.monthly_summary', 'Monthly Summary')}</Text>
-          <View style={styles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.statIconContainer, { backgroundColor: colors.primary + '15' }]}>
-                <Icon name="calendar" size={18} color={colors.primary} />
-              </View>
-              <Text style={[styles.statValue, { color: colors.primary }]}>{monthlyStats.totalBookings}</Text>
-              <Text style={[styles.statLabel, { color: colors.textLight }]}>Total Events</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.statIconContainer, { backgroundColor: '#DC2626' + '15' }]}>
-                <Icon name="alert-circle" size={18} color="#DC2626" />
-              </View>
-              <Text style={[styles.statValue, { color: '#DC2626' }]}>{monthlyStats.busyDays}</Text>
-              <Text style={[styles.statLabel, { color: colors.textLight }]}>Busy Days</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.statIconContainer, { backgroundColor: '#16A34A' + '15' }]}>
-                <Icon name="check-circle" size={18} color="#16A34A" />
-              </View>
-              <Text style={[styles.statValue, { color: '#16A34A' }]}>{monthlyStats.freeDays}</Text>
-              <Text style={[styles.statLabel, { color: colors.textLight }]}>Free Days</Text>
-            </View>
+          {/* Calendar Grid */}
+          <View style={[styles.calendarWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Calendar
+              key={isDark ? 'dark' : 'light'}
+              current={selectedDate}
+              onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+              onMonthChange={(month: DateData) => setCurrentMonth(month.dateString.substring(0, 7))}
+              markingType={'multi-dot'}
+              markedDates={markedDates}
+              // @ts-ignore
+              theme={{
+                calendarBackground: 'transparent',
+                textSectionTitleColor: colors.textLight,
+                dayTextColor: colors.text,
+                todayTextColor: colors.primary,
+                selectedDayTextColor: colors.primary,
+                monthTextColor: colors.text,
+                arrowColor: colors.primary,
+                textDayFontWeight: '500',
+                textMonthFontWeight: 'bold',
+                textDayHeaderFontWeight: '600',
+                textDayFontSize: 12,
+                textMonthFontSize: 15,
+                textDayHeaderFontSize: 12,
+                'stylesheet.calendar.header': {
+                  header: {
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    marginTop: 4,
+                    alignItems: 'center'
+                  },
+                  monthText: {
+                    fontSize: 15,
+                    fontWeight: 'bold',
+                    color: colors.text,
+                    margin: 4,
+                  }
+                },
+                'stylesheet.day.basic': {
+                  base: {
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }
+                }
+              }}
+              style={styles.calendar}
+            />
           </View>
-        </View>
 
-        {/* Selected Day Summary */}
-        <View style={styles.summaryContainer}>
-          <View style={[styles.daySummaryCard, { backgroundColor: colors.primary }]}>
-            <View style={styles.daySummaryContent}>
-              <View style={styles.daySummaryIconContainer}>
-                <Icon name="calendar" size={24} color={colors.primary} />
-              </View>
-              <View>
-                <Text style={styles.daySummaryDate}>
-                  {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                </Text>
-                <Text style={styles.daySummaryText}>
-                  {selectedEvents.length === 0
-                    ? 'No tasks scheduled for this day'
-                    : `You have ${selectedEvents.length} task${selectedEvents.length > 1 ? 's' : ''} today`}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Agenda */}
-        <View style={styles.agendaContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t('calendar.agenda_for', 'Agenda for')} {selectedDate}
-          </Text>
-
-          {selectedEvents.length === 0 ? (
-            <View style={[styles.noEventsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Icon name="inbox" size={32} color={colors.textLight} />
-              <Text style={[styles.noEventsText, { color: colors.textLight }]}>
-                No events scheduled for this day.
-              </Text>
-            </View>
-          ) : (
-            selectedEvents.map(event => (
-              <TouchableOpacity
-                key={event.id}
-                style={[styles.eventCard, { backgroundColor: colors.surface, borderLeftColor: STATUS_COLORS[event.status] }]}
-                onPress={() => openEditModal(event)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.eventHeader}>
-                  <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
-                  <Text style={[styles.eventTime, { color: colors.textLight }]}>{event.time}</Text>
+          {/* Monthly Summary */}
+          <View style={styles.summaryContainer}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('calendar.monthly_summary', 'Monthly Summary')}</Text>
+            <View style={styles.statsRow}>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                  <Icon name="calendar" size={16} color={colors.primary} />
                 </View>
-                <View style={styles.eventFooter}>
-                  <Text style={[styles.eventType, { color: colors.textLight }]}>
-                    {event.type.toUpperCase()}
+                <Text style={[styles.statValue, { color: colors.primary }]}>{monthlyStats.totalBookings}</Text>
+                <Text style={[styles.statLabel, { color: colors.textLight }]}>Total Events</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#DC2626' + '15' }]}>
+                  <Icon name="alert-circle" size={16} color="#DC2626" />
+                </View>
+                <Text style={[styles.statValue, { color: '#DC2626' }]}>{monthlyStats.busyDays}</Text>
+                <Text style={[styles.statLabel, { color: colors.textLight }]}>Busy Days</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#16A34A' + '15' }]}>
+                  <Icon name="check-circle" size={16} color="#16A34A" />
+                </View>
+                <Text style={[styles.statValue, { color: '#16A34A' }]}>{monthlyStats.freeDays}</Text>
+                <Text style={[styles.statLabel, { color: colors.textLight }]}>Free Days</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Selected Day Summary */}
+          <View style={styles.summaryContainer}>
+            <View style={[styles.daySummaryCard, { backgroundColor: colors.primary }]}>
+              <View style={styles.daySummaryContent}>
+                <View style={styles.daySummaryIconContainer}>
+                  <Icon name="calendar" size={24} color={colors.primary} />
+                </View>
+                <View>
+                  <Text style={styles.daySummaryDate}>
+                    {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[event.status] + '20' }]}>
-                    <Text style={[styles.statusText, { color: STATUS_COLORS[event.status] }]}>
-                      {event.status.toUpperCase()}
+                  <Text style={styles.daySummaryText}>
+                    {selectedEvents.length === 0
+                      ? 'No tasks scheduled for this day'
+                      : `You have ${selectedEvents.length} task${selectedEvents.length > 1 ? 's' : ''} today`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Agenda */}
+          <View style={styles.agendaContainer}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t('calendar.agenda_for', 'Agenda for')} {selectedDate}
+            </Text>
+
+            {selectedEvents.length === 0 ? (
+              <View style={[styles.noEventsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Icon name="inbox" size={32} color={colors.textLight} />
+                <Text style={[styles.noEventsText, { color: colors.textLight }]}>
+                  No events scheduled for this day.
+                </Text>
+              </View>
+            ) : (
+              selectedEvents.map(event => (
+                <TouchableOpacity
+                  key={event.id}
+                  style={[styles.eventCard, { backgroundColor: colors.surface, borderLeftColor: STATUS_COLORS[event.status] }]}
+                  onPress={() => openEditModal(event)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.eventHeader}>
+                    <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
+                    <Text style={[styles.eventTime, { color: colors.textLight }]}>{event.time}</Text>
+                  </View>
+                  <View style={styles.eventFooter}>
+                    <Text style={[styles.eventType, { color: colors.textLight }]}>
+                      {event.type.toUpperCase()}
                     </Text>
+                    <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[event.status] + '20' }]}>
+                      <Text style={[styles.statusText, { color: STATUS_COLORS[event.status] }]}>
+                        {event.status.toUpperCase()}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                {event.yajmanName && (
-                  <View style={styles.yajmanRow}>
-                    <Icon name="user" size={12} color={colors.primary} />
-                    <Text style={[styles.yajmanText, { color: colors.primary }]}>{event.yajmanName}</Text>
-                    {event.yajmanPhone && (
-                      <Text style={[styles.yajmanPhone, { color: colors.textLight }]}>{event.yajmanPhone}</Text>
-                    )}
-                  </View>
-                )}
-                {event.description && (
-                  <Text style={[styles.eventDesc, { color: colors.textLight }]} numberOfLines={2}>
-                    {event.description}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
+                  {event.yajmanName && (
+                    <View style={styles.yajmanRow}>
+                      <Icon name="user" size={12} color={colors.primary} />
+                      <Text style={[styles.yajmanText, { color: colors.primary }]}>{event.yajmanName}</Text>
+                      {event.yajmanPhone && (
+                        <Text style={[styles.yajmanPhone, { color: colors.textLight }]}>{event.yajmanPhone}</Text>
+                      )}
+                    </View>
+                  )}
+                  {event.description && (
+                    <Text style={[styles.eventDesc, { color: colors.textLight }]} numberOfLines={2}>
+                      {event.description}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          <View style={{ height: 100 }} />
+        </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: '#1E293B' }]}
-        onPress={openAddModal}
-        activeOpacity={0.9}
-      >
-        <Icon name="plus" size={24} color="#FFF" />
-      </TouchableOpacity>
+        {/* Floating Action Button */}
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          onPress={openAddModal}
+          activeOpacity={0.9}
+        >
+          <Icon name="plus" size={24} color="#FFF" />
+        </TouchableOpacity>
 
+      </View>
       <EventModal
         visible={modalVisible}
         selectedDate={selectedDate}
@@ -244,6 +281,12 @@ const CalendarScreen = () => {
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   scrollContent: {
     paddingBottom: 20,
   },
@@ -320,8 +363,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statIconContainer: {
-    width: 28,
-    height: 28,
+    width: 25,
+    height: 25,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',

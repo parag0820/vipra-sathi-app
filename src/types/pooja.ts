@@ -1,4 +1,4 @@
-export type SectionType = 'Heading' | 'Description' | 'Dhyan' | 'Mantra';
+export type SectionType = 'Heading' | 'Description' | 'Dhyan' | 'Mantra' | 'Vidhi' | 'Audio';
 
 export interface PoojaSection {
   sectionId: string;

@@ -190,8 +190,14 @@ const CommunityScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="Community" showBack={false} />
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader 
+        title="Community" 
+        showBack={false} 
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
 
       <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 10 }}>
         <Text style={[styles.headerSubtitle, { color: colors.textLight }]}>
@@ -237,12 +243,19 @@ const CommunityScreen = () => {
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreatePost}
       />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   header: { padding: 20, paddingTop: 30, paddingBottom: 10 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
   headerSubtitle: { fontSize: 16 },

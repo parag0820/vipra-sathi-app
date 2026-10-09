@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   slideLogo: {
     width: 150,
     height: 150,
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   slideLogoOther: {
     width: 150,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     // fontWeight: '500',
     textAlign: 'center',
     color: '#333',
-    lineHeight: 26,
+    // lineHeight: 26,
     marginBottom: 10,
   },
   slideDescription: {
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   languageButton: {
-    paddingVertical: 12,
+    paddingVertical: 11,
     minWidth: 130,
     alignItems: 'center',
     borderRadius: 10,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     borderColor: PRIMARY_COLOR,
   },
   languageText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     fontWeight: '500',
   },

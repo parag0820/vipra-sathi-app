@@ -28,8 +28,9 @@ const StotramDetailScreen = () => {
   }
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
-      <CustomHeader title={stotram.title} showBack={true} />
+    <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader title={stotram.title} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={[styles.category, { color: colors.secondary }]}>{stotram.category}</Text>
         
@@ -42,12 +43,19 @@ const StotramDetailScreen = () => {
       
       {/* Sticky Audio Player */}
       <AudioPlayerUI title={stotram.title} audioUrl={stotram.audioUrl} />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   screenContainer: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: {
     padding: 20,

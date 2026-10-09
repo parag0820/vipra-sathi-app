@@ -82,7 +82,7 @@ const YajmanDetailScreen = () => {
     return (
       <View style={styles.infoRow}>
         <View style={[styles.infoIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name={icon} size={18} color={colors.primary} />
+          <Icon name={icon as any} size={18} color={colors.primary} />
         </View>
         <View style={styles.infoContent}>
           <Text style={[styles.infoLabel, { color: colors.textLight }]}>{label}</Text>
@@ -93,17 +93,17 @@ const YajmanDetailScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.darkHeader} translucent={true} />
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={true} />
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.darkHeader, borderBottomColor: colors.darkHeader, paddingTop: Math.max(insets.top, 12) }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary, borderBottomColor: colors.primary, paddingTop: Math.max(insets.top, 12) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
           <Icon name="arrow-left" size={24} color="#FFF" />
         </TouchableOpacity>
         <View style={styles.headerRight}>
         </View>
       </View>
-
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollContent}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
@@ -181,6 +181,7 @@ const YajmanDetailScreen = () => {
 
         </View>
       </ScrollView>
+      </View>
     </View>
   );
 };
@@ -188,6 +189,12 @@ const YajmanDetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',

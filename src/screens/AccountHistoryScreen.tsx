@@ -57,7 +57,7 @@ const FILTERS = [
 ];
 
 const AccountHistoryScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -103,17 +103,17 @@ const AccountHistoryScreen = () => {
 
       let message = `${t('accountHistory.reportTitle', 'Account History Report')}\n`;
       message += `Period: ${FILTERS.find(f => f.id === activeFilter)?.label}\n\n`;
-      
+
       let totalIncome = 0;
       let totalExpense = 0;
 
       filteredTransactions.forEach((t) => {
         if (t.type === 'income') totalIncome += t.amount;
         else totalExpense += t.amount;
-        
+
         const dateObj = new Date(t.date);
         const dateStr = dateObj.toLocaleDateString();
-        
+
         message += `[${dateStr}] ${t.type === 'income' ? '+' : '-'}₹${t.amount} - ${t.category} (${t.source})\n`;
         if (t.remark) message += `   Note: ${t.remark}\n`;
       });
@@ -141,7 +141,7 @@ const AccountHistoryScreen = () => {
     return (
       <View style={[styles.transactionCard, { backgroundColor: colors.surface }]}>
         <View style={[styles.iconWrapper, { backgroundColor: amountColor + '15' }]}>
-          <Icon name={iconName} size={20} color={amountColor} />
+          <Icon name={iconName} size={18} color={amountColor} />
         </View>
         <View style={styles.cardCenter}>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{item.category}</Text>
@@ -174,14 +174,14 @@ const AccountHistoryScreen = () => {
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <TouchableOpacity 
-            style={[styles.iconBtn, { backgroundColor: colors.primary + '15' }]} 
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.primary + '15' }]}
             onPress={handleShare}
           >
             <Icon name="share-2" size={16} color={colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.filterBtn, { backgroundColor: colors.primary + '15' }]} 
+          <TouchableOpacity
+            style={[styles.filterBtn, { backgroundColor: colors.primary + '15' }]}
             onPress={() => setIsFilterModalVisible(true)}
           >
             <Icon name="sliders" size={16} color={colors.primary} />
@@ -209,6 +209,7 @@ const AccountHistoryScreen = () => {
       <DatePicker
         modal
         open={isDatePickerOpen}
+        theme={isDark ? 'dark' : 'light'}
         date={customDate || new Date()}
         mode="date"
         onConfirm={(date) => {
@@ -291,8 +292,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   iconBtn: {
-    width: 36,
-    height: 36,
+    width: 26,
+    height: 26,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
@@ -313,8 +314,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   iconWrapper: {
-    width: 44,
-    height: 44,
+    width: 30,
+    height: 30,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -324,12 +325,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     marginBottom: 4,
   },
   dateText: {
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   amount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   emptyContainer: {

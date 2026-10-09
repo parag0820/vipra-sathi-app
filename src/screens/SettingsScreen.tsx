@@ -148,8 +148,15 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <CustomHeader title={t('menu.settings', 'Settings')} icon="settings" showBack={true} />
+    <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <CustomHeader 
+        title={t('menu.settings', 'Settings')} 
+        icon="settings" 
+        showBack={true} 
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={[
@@ -244,6 +251,7 @@ const SettingsScreen = () => {
           <Text style={[styles.versionText, { color: colors.textLight }]}>Vipra Saarthi App v1.0.0</Text>
         </View>
       </ScrollView>
+      </View>
     </View>
   );
 };
@@ -251,6 +259,12 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   scrollContent: {
     padding: 16,

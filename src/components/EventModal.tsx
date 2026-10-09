@@ -80,18 +80,15 @@ const EventModal: React.FC<EventModalProps> = ({
         <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
 
           {/* Header */}
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <View style={styles.headerLeft}>
-              <View style={[styles.headerIcon, { backgroundColor: colors.primary + '15' }]}>
-                <Icon name={initialData ? 'edit-3' : 'plus'} size={18} color={colors.primary} />
+          <View style={[styles.header, { backgroundColor: colors.primary, justifyContent: 'center' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <View style={[styles.headerIcon, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                <Icon name={initialData ? 'edit-3' : 'plus'} size={18} color="#FFF" />
               </View>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>
+              <Text style={[styles.headerTitle, { color: '#FFF' }]}>
                 {initialData ? 'Edit Event' : 'Add Event'}
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Icon name="x" size={20} color={colors.textLight} />
-            </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.content}>
@@ -120,6 +117,7 @@ const EventModal: React.FC<EventModalProps> = ({
             <DatePicker
               modal
               open={datePickerVisible}
+              theme={isDark ? 'dark' : 'light'}
               date={new Date()}
               mode="datetime"
               onConfirm={(date) => {

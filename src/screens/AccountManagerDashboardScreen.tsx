@@ -7,60 +7,29 @@ import { useTheme } from '../theme/ThemeContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import CustomHeader from '../components/CustomHeader';
+import DatePicker from 'react-native-date-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const HorizontalBarChart = ({ data, maxValue, colors: themeColors }: { data: { label: string; value: number }[]; maxValue: number; colors: any }) => {
-  const ticks = [100, 75, 50, 25, 0];
-
-  return (
-    <View style={styles.barChartContainer}>
-      <View style={styles.barChartRow}>
-        <View style={styles.yAxis}>
-          {ticks.map((tick) => (
-            <Text key={tick} style={[styles.yAxisLabel, { color: themeColors.textLight }]}>
-              {tick}%
-            </Text>
-          ))}
-        </View>
-        <View style={styles.barsArea}>
-          {ticks.map((tick) => (
-            <View key={tick} style={[styles.gridLine, { top: `${100 - tick}%`, backgroundColor: themeColors.border }]} />
-          ))}
-          <View style={styles.barsRow}>
-            {data.map((item, index) => {
-              const pct = maxValue > 0 ? Math.round((item.value / maxValue) * 100) : 0;
-              return (
-                <View key={index} style={styles.barColumn}>
-                  <Text style={[styles.barPercent, { color: '#C75B12' }]}>{pct}%</Text>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { height: `${pct}%`, backgroundColor: '#C75B12' }]} />
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      </View>
-      <View style={[styles.xAxis, { paddingLeft: 32 }]}>
-        {data.map((item, index) => (
-          <View key={index} style={styles.xAxisItem}>
-            <Text style={[styles.xAxisLabel, { color: themeColors.text }]} numberOfLines={1}>
-              {item.label}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-};
-
 const AccountManagerDashboardScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [openDatePicker, setOpenDatePicker] = useState(false);
+
+  // Formatting date
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   const [dashboardData] = useState({
     monthlyTotal: {
@@ -69,19 +38,12 @@ const AccountManagerDashboardScreen = () => {
       balance: 33000,
     },
     sourceWise: [
-      { id: '1', source: 'Karmkand', amount: 30000, type: 'income' },
-      { id: '2', source: 'Astrology', amount: 15000, type: 'income' },
-      { id: '3', source: 'Travel', amount: 5000, type: 'expense' },
-      { id: '4', source: 'Samagri', amount: 7000, type: 'expense' },
+      { id: '1', source: 'Karmkand', amount: 30000, type: 'income', time: '10:30 AM' },
+      { id: '2', source: 'Astrology', amount: 15000, type: 'income', time: '11:45 AM' },
+      { id: '3', source: 'Travel', amount: 5000, type: 'expense', time: '01:15 PM' },
+      { id: '4', source: 'Samagri', amount: 7000, type: 'expense', time: '03:00 PM' },
     ]
   });
-
-  const maxValue = Math.max(...dashboardData.sourceWise.map(s => s.amount));
-
-  const barData = dashboardData.sourceWise.map((item) => ({
-    label: item.source,
-    value: item.amount,
-  }));
 
   const navigateToEntry = (type: 'earning' | 'expense', defaultCategory?: string) => {
     if (type === 'earning') {
@@ -99,88 +61,121 @@ const AccountManagerDashboardScreen = () => {
   ];
 
   return (
-    <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
-      <CustomHeader title={t('accountManager.title', 'Account Manager')} icon="pie-chart" />
-      <ScrollView style={styles.container}>
+    <View style={[styles.mainContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader title={t('accountManager.title', 'Account Manager')} icon="pie-chart" headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        <ScrollView style={styles.container}>
 
-        {/* Balance Card */}
-        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.balanceRow}>
-            <Text style={[styles.balanceLabel, { color: colors.text }]}>{t('accountManager.balance', 'Balance')}</Text>
-            <Text style={[styles.balanceAmount, { color: colors.primary }]}>₹{dashboardData.monthlyTotal.balance.toLocaleString()}</Text>
-          </View>
-        </View>
+          {/* Date Selector */}
+          <TouchableOpacity
+            style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => setOpenDatePicker(true)}
+          >
+            <Icon name="calendar" size={18} color={colors.primary} />
+            <Text style={[styles.dateText, { color: colors.primaryDark }]}>{formatDate(selectedDate)}</Text>
+            <Icon name="chevron-down" size={18} color={colors.textLight} />
+          </TouchableOpacity>
 
-        {/* Quick Entry Buttons */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeading, { color: colors.text }]}>{t('accountManager.quickEntry', 'Quick Entry')}</Text>
-          <View style={styles.quickEntryGrid}>
-            {quickEntries.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.quickEntryCard, { backgroundColor: colors.surface }]}
-                onPress={() => navigateToEntry(item.type as any, item.category)}
-              >
-                <View style={[styles.iconWrapper, { backgroundColor: item.color + '20' }]}>
-                  <Icon name={item.icon as any} size={18} color={item.color} />
-                </View>
-                <Text style={[styles.quickEntryTitle, { color: colors.text, textAlign: 'center' }]} numberOfLines={2}>
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+          <DatePicker
+            modal
+            open={openDatePicker}
+            date={selectedDate}
+            mode="date"
+            onConfirm={(date) => {
+              setOpenDatePicker(false);
+              setSelectedDate(date);
+            }}
+            onCancel={() => {
+              setOpenDatePicker(false);
+            }}
+          />
 
-        {/* Source-wise Horizontal Bar Chart */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionHeading, { color: colors.text }]}>{t('accountManager.sourceWise', 'Source-wise Totals')}</Text>
-          <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
-            <HorizontalBarChart data={barData} maxValue={maxValue} colors={colors} />
-          </View>
-
-          {/* Source List */}
-          <View style={[styles.sourceList, { backgroundColor: colors.surface }]}>
-            {dashboardData.sourceWise.map((item, index) => (
-              <View key={item.id} style={[styles.sourceItem, index < dashboardData.sourceWise.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
-                <Text style={[styles.sourceName, { color: colors.text }]}>{item.source}</Text>
-                <Text style={[styles.sourceAmount, { color: item.type === 'income' ? colors.earning : colors.expense }]}>
-                  {item.type === 'income' ? '+' : '-'}₹{item.amount.toLocaleString()}
-                </Text>
+          {/* Summary Card */}
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.summaryTopRow}>
+              <View style={styles.summaryBox}>
+                <Text style={[styles.summaryLabel, { color: colors.textLight }]}>Total Income</Text>
+                <Text style={[styles.summaryValue, { color: colors.earning }]}>+₹{dashboardData.monthlyTotal.aaya.toLocaleString()}</Text>
               </View>
-            ))}
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryBox}>
+                <Text style={[styles.summaryLabel, { color: colors.textLight }]}>Total Expense</Text>
+                <Text style={[styles.summaryValue, { color: colors.expense }]}>-₹{dashboardData.monthlyTotal.kharcha.toLocaleString()}</Text>
+              </View>
+            </View>
+
+            <View style={styles.balanceContainer}>
+              <Text style={[styles.balanceLabel, { color: colors.textLight }]}>Total Balance</Text>
+              <Text style={[styles.balanceAmount, { color: colors.primary }]}>₹{dashboardData.monthlyTotal.balance.toLocaleString()}</Text>
+            </View>
           </View>
+
+          {/* Quick Entry Buttons */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionHeading, { color: colors.text }]}>{t('accountManager.quickEntry', 'Quick Entry')}</Text>
+            <View style={styles.quickEntryGrid}>
+              {quickEntries.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.quickEntryCard, { backgroundColor: colors.surface }]}
+                  onPress={() => navigateToEntry(item.type as any, item.category)}
+                >
+                  <View style={[styles.iconWrapper, { backgroundColor: item.color + '20' }]}>
+                    <Icon name={item.icon as any} size={18} color={item.color} />
+                  </View>
+                  <Text style={[styles.quickEntryTitle, { color: colors.text, textAlign: 'center' }]} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          {/* View History Button */}
+          <TouchableOpacity
+            style={[styles.historyBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('AccountHistory')}
+          >
+            <Icon name="clock" size={18} color={colors.primary} />
+            <Text style={[styles.historyBtnText, { color: colors.primary }]}>{t('accountManager.viewHistory', 'View Full History')}</Text>
+            <Icon name="chevron-right" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          {/* List of Income/Expense */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionHeading, { color: colors.text }]}>Income & Expenses</Text>
+            <View style={[styles.sourceList, { backgroundColor: colors.surface }]}>
+              {dashboardData.sourceWise.map((item, index) => (
+                <View key={item.id} style={[styles.sourceItem, index < dashboardData.sourceWise.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
+                  <View style={styles.sourceInfo}>
+                    <Text style={[styles.sourceName, { color: colors.text }]}>{item.source}</Text>
+                    <Text style={[styles.sourceTime, { color: colors.textLight }]}>{item.time}</Text>
+                  </View>
+                  <Text style={[styles.sourceAmount, { color: item.type === 'income' ? colors.earning : colors.expense }]}>
+                    {item.type === 'income' ? '+' : '-'}₹{item.amount.toLocaleString()}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Bottom Action Buttons */}
+        <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.earning }]}
+            onPress={() => navigateToEntry('earning')}
+          >
+            <Icon name="arrow-down-left" size={16} color="#FFF" style={styles.actionIcon} />
+            <Text style={styles.actionBtnText}>{t('accountManager.addEarning', 'Add Earning')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.expense }]}
+            onPress={() => navigateToEntry('expense')}
+          >
+            <Icon name="arrow-up-right" size={16} color="#FFF" style={styles.actionIcon} />
+            <Text style={styles.actionBtnText}>{t('accountManager.addExpense', 'Add Expense')}</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* View History Button */}
-        <TouchableOpacity
-          style={[styles.historyBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => navigation.navigate('AccountHistory')}
-        >
-          <Icon name="clock" size={18} color={colors.primary} />
-          <Text style={[styles.historyBtnText, { color: colors.primary }]}>{t('accountManager.viewHistory', 'View Full History')}</Text>
-          <Icon name="chevron-right" size={18} color={colors.primary} />
-        </TouchableOpacity>
-
-      </ScrollView>
-
-      {/* Bottom Action Buttons */}
-      <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: colors.earning }]}
-          onPress={() => navigateToEntry('earning')}
-        >
-          <Icon name="arrow-down-left" size={16} color="#FFF" style={styles.actionIcon} />
-          <Text style={styles.actionBtnText}>{t('accountManager.addEarning', 'Add Earning')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: colors.expense }]}
-          onPress={() => navigateToEntry('expense')}
-        >
-          <Icon name="arrow-up-right" size={16} color="#FFF" style={styles.actionIcon} />
-          <Text style={styles.actionBtnText}>{t('accountManager.addExpense', 'Add Expense')}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -190,50 +185,100 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
   },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   container: {
     flex: 1,
-    padding: 12,
+    padding: 16,
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 5,
+    gap: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
   },
   summaryCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
-    marginBottom: 14,
-    elevation: 1,
+    marginBottom: 10,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
-  balanceRow: {
+  summaryTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  summaryBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  balanceContainer: {
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
   },
   balanceLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
+    marginBottom: 4,
   },
   balanceAmount: {
     fontSize: 16,
     fontWeight: 'bold',
   },
   section: {
-    marginBottom: 14,
+    marginBottom: 10,
   },
   sectionHeading: {
     fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
   quickEntryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 12,
   },
   quickEntryCard: {
     width: '48%',
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 10,
     alignItems: 'center',
     elevation: 1,
@@ -243,100 +288,26 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 20,
+    height: 20,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   quickEntryTitle: {
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
-  chartCard: {
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 8,
+  sourceList: {
+    borderRadius: 16,
+    overflow: 'hidden',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
-  },
-  barChartContainer: {
-    width: '100%',
-  },
-  barChartRow: {
-    flexDirection: 'row',
-    height: 140,
-  },
-  yAxis: {
-    width: 32,
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingRight: 4,
-  },
-  yAxisLabel: {
-    fontSize: 8,
-    fontWeight: '500',
-  },
-  barsArea: {
-    flex: 1,
-    position: 'relative',
-  },
-  gridLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 1,
-    opacity: 0.3,
-  },
-  barsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-end',
-    height: '100%',
-    paddingHorizontal: 4,
-  },
-  barColumn: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  barPercent: {
-    fontSize: 8,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  barTrack: {
-    width: 22,
-    height: '90%',
-    justifyContent: 'flex-end',
-    borderRadius: 4,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  barFill: {
-    width: '100%',
-    borderRadius: 4,
-  },
-  xAxis: {
-    flexDirection: 'row',
-    marginTop: 6,
-  },
-  xAxisItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  xAxisLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  sourceList: {
-    borderRadius: 10,
-    overflow: 'hidden',
   },
   sourceItem: {
     flexDirection: 'row',
@@ -344,50 +315,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
   },
+  sourceInfo: {
+    flex: 1,
+  },
   sourceName: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  sourceTime: {
+    fontSize: 10,
   },
   sourceAmount: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   historyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 14,
-    borderRadius: 12,
+    padding: 10,
+    borderRadius: 16,
     borderWidth: 1,
-    marginTop: 8,
-    marginBottom: 16,
+    // marginTop: 4,
+    marginBottom: 10,
     gap: 8,
   },
   historyBtnText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   bottomActions: {
     flexDirection: 'row',
-    padding: 10,
-    gap: 10,
+    padding: 16,
+    gap: 12,
     borderTopWidth: 1,
   },
   actionBtn: {
     flex: 1,
-    height: 40,
-    borderRadius: 20,
+    height: 38,
+    borderRadius: 24,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   actionIcon: {
-    marginRight: 6,
+    marginRight: 8,
   },
   actionBtnText: {
     color: '#FFF',
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });
 

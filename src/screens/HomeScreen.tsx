@@ -55,17 +55,19 @@ const SERVICE_CARDS = [
 ];
 
 const QUICK_ACTIONS = [
-  { id: '1', labelKey: 'pooja', icon: 'droplet', screen: 'PoojaLibrary', image: require('../assets/images/lotus_pooja.png') },
+  { id: '1', labelKey: 'pooja', icon: 'droplet', screen: 'Library', image: require('../assets/images/lotus_pooja.png') },
   { id: '2', labelKey: 'calendar', icon: 'calendar', screen: 'Calendar', image: require('../assets/images/calendar.png') },
-  { id: '3', labelKey: 'dakshina', icon: 'credit-card', screen: 'Dakshina', image: require('../assets/images/dakshina.png') },
+  { id: '3', labelKey: 'dakshina', icon: 'credit-card', screen: 'DakshinaCalculator', image: require('../assets/images/dakshina.png') },
   { id: '4', labelKey: 'panchang', icon: 'sun', screen: 'Panchang', image: require('../assets/images/panchang.png') },
   { id: '5', labelKey: 'muhurat', icon: 'compass', screen: 'Muhurt', image: require('../assets/images/muhurat.png') },
   { id: '6', labelKey: 'kundali', icon: 'star', screen: 'Kundali', image: require('../assets/images/lotus_kundali.png') },
+  { id: '6a', labelKey: 'kundali_match', icon: 'heart', screen: 'KundaliMatchingForm' },
+  { id: '6b', labelKey: 'samagri', icon: 'shopping-bag', screen: 'Samagri' },
   { id: '7', labelKey: 'yajman', icon: 'users', screen: 'YajmanList', image: require('../assets/images/community.png') },
   { id: '8', labelKey: 'stotram', icon: 'book-open', screen: 'StotramLibrary', image: require('../assets/images/stotram.png') },
   { id: '9', labelKey: 'community', icon: 'message-circle', screen: 'Community', image: require('../assets/images/community.png') },
   { id: '10', labelKey: 'history', icon: 'clock', screen: 'History', image: require('../assets/images/history.png') },
-  { id: '11', labelKey: 'account', icon: 'user', screen: 'Settings', image: require('../assets/images/account.png') },
+  { id: '11', labelKey: 'account', icon: 'user', screen: 'AccountManagerDashboard', image: require('../assets/images/account.png') },
   { id: '12', labelKey: 'subscription', icon: 'award', screen: 'Subscription', image: require('../assets/images/subscription.png') },
 ];
 
@@ -137,13 +139,13 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F8E6CE' }]}>
-      {isFocused && <StatusBar barStyle="light-content" backgroundColor="#800000" />}
-      <View style={{ backgroundColor: '#800000', paddingTop: insets.top, zIndex: 1 }}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {isFocused && <StatusBar barStyle="light-content" backgroundColor={colors.primary} />}
+      <View style={{ backgroundColor: colors.primary, paddingTop: insets.top, zIndex: 1 }}>
         <View style={[styles.header, { paddingBottom: 10, marginBottom: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }]}>
           <View style={styles.headerLeft}>
             <Image
-              source={require('../../assets/logo.png')}
+              source={require('../../logo.png')}
               style={styles.logoWhite}
               resizeMode="contain"
             />
@@ -174,7 +176,7 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <LinearGradient
-          colors={['#800000', '#800000']}
+          colors={[colors.primary, colors.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.topHeaderGradient, { marginHorizontal: -14, paddingBottom: 45, marginBottom: -20, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}
@@ -187,51 +189,51 @@ const HomeScreen = () => {
             <View style={{
               alignItems: 'center', flexShrink: 0,
             }}>
-              <Text style={{ color: '#FCE596', fontSize: 12, fontWeight: 'bold' }}>{t('home.sanatan', 'सनातन')}</Text>
-              <Text style={{ color: '#FCE596', fontSize: 12, fontWeight: 'bold' }}>{t('home.seva_me_sadaiv', 'सेवा में सदैव')}</Text>
-              <Text style={{ color: '#FCE596', fontSize: 12, marginTop: 2, fontWeight: 'bold' }}>— ॐ —</Text>
+              <Text style={{ color: colors.secondary, fontSize: 12, fontWeight: 'bold' }}>{t('home.sanatan', 'सनातन')}</Text>
+              <Text style={{ color: colors.secondary, fontSize: 12, fontWeight: 'bold' }}>{t('home.seva_me_sadaiv', 'सेवा में सदैव')}</Text>
+              <Text style={{ color: colors.secondary, fontSize: 12, marginTop: 2, fontWeight: 'bold' }}>— ॐ —</Text>
             </View>
           </View>
         </LinearGradient>
 
-        <View style={styles.mainCard}>
+        <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
           {/* Daily Spiritual Card */}
-          <View style={[styles.spiritualCard, { backgroundColor: '#F8E6CE' }]}>
+          <View style={[styles.spiritualCard, { backgroundColor: colors.surface }]}>
             <View style={styles.spiritualCardTopRow}>
               <View style={styles.spiritualContent}>
-                <View style={styles.spiritualTag}>
-                  <Icon name="sun" size={12} color="#800000" />
-                  <Text style={styles.spiritualTagText}>{t('home.spiritual_card', 'Daily Spiritual Card')}</Text>
+                <View style={[styles.spiritualTag, { backgroundColor: colors.aajkaBg }]}>
+                  <Icon name="sun" size={12} color={isDark ? '#FFF' : colors.primary} />
+                  <Text style={[styles.spiritualTagText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.spiritual_card', 'Daily Spiritual Card')}</Text>
                 </View>
-                <Text style={styles.quoteText}>
+                <Text style={[styles.quoteText, { color: colors.text }]}>
                   {t('home.daily_quote', '"Inner peace begins when you choose not to allow another person or event to control your emotions."')}
                 </Text>
               </View>
               <Image
                 source={require('../../logo.png')}
-                style={styles.ganeshaImage}
+                style={[styles.ganeshaImage, { tintColor: isDark ? '#FFF' : colors.primary }]}
                 resizeMode="contain"
               />
             </View>
 
-            <View style={styles.mantraContainer}>
-              <Text style={styles.mantraLabel}>{t('home.todays_mantra', "Today's Mantra")}</Text>
-              <Text style={styles.mantraText}>{t('home.mantra_om_gam', 'Om Gam Ganapataye Namaha')}</Text>
+            <View style={[styles.mantraContainer, { backgroundColor: colors.aajkaBg }]}>
+              <Text style={[styles.mantraLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.todays_mantra', "Today's Mantra")}</Text>
+              <Text style={[styles.mantraText, { color: colors.text }]}>{t('home.mantra_om_gam', 'Om Gam Ganapataye Namaha')}</Text>
             </View>
           </View>
 
           {/* Quick Actions / Grid */}
           <View style={styles.gridSection}>
             <View style={styles.gridSectionHeader}>
-              <Text style={styles.gridSectionTitle}>{t('home.all_services', 'सभी सेवाएँ')}</Text>
+              <Text style={[styles.gridSectionTitle, { color: colors.text }]}>{t('home.all_services', 'सभी सेवाएँ')}</Text>
               <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginHorizontal: 8, marginTop: 2 }}>
-                <View style={{ flex: 1, height: 1, backgroundColor: '#E8D4B4' }} />
-                <Icon name="sun" size={12} color="#E8D4B4" style={{ marginHorizontal: 4 }} />
-                <View style={{ flex: 1, height: 1, backgroundColor: '#E8D4B4' }} />
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                <Icon name="sun" size={12} color={colors.border} style={{ marginHorizontal: 4 }} />
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
               </View>
               <TouchableOpacity style={styles.sarveBhavantuBtn}>
-                <Text style={styles.sarveBhavantuText}>{t('home.sarve_bhavantu', 'सर्वे भवन्तु सुखिनः')}</Text>
-                <Icon name="chevron-right" size={14} color="#800000" />
+                <Text style={[styles.sarveBhavantuText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.sarve_bhavantu', 'सर्वे भवन्तु सुखिनः')}</Text>
+                <Icon name="chevron-right" size={14} color={isDark ? '#FFF' : colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -239,16 +241,16 @@ const HomeScreen = () => {
               {QUICK_ACTIONS.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={styles.quickActionCard}
+                  style={[styles.quickActionCard, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1.2 }]}
                   onPress={() => navigation.navigate(item.screen)}
                   activeOpacity={0.7}
                 >
                   {item.image ? (
-                    <Image source={item.image} style={{ width: 20, height: 28, marginBottom: 8 }} resizeMode="contain" />
+                    <Image source={item.image} style={{ width: 20, height: 28, marginBottom: 8, tintColor: isDark ? '#FFF' : undefined }} resizeMode="contain" />
                   ) : (
-                    <Icon name={item.icon as any} size={20} color="#800000" style={styles.quickActionIconImage} />
+                    <Icon name={item.icon as any} size={20} color={isDark ? '#FFF' : colors.primary} style={styles.quickActionIconImage} />
                   )}
-                  <Text style={styles.quickActionLabel}>{t(`quick_actions.${item.labelKey}`)}</Text>
+                  <Text style={[styles.quickActionLabel, { color: colors.text }]}>{t(`quick_actions.${item.labelKey}`)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -257,22 +259,22 @@ const HomeScreen = () => {
           {/* Today's Panchang (Swapped order: Before Pooja) */}
           <View style={styles.panchangSection}>
             <TouchableOpacity
-              style={styles.panchangMainCard}
+              style={[styles.panchangMainCard, { backgroundColor: colors.surface }]}
               onPress={() => navigation.navigate('Panchang')}
               activeOpacity={0.8}
             >
               <View style={styles.panchangHeaderRow}>
-                <Text style={styles.panchangMainTitle}>{t('home.todays_panchang', 'आज का पंचांग')}</Text>
+                <Text style={[styles.panchangMainTitle, { color: colors.text }]}>{t('home.todays_panchang', 'आज का पंचांग')}</Text>
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginHorizontal: 8, marginTop: 6 }}>
-                  <View style={{ flex: 1, height: 1, backgroundColor: '#E8D4B4' }} />
-                  <Icon name="sun" size={12} color="#E8D4B4" style={{ marginHorizontal: 4 }} />
-                  <View style={{ flex: 1, height: 1, backgroundColor: '#E8D4B4' }} />
+                  <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                  <Icon name="sun" size={12} color={colors.border} style={{ marginHorizontal: 4 }} />
+                  <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
                 </View>
                 <View style={[styles.panchangDateInfo, { alignItems: 'flex-end', flexShrink: 1 }]}>
-                  <Text style={[styles.panchangDateTextTop, { textAlign: 'right' }]} numberOfLines={2}>
+                  <Text style={[styles.panchangDateTextTop, { textAlign: 'right', color: colors.text }]} numberOfLines={2}>
                     {topDateText}
                   </Text>
-                  <Text style={[styles.panchangDateTextBottom, { textAlign: 'right' }]} numberOfLines={2}>
+                  <Text style={[styles.panchangDateTextBottom, { textAlign: 'right', color: colors.textLight }]} numberOfLines={2}>
                     {bottomDateText}
                   </Text>
                 </View>
@@ -280,21 +282,21 @@ const HomeScreen = () => {
 
               <View style={styles.panchangThreeCols}>
                 <View style={styles.panchangCol}>
-                  <Icon name="calendar" size={20} color="#800000" />
-                  <Text style={styles.panchangColLabel}>{t('tithi', 'तिथि')}</Text>
-                  <Text style={styles.panchangColValue}>{panchang ? (t(panchang.tithiKey)) : 'अष्टमी'}</Text>
+                  <Icon name="calendar" size={20} color={isDark ? '#FFF' : colors.primary} />
+                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('tithi', 'तिथि')}</Text>
+                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{panchang ? (t(panchang.tithiKey)) : 'अष्टमी'}</Text>
                 </View>
-                <View style={styles.panchangDividerVertical} />
+                <View style={[styles.panchangDividerVertical, { backgroundColor: colors.border }]} />
                 <View style={styles.panchangCol}>
-                  <Icon name="star" size={20} color="#800000" />
-                  <Text style={styles.panchangColLabel}>{t('nakshatra', 'नक्षत्र')}</Text>
-                  <Text style={styles.panchangColValue}>{panchang ? ('Rohini') : 'रोहिणी'}</Text>
+                  <Icon name="star" size={20} color={isDark ? '#FFF' : colors.primary} />
+                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('nakshatra', 'नक्षत्र')}</Text>
+                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{panchang ? ('Rohini') : 'रोहिणी'}</Text>
                 </View>
-                <View style={styles.panchangDividerVertical} />
+                <View style={[styles.panchangDividerVertical, { backgroundColor: colors.border }]} />
                 <View style={styles.panchangCol}>
-                  <Icon name="moon" size={20} color="#800000" />
-                  <Text style={styles.panchangColLabel}>{t('home.rahu_kaal', 'राहु काल')}</Text>
-                  <Text style={styles.panchangColValue}>03:12 - 04:48</Text>
+                  <Icon name="moon" size={20} color={isDark ? '#FFF' : colors.primary} />
+                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('home.rahu_kaal', 'राहु काल')}</Text>
+                  <Text style={[styles.panchangColValue, { color: colors.text }]}>03:12 - 04:48</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -304,24 +306,24 @@ const HomeScreen = () => {
           <View style={styles.poojaSection}>
             <View style={styles.sectionHeader}>
               <View style={styles.poojaTitleRow}>
-                <Icon name="calendar" size={18} color="#800000" />
+                <Icon name="calendar" size={18} color={isDark ? '#FFF' : colors.primary} />
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.todays_pooja')}</Text>
               </View>
               <TouchableOpacity style={styles.viewAllBtn}>
-                <Text style={styles.viewAllText}>{t('home.view_all', 'View All')}</Text>
-                <Icon name="chevron-right" size={14} color="#800000" />
+                <Text style={[styles.viewAllText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.view_all', 'View All')}</Text>
+                <Icon name="chevron-right" size={14} color={isDark ? '#FFF' : colors.primary} />
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.poojaCard, { backgroundColor: '#F8E6CE', borderColor: colors.border }]}>
+            <View style={[styles.poojaCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Image
                 source={require('../assets/images/onboarding_1.jpeg')}
                 style={styles.poojaImage}
                 resizeMode="cover"
               />
               <View style={styles.poojaInfo}>
-                <View style={styles.aajKaTag}>
-                  <Text style={styles.aajKaTagText}>{t('home.aaj_ka_karyakram')}</Text>
+                <View style={[styles.aajKaTag, { backgroundColor: colors.aajkaBg }]}>
+                  <Text style={[styles.aajKaTagText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.aaj_ka_karyakram')}</Text>
                 </View>
                 <Text style={[styles.poojaName, { color: colors.text }]}>{t('home.griha_pravesh', 'Griha Pravesh')}</Text>
                 <View style={styles.poojaDetailRow}>
@@ -334,7 +336,7 @@ const HomeScreen = () => {
                 </View>
               </View>
               <TouchableOpacity style={styles.poojaArrowBtn}>
-                <Icon name="chevron-right" size={18} color="#800000" />
+                <Icon name="chevron-right" size={18} color={isDark ? '#FFF' : colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -343,48 +345,48 @@ const HomeScreen = () => {
           <View style={styles.yajmanSection}>
             <View style={styles.sectionHeader}>
               <View style={styles.poojaTitleRow}>
-                <Icon name="users" size={18} color="#800000" />
-                <Text style={[styles.sectionTitle, { color: '#800000' }]}>{t('home.yajman_overview', "Yajman Overview")}</Text>
+                <Icon name="users" size={18} color={isDark ? '#FFF' : colors.primary} />
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.yajman_overview', "Yajman Overview")}</Text>
               </View>
               <TouchableOpacity style={styles.viewAllBtn} onPress={toggleYajmanFilter}>
-                <Text style={styles.viewAllText}>
+                <Text style={[styles.viewAllText, { color: isDark ? '#FFF' : colors.primary }]}>
                   {yajmanFilter === 'today' ? t('home.today', "Today") : t('home.last_30_days', "Last 30 Days")} ▾
                 </Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              style={[styles.yajmanCard, { backgroundColor: '#F8E6CE' }]}
+              style={[styles.yajmanCard, { backgroundColor: colors.surface }]}
               onPress={() => navigation.navigate('YajmanList')}
               activeOpacity={0.8}
             >
               <View style={styles.yajmanStatsRow}>
                 <View style={styles.yajmanStatItem}>
                   <View style={[styles.statIconBg, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
-                    <Icon name="arrow-down-left" size={16} color="#22C55E" />
+                    <Icon name="arrow-down-left" size={16} color={colors.success} />
                   </View>
-                  <Text style={styles.statLabel}>{t('home.income', "Income")}</Text>
-                  <Text style={[styles.statValue, { color: '#22C55E' }]}>{yajmanStats.income}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textLight }]}>{t('home.income', "Income")}</Text>
+                  <Text style={[styles.statValue, { color: colors.success }]}>{yajmanStats.income}</Text>
                 </View>
 
-                <View style={styles.statDivider} />
+                <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
 
                 <View style={styles.yajmanStatItem}>
                   <View style={[styles.statIconBg, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
-                    <Icon name="arrow-up-right" size={16} color="#EF4444" />
+                    <Icon name="arrow-up-right" size={16} color={colors.error} />
                   </View>
-                  <Text style={styles.statLabel}>{t('home.expense', "Expense")}</Text>
-                  <Text style={[styles.statValue, { color: '#EF4444' }]}>{yajmanStats.expense}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textLight }]}>{t('home.expense', "Expense")}</Text>
+                  <Text style={[styles.statValue, { color: colors.error }]}>{yajmanStats.expense}</Text>
                 </View>
 
-                <View style={styles.statDivider} />
+                <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
 
                 <View style={styles.yajmanStatItem}>
                   <View style={[styles.statIconBg, { backgroundColor: 'rgba(128, 0, 0, 0.15)' }]}>
-                    <Icon name="user-plus" size={16} color="#800000" />
+                    <Icon name="user-plus" size={16} color={colors.primary} />
                   </View>
-                  <Text style={styles.statLabel}>{t('home.new_yajmans', "New Yajmans")}</Text>
-                  <Text style={[styles.statValue, { color: '#1E293B' }]}>{yajmanStats.newCount}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textLight }]}>{t('home.new_yajmans', "New Yajmans")}</Text>
+                  <Text style={[styles.statValue, { color: colors.text }]}>{yajmanStats.newCount}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -394,22 +396,22 @@ const HomeScreen = () => {
           <View style={styles.festivalSection}>
             <View style={styles.sectionHeader}>
               <View style={styles.poojaTitleRow}>
-                <Icon name="star" size={18} color="#800000" />
+                <Icon name="star" size={18} color={colors.primary} />
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.upcoming_festivals', 'Upcoming Festivals')}</Text>
               </View>
             </View>
 
-            <View style={[styles.festivalCard, { backgroundColor: '#F8E6CE', borderColor: colors.border }]}>
+            <View style={[styles.festivalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.festivalIconContainer}>
-                <Icon name="droplet" size={20} color="#800000" />
+                <Icon name="droplet" size={20} color={colors.primary} />
               </View>
               <View style={styles.festivalInfo}>
                 <Text style={[styles.festivalName, { color: colors.text }]}>{t('home.ganesh_chaturthi', 'Ganesh Chaturthi')}</Text>
                 <Text style={[styles.festivalDate, { color: colors.textLight }]}>7 Sep 2025</Text>
               </View>
               <TouchableOpacity style={styles.viewDetailsBtn}>
-                <Text style={styles.viewDetailsText}>{t('home.view_details', 'View Details')}</Text>
-                <Icon name="chevron-right" size={14} color="#800000" />
+                <Text style={[styles.viewDetailsText, { color: colors.primary }]}>{t('home.view_details', 'View Details')}</Text>
+                <Icon name="chevron-right" size={14} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -626,6 +628,27 @@ const styles = StyleSheet.create({
       android: { elevation: 1 },
     }),
   },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+  },
+  quickActionCard: {
+    width: (width - 60) / 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 5,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  quickActionIconImage: {
+    width: 28,
+    height: 28,
+    marginBottom: 8,
+  },
   quickActionItem: {
     alignItems: 'center',
     width: '25%',
@@ -646,6 +669,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     color: '#1E293B',
+    textAlign: 'center',
   },
   serviceSection: {
     marginBottom: 16,
@@ -1050,28 +1074,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#800000',
   },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  quickActionCard: {
-    width: '23%',
-    backgroundColor: '#F8E6CE',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#FCE596',
-    alignItems: 'center',
-    paddingVertical: 7,
-    marginBottom: 10,
-    ...Platform.select({
-      ios: { shadowColor: '#C75B12', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-      android: { elevation: 2 },
-    }),
-  },
-  quickActionIconImage: {
-    marginBottom: 8,
-  },
   panchangMainCard: {
     backgroundColor: '#F8E6CE',
     borderRadius: 14,
@@ -1139,8 +1141,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1E293B',
     textAlign: 'center',
-  },
-
+  }
 });
 
 export default HomeScreen;

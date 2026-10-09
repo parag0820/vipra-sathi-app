@@ -119,20 +119,20 @@ const PanchangScreen = () => {
 
   if (!panchangData) return null;
 
-  const headerColor = '#9E2A2B';
-  const cardBg = isDark ? colors.surface : '#FFFFFF';
-  const textColor = isDark ? colors.text : '#333333';
-  const borderColor = isDark ? colors.border : '#F4F4F5';
+  const headerColor = colors.primary;
+  const cardBg = colors.background;
+  const textColor = colors.text;
+  const borderColor = colors.border;
 
   const renderDataRow = (iconName: string, label: string, value: string, subValue?: string) => (
     <View style={[styles.dataRow, { borderBottomColor: borderColor }]}>
       <View style={styles.iconLabelContainer}>
-        <MaterialCommunityIcons name={iconName as any} size={20} color="#F59E0B" style={styles.rowIcon} />
+        <MaterialCommunityIcons name={iconName as any} size={20} color={colors.secondary} style={styles.rowIcon} />
         <Text style={[styles.rowLabel, { color: textColor }]}>{label}</Text>
       </View>
       <View style={styles.valueContainer}>
         <Text style={[styles.rowValue, { color: textColor }]}>{value}</Text>
-        {subValue && <Text style={styles.rowSubValue}>{subValue}</Text>}
+        {subValue && <Text style={[styles.rowSubValue, { color: colors.textLight }]}>{subValue}</Text>}
       </View>
     </View>
   );
@@ -165,30 +165,38 @@ const PanchangScreen = () => {
 
         {/* Location Dropdown */}
         <TouchableOpacity
-          style={[styles.locationSelector, { backgroundColor: isDark ? colors.background : '#FAFAFA', borderColor: isDark ? colors.border : '#E5E7EB' }]}
+          style={[styles.locationSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => setShowLocationPicker(true)}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialCommunityIcons name="map-marker" size={18} color="#C53030" style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons name="map-marker" size={18} color={colors.primary} style={{ marginRight: 8 }} />
             <Text style={[styles.locationText, { color: textColor }]}>
               {i18n.language === 'hi' ? location.name.hi : location.name.en}
             </Text>
           </View>
-          <Icon name="chevron-down" size={20} color="#666" />
+          <Icon name="chevron-down" size={20} color={colors.textLight} />
         </TouchableOpacity>
 
         {/* Custom Tab Bar */}
-        <View style={[styles.tabBar, { borderBottomColor: isDark ? colors.border : '#E5E7EB' }]}>
+        <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
           <View style={styles.tabContainer}>
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <TouchableOpacity
                   key={tab.key}
-                  style={[styles.tabBtn, isActive && styles.tabBtnActive, isActive && { backgroundColor: isDark ? '#2A1818' : '#FFF4EB' }]}
+                  style={[
+                    styles.tabBtn, 
+                    isActive && styles.tabBtnActive,
+                    isActive && { borderBottomColor: colors.primary }
+                  ]}
                   onPress={() => setActiveTab(tab.key)}
                 >
-                  <Text style={[styles.tabText, isActive && styles.tabTextActive, isDark && !isActive && { color: colors.textLight }]}>{tab.label}</Text>
+                  <Text style={[
+                    styles.tabText, 
+                    isActive && styles.tabTextActive, 
+                    { color: isActive ? colors.primary : colors.textLight }
+                  ]}>{tab.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -215,11 +223,11 @@ const PanchangScreen = () => {
 
               {/* Festivals Section */}
               {panchangData.festivals && panchangData.festivals.length > 0 && (
-                <View style={[styles.festivalsCard, { backgroundColor: isDark ? colors.background : '#FFF8F0' }]}>
-                  <Text style={styles.festivalsTitle}>{t('panchang_screen.festivals_title')}</Text>
+                <View style={[styles.festivalsCard, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.festivalsTitle, { color: colors.primary }]}>{t('panchang_screen.festivals_title')}</Text>
                   {panchangData.festivals.map((fest, index) => (
                     <View key={index} style={styles.festivalItem}>
-                      <MaterialCommunityIcons name="play-circle" size={16} color="#E8A87C" style={{ marginRight: 8 }} />
+                      <MaterialCommunityIcons name="play-circle" size={16} color={colors.secondary} style={{ marginRight: 8 }} />
                       <Text style={[styles.festivalText, { color: textColor }]}>{fest}</Text>
                     </View>
                   ))}
@@ -256,7 +264,7 @@ const PanchangScreen = () => {
                     setShowLocationPicker(false);
                   }}
                 >
-                  <Text style={[styles.locationOptionText, { color: item.id === location.id ? '#C53030' : textColor, fontWeight: item.id === location.id ? 'bold' : 'normal' }]}>
+                  <Text style={[styles.locationOptionText, { color: item.id === location.id ? colors.primary : textColor, fontWeight: item.id === location.id ? 'bold' : 'normal' }]}>
                     {i18n.language === 'hi' ? item.name.hi : item.name.en}
                   </Text>
                 </TouchableOpacity>

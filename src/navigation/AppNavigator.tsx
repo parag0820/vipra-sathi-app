@@ -21,11 +21,13 @@ import PoojaLibraryScreen from '../screens/PoojaLibraryScreen';
 import PoojaDetailScreen from '../screens/PoojaDetailScreen';
 import MenuScreen from '../screens/MenuScreen';
 import KundaliScreen from '../screens/KundaliScreen';
+import KundaliMatchingFormScreen from '../screens/KundaliMatchingFormScreen';
 import KundaliMatchingResultScreen from '../screens/KundaliMatchingResultScreen';
 import KundaliGeneratedScreen from '../screens/KundaliGeneratedScreen';
 import PanchangScreen from '../screens/PanchangScreen';
 import MuhurtScreen from '../screens/MuhurtScreen';
 import SamagriScreen from '../screens/SamagriScreen';
+import HawanScreen from '../screens/HawanScreen';
 import StotramLibraryScreen from '../screens/StotramLibraryScreen';
 import StotramDetailScreen from '../screens/StotramDetailScreen';
 import AartiLibraryScreen from '../screens/AartiLibraryScreen';
@@ -55,6 +57,7 @@ export type RootStackParamList = {
   PoojaLibrary: undefined;
   PoojaDetail: { poojaId: string };
   Kundali: undefined;
+  KundaliMatchingForm: undefined;
   KundaliMatchingResult: undefined;
   KundaliGenerated: {
     name: string;
@@ -63,8 +66,10 @@ export type RootStackParamList = {
     place: string;
   };
   Panchang: undefined;
+  DakshinaCalculator: undefined;
   Muhurt: undefined;
   Samagri: undefined;
+  Hawan: undefined;
   StotramLibrary: undefined;
   StotramDetail: { stotramId: string };
   AartiLibrary: undefined;
@@ -135,7 +140,7 @@ const MainTabNavigator = () => {
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textLight,
           tabBarStyle: {
-            backgroundColor: colors.surface,
+            backgroundColor: '#F8E6CE',
             borderTopColor: 'transparent',
             borderTopWidth: 0,
             paddingBottom: 8,
@@ -187,11 +192,14 @@ const AppNavigator = () => {
           <Stack.Screen name="PoojaLibrary" component={PoojaLibraryScreen} />
           <Stack.Screen name="PoojaDetail" component={PoojaDetailScreen} options={{ presentation: 'card' }} />
           <Stack.Screen name="Kundali" component={KundaliScreen} />
+          <Stack.Screen name="KundaliMatchingForm" component={KundaliMatchingFormScreen} />
           <Stack.Screen name="KundaliMatchingResult" component={KundaliMatchingResultScreen} />
           <Stack.Screen name="KundaliGenerated" component={KundaliGeneratedScreen} />
           <Stack.Screen name="Panchang" component={PanchangScreen} />
+          <Stack.Screen name="DakshinaCalculator" component={DakshinaCalculatorScreen} />
           <Stack.Screen name="Muhurt" component={MuhurtScreen} />
           <Stack.Screen name="Samagri" component={SamagriScreen} />
+          <Stack.Screen name="Hawan" component={HawanScreen} />
           <Stack.Screen name="StotramLibrary" component={StotramLibraryScreen} />
           <Stack.Screen name="StotramDetail" component={StotramDetailScreen} options={{ presentation: 'card' }} />
           <Stack.Screen name="AartiLibrary" component={AartiLibraryScreen} />

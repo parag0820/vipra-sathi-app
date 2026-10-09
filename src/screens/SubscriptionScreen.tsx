@@ -90,9 +90,15 @@ const SubscriptionScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
-      <CustomHeader title="Subscription Plans" showBack={true} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <View style={[styles.container, { backgroundColor: colors.primary, paddingBottom: insets.bottom }]}>
+      <CustomHeader 
+        title="Subscription Plans" 
+        showBack={true} 
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
 
         {renderPlanCard(
           "Vipra Saarthi Basic",
@@ -150,6 +156,7 @@ const SubscriptionScreen = () => {
           "Professional Pandits running a complete digital practice who need full access to every premium tool and branded report."
         )}
       </ScrollView>
+      </View>
     </View>
   );
 };
@@ -157,6 +164,12 @@ const SubscriptionScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   scrollContent: {
     padding: 16,
@@ -208,7 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   price: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   priceSubtitle: {

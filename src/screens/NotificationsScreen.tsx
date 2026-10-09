@@ -51,7 +51,7 @@ const NotificationsScreen = () => {
       >
         <View style={styles.contentRow}>
           <View style={[styles.iconContainer, { backgroundColor: iconConfig.color + '15' }]}>
-            <Icon name={iconConfig.name} size={24} color={iconConfig.color} />
+            <Icon name={iconConfig.name as any} size={24} color={iconConfig.color} />
           </View>
           
           <View style={styles.textContainer}>
@@ -75,9 +75,9 @@ const NotificationsScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="Notifications" showBack={true} />
-
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader title="Notifications" showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       {notifications.some(n => !n.isRead) && (
         <TouchableOpacity onPress={handleMarkAllRead} style={styles.markReadBtn}>
           <Text style={[styles.markReadText, { color: colors.primary }]}>Mark all read</Text>
@@ -96,12 +96,19 @@ const NotificationsScreen = () => {
           </View>
         }
       />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   markReadBtn: {
     alignSelf: 'flex-end',
     paddingHorizontal: 16,

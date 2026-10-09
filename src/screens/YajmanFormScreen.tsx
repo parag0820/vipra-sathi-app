@@ -11,6 +11,7 @@ import { useYajmans } from '../hooks/useYajmans';
 import { YajmanCategory } from '../types/yajman';
 import CustomMultiSelectDropdown from '../components/CustomMultiSelectDropdown';
 import { yajmanApi } from '../api/yajman';
+import CustomHeader from '../components/CustomHeader';
 
 type FormRouteProp = RouteProp<RootStackParamList, 'YajmanForm'>;
 
@@ -161,106 +162,110 @@ const YajmanFormScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}
+      style={[styles.container, { backgroundColor: colors.primary }]}
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.darkHeader} translucent={true} />
-      {/* Custom Header for Modal */}
-      <View style={[styles.header, { backgroundColor: colors.darkHeader, borderBottomColor: colors.darkHeader, paddingTop: Math.max(insets.top, 14), justifyContent: 'center' }]}>
-        <Text style={[styles.headerTitle, { color: '#FFF' }]}>
-          {isEditing ? 'Edit Yajman' : 'New Yajman'}
-        </Text>
-      </View>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={true} />
 
-      <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
+      <CustomHeader
+        title={isEditing ? 'Edit Yajman' : 'New Yajman'}
+        showBack={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
 
-        {/* Personal Info */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Personal Details</Text>
-          {renderInput('name', 'Full Name', 'Enter yajman name')}
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
 
-          <CustomMultiSelectDropdown
-            label="Category"
-            values={formData.category ? formData.category.split(',').map(s => s.trim()).filter(Boolean) : []}
-            options={categories.length > 0 ? categories.map(c => c.categoryName) : ['Karmkand', 'Astrology', 'Others']}
-            onSelect={(vals: string[]) => {
-              const matchedIds = vals.map(val => {
-                const matched = categories.find(c => c.categoryName === val);
-                return matched ? matched._id : '';
-              }).filter(Boolean);
-              
-              setFormData({ 
-                ...formData, 
-                category: vals.join(', '),
-                categoryId: matchedIds
-              });
-            }}
-          />
-        </View>
+          {/* Personal Info */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Personal Details</Text>
+            {renderInput('name', 'Full Name', 'Enter yajman name')}
 
-        {/* Contact Info */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Contact Information</Text>
-          {renderInput('callingMobile', 'Mobile Number', 'Enter 10-digit number', { keyboardType: 'numeric' })}
-          {renderInput('whatsappMobile', 'WhatsApp Number', 'Enter WhatsApp number', { keyboardType: 'numeric' })}
-          {renderInput('email', 'Email Address', 'Enter email address', { keyboardType: 'email-address' })}
-        </View>
+            <CustomMultiSelectDropdown
+              label="Category"
+              values={formData.category ? formData.category.split(',').map(s => s.trim()).filter(Boolean) : []}
+              options={categories.length > 0 ? categories.map(c => c.categoryName) : ['Karmkand', 'Astrology', 'Others']}
+              onSelect={(vals: string[]) => {
+                const matchedIds = vals.map(val => {
+                  const matched = categories.find(c => c.categoryName === val);
+                  return matched ? matched._id : '';
+                }).filter(Boolean);
 
-        {/* Important Dates */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Important Dates</Text>
-          <View style={styles.row}>
-            <View style={styles.col}>{renderDatePicker('birthday', 'Birthday')}</View>
-            <View style={styles.col}>{renderDatePicker('anniversary', 'Anniversary')}</View>
+                setFormData({
+                  ...formData,
+                  category: vals.join(', '),
+                  categoryId: matchedIds
+                });
+              }}
+            />
           </View>
 
-          {renderInput('yearlyProgramName', 'Yearly Program Name', 'e.g. Yearly Shraddha / Tithi')}
-          {renderDatePicker('yearlyProgramDate', 'Yearly Program Date')}
-        </View>
-
-        {/* Address */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Address Details</Text>
-          <View style={styles.row}>
-            <View style={styles.col}>{renderInput('city', 'City', 'Enter city')}</View>
-            <View style={styles.col}>{renderInput('state', 'State', 'Enter state')}</View>
+          {/* Contact Info */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Contact Information</Text>
+            {renderInput('callingMobile', 'Mobile Number', 'Enter 10-digit number', { keyboardType: 'numeric' })}
+            {renderInput('whatsappMobile', 'WhatsApp Number', 'Enter WhatsApp number', { keyboardType: 'numeric' })}
+            {renderInput('email', 'Email Address', 'Enter email address', { keyboardType: 'email-address' })}
           </View>
-          {renderInput('address', 'Full Address', 'Enter complete address', { multiline: true })}
+
+          {/* Important Dates */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Important Dates</Text>
+            <View style={styles.row}>
+              <View style={styles.col}>{renderDatePicker('birthday', 'Birthday')}</View>
+              <View style={styles.col}>{renderDatePicker('anniversary', 'Anniversary')}</View>
+            </View>
+
+            {renderInput('yearlyProgramName', 'Yearly Program Name', 'e.g. Yearly Shraddha / Tithi')}
+            {renderDatePicker('yearlyProgramDate', 'Yearly Program Date')}
+          </View>
+
+          {/* Address */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Address Details</Text>
+            <View style={styles.row}>
+              <View style={styles.col}>{renderInput('city', 'City', 'Enter city')}</View>
+              <View style={styles.col}>{renderInput('state', 'State', 'Enter state')}</View>
+            </View>
+            {renderInput('address', 'Full Address', 'Enter complete address', { multiline: true })}
+          </View>
+
+          {/* Other */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Other Information</Text>
+            {renderDatePicker('kycDate', 'KYC Date')}
+            {renderInput('remark', 'Remarks / Notes', 'Any additional notes about this yajman', { multiline: true })}
+          </View>
+
+        </ScrollView>
+
+        {/* Bottom Actions */}
+        <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.cancelBtn, { borderColor: colors.border }]}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={[styles.cancelBtnText, { color: colors.text }]}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.saveBtn, { backgroundColor: colors.primary }]}
+            onPress={handleSave}
+            disabled={isSubmitting}
+          >
+            <Text style={[styles.saveBtnText, { color: '#FFF' }]}>
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Other */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Other Information</Text>
-          {renderDatePicker('kycDate', 'KYC Date')}
-          {renderInput('remark', 'Remarks / Notes', 'Any additional notes about this yajman', { multiline: true })}
-        </View>
-
-      </ScrollView>
-
-      {/* Bottom Actions */}
-      <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 10) }]}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.cancelBtn, { borderColor: colors.border }]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={[styles.cancelBtnText, { color: colors.text }]}>Cancel</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.saveBtn, { backgroundColor: colors.primary }]}
-          onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          <Text style={[styles.saveBtnText, { color: '#FFF' }]}>
-            {isSubmitting ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <DatePicker
         modal
         open={datePickerConfig.open}
+        theme={isDark ? 'dark' : 'light'}
         date={datePickerConfig.field && dates[datePickerConfig.field] ? dates[datePickerConfig.field]! : new Date()}
         mode="date"
         onConfirm={(date) => {
@@ -280,6 +285,12 @@ const YajmanFormScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',

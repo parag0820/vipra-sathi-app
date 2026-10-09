@@ -53,16 +53,16 @@ const KundaliScreen = () => {
     iconName?: string
   ) => (
     <View style={styles.inputContainer}>
-      <Text style={[styles.label, { color: '#333' }]}>{label}</Text>
-      <View style={[styles.inputWrapper, { backgroundColor: '#FFF', borderColor: '#E0E0E0' }]}>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TextInput
-          style={[styles.textInput, { color: '#333' }]}
+          style={[styles.textInput, { color: colors.text }]}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textLight}
           value={value}
           onChangeText={onChangeText}
         />
-        {iconName && <Icon name={iconName as any} size={18} color="#333" />}
+        {iconName && <Icon name={iconName as any} size={18} color={isDark ? '#FFF' : '#333'} />}
       </View>
     </View>
   );
@@ -76,19 +76,19 @@ const KundaliScreen = () => {
     iconName?: string
   ) => (
     <View style={styles.inputContainer}>
-      <Text style={[styles.label, { color: '#333' }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
       <TouchableOpacity
-        style={[styles.inputWrapper, { backgroundColor: '#FFF', borderColor: '#E0E0E0' }]}
+        style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => {
           setPickerMode(field === 'dob' ? 'date' : 'time');
           setCurrentPickerField({ person, field });
           setPickerVisible(true);
         }}
       >
-        <Text style={[styles.textInput, { color: value ? '#333' : '#999', paddingTop: Platform.OS === 'ios' ? 12 : 8 }]}>
+        <Text style={[styles.textInput, { color: value ? colors.text : colors.textLight, paddingTop: Platform.OS === 'ios' ? 12 : 8 }]}>
           {value || placeholder}
         </Text>
-        {iconName && <Icon name={iconName as any} size={18} color="#333" />}
+        {iconName && <Icon name={iconName as any} size={18} color={isDark ? '#FFF' : '#333'} />}
       </TouchableOpacity>
     </View>
   );
@@ -105,7 +105,7 @@ const KundaliScreen = () => {
         headerTextColor="#FFF"
       />
 
-      <View style={styles.mainContentWrapper}>
+      <View style={[styles.mainContentWrapper, { backgroundColor: colors.background }]}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'create' ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }]}
@@ -127,7 +127,7 @@ const KundaliScreen = () => {
               {/* Bride Details Section */}
               <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.sectionHeader}>
-                  <Icon name="user" size={20} color={colors.primary} />
+                  <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
                   <Text style={[styles.sectionTitle, { color: colors.text }]}>Bride Details</Text>
                 </View>
 
@@ -140,7 +140,7 @@ const KundaliScreen = () => {
               {/* Groom Details Section */}
               <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.sectionHeader}>
-                  <Icon name="user" size={20} color={colors.secondary} />
+                  <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
                   <Text style={[styles.sectionTitle, { color: colors.text }]}>Groom Details</Text>
                 </View>
 
@@ -168,21 +168,21 @@ const KundaliScreen = () => {
                 {renderInput(t('kundali.place_label', 'Place of Birth'), createDetails.place, (text) => setCreateDetails({ ...createDetails, place: text }), t('kundali.place_placeholder', 'Jaipur, Rajasthan'), 'map-pin')}
 
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.label, { color: '#333' }]}>{t('kundali.gender_label', 'Gender')}</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>{t('kundali.gender_label', 'Gender')}</Text>
                   <View style={styles.genderContainer}>
                     <TouchableOpacity
-                      style={[styles.genderBtn, createDetails.gender === 'male' ? styles.genderBtnActive : styles.genderBtnInactive]}
+                      style={[styles.genderBtn, createDetails.gender === 'male' ? styles.genderBtnActive : [styles.genderBtnInactive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'male' })}
                     >
-                      <Text style={createDetails.gender === 'male' ? styles.genderBtnTextActive : styles.genderBtnTextInactive}>
+                      <Text style={createDetails.gender === 'male' ? styles.genderBtnTextActive : [styles.genderBtnTextInactive, { color: colors.text }]}>
                         {t('kundali.male', 'Male')}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.genderBtn, createDetails.gender === 'female' ? styles.genderBtnActive : styles.genderBtnInactive]}
+                      style={[styles.genderBtn, createDetails.gender === 'female' ? styles.genderBtnActive : [styles.genderBtnInactive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'female' })}
                     >
-                      <Text style={createDetails.gender === 'female' ? styles.genderBtnTextActive : styles.genderBtnTextInactive}>
+                      <Text style={createDetails.gender === 'female' ? styles.genderBtnTextActive : [styles.genderBtnTextInactive, { color: colors.text }]}>
                         {t('kundali.female', 'Female')}
                       </Text>
                     </TouchableOpacity>
@@ -203,17 +203,17 @@ const KundaliScreen = () => {
                 <Icon name="arrow-right" size={18} color="#FFF" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
 
-              <View style={styles.recentSection}>
-                <Text style={styles.recentTitle}>{t('kundali.recent_title', 'Recent Kundali')}</Text>
-                <TouchableOpacity style={styles.recentItem}>
-                  <View style={styles.recentIconWrapper}>
-                    <Icon name="user" size={18} color="#333" />
+              <View style={[styles.recentSection, { backgroundColor: isDark ? colors.surface : '#F9F6EE' }]}>
+                <Text style={[styles.recentTitle, { color: colors.text }]}>{t('kundali.recent_title', 'Recent Kundali')}</Text>
+                <TouchableOpacity style={[styles.recentItem, { backgroundColor: isDark ? '#2A2A2A' : '#FFF' }]}>
+                  <View style={[styles.recentIconWrapper, { backgroundColor: isDark ? '#444' : '#F0F0F0' }]}>
+                    <Icon name="user" size={18} color={isDark ? '#FFF' : '#333'} />
                   </View>
                   <View style={styles.recentInfo}>
-                    <Text style={styles.recentName}>Rakesh Sharma</Text>
-                    <Text style={styles.recentDate}>24 Sep 1990, 10:30 AM</Text>
+                    <Text style={[styles.recentName, { color: colors.text }]}>Rakesh Sharma</Text>
+                    <Text style={[styles.recentDate, { color: colors.textLight }]}>24 Sep 1990, 10:30 AM</Text>
                   </View>
-                  <Icon name="chevron-right" size={18} color="#333" />
+                  <Icon name="chevron-right" size={18} color={isDark ? '#FFF' : '#333'} />
                 </TouchableOpacity>
               </View>
             </>
@@ -226,6 +226,7 @@ const KundaliScreen = () => {
       <DatePicker
         modal
         open={pickerVisible}
+        theme={isDark ? 'dark' : 'light'}
         date={new Date()}
         mode={pickerMode}
         onConfirm={(date) => {
@@ -263,7 +264,6 @@ const styles = StyleSheet.create({
   },
   mainContentWrapper: {
     flex: 1,
-    backgroundColor: '#FFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: 'hidden',

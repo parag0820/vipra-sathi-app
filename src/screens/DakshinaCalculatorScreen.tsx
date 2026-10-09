@@ -196,271 +196,281 @@ const DakshinaCalculatorScreen = () => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <View style={[styles.customHeaderContainer, { paddingTop: insets.top + 20 }]}>
-        <View style={styles.headerContentWrapper}>
-          <Text style={styles.headerTitleText}>{t('dakshina_calc.title', 'Dakshina Calculator')}</Text>
-          <Text style={styles.headerSubtitleText}>{t('dakshina_calc.subtitle', 'Service, Devotion and Transparency')}</Text>
-        </View>
-      </View>
-
-      <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: '#800000' }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Pooja Name Section */}
-          <View style={styles.card}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('dakshina_calc.pooja_name', 'Pooja Name')} <Text style={styles.required}>*</Text></Text>
-              <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="flower-tulip-outline" size={20} color="#800000" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={poojaName}
-                  onChangeText={setPoojaName}
-                  placeholder={t('dakshina_calc.pooja_placeholder', 'Enter Pooja Name')}
-                  placeholderTextColor="gray"
-                />
-              </View>
-            </View>
-
-            <View style={styles.datesRow}>
-              <View style={styles.datePickerContainer}>
-                <Text style={styles.label}>{t('dakshina_calc.start_date', 'Start Date')} <Text style={styles.required}>*</Text></Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => { setCalendarMode('start'); setPickerVisible(true); }}
-                >
-                  <Text style={[styles.dateText, { color: startDate ? '#333' : '#999' }]} numberOfLines={1}>
-                    {formatDate(startDate) || 'DD/MM/YYYY'}
-                  </Text>
-                  <Feather name="calendar" size={16} color="#666" />
-                </TouchableOpacity>
-              </View>
-              <View style={{ width: 12 }} />
-              <View style={styles.datePickerContainer}>
-                <Text style={styles.label}>{t('dakshina_calc.end_date', 'End Date')} <Text style={styles.required}>*</Text></Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => { setCalendarMode('end'); setPickerVisible(true); }}
-                >
-                  <Text style={[styles.dateText, { color: endDate ? '#333' : 'gray' }]} numberOfLines={1}>
-                    {formatDate(endDate) || 'DD/MM/YYYY'}
-                  </Text>
-                  <Feather name="calendar" size={16} color="#666" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Service Team Section */}
-          <View style={[styles.card, styles.highlightedCard]}>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="account-group-outline" size={24} color="#800000" />
-              <View style={styles.cardHeaderTexts}>
-                <Text style={styles.cardTitle}>{t('dakshina_calc.seva_dal', 'Service Team')}</Text>
-                <Text style={styles.cardSubtitle}>{t('dakshina_calc.seva_dal_sub', 'Number of Acharyas and Pandits involved')}</Text>
-              </View>
-            </View>
-
-            {/* Headers */}
-            <View style={styles.teamHeaders}>
-              <View style={{ flex: 1.5 }} />
-              <Text style={styles.teamHeaderLabel}>{t('dakshina_calc.count', 'Count')} <Text style={styles.required}>*</Text></Text>
-              <Text style={styles.teamHeaderLabel}>{t('dakshina_calc.per_day', 'Per Day')} <Text style={styles.required}>*</Text></Text>
-            </View>
-
-            {/* Acharya Row */}
-            <View style={styles.teamRow}>
-              <View style={styles.teamInfo}>
-                <View style={styles.teamIconWrapper}>
-                  <MaterialCommunityIcons name="account-tie-outline" size={24} color="#800000" />
-                </View>
-                <View style={{ flex: 1, paddingRight: 4 }}>
-                  <Text style={styles.teamRole} numberOfLines={1}>{t('dakshina_calc.acharya', 'Acharya')}</Text>
-                  <Text style={styles.teamRoleSub}>{t('dakshina_calc.acharya_sub', 'Main Yajman & Veda Path')}</Text>
-                </View>
-              </View>
-              <TextInput style={styles.teamInput} value={acharyaCount} onChangeText={setAcharyaCount} keyboardType="numeric" placeholderTextColor="gray" />
-              <View style={styles.teamInputWithPrefix}>
-                <Text style={styles.rupeePrefix}>₹</Text>
-                <TextInput style={styles.prefixInput} value={acharyaPerDay} onChangeText={setAcharyaPerDay} keyboardType="numeric" placeholderTextColor="gray" />
-              </View>
-            </View>
-
-            {/* Upacharya Row */}
-            <View style={styles.teamRow}>
-              <View style={styles.teamInfo}>
-                <View style={styles.teamIconWrapper}>
-                  <MaterialCommunityIcons name="account-outline" size={24} color="#800000" />
-                </View>
-                <View style={{ flex: 1, paddingRight: 4 }}>
-                  <Text style={styles.teamRole} numberOfLines={1}>{t('dakshina_calc.upacharya', 'Upacharya')}</Text>
-                  <Text style={styles.teamRoleSub}>{t('dakshina_calc.upacharya_sub', 'Assistant Acharya')}</Text>
-                </View>
-              </View>
-              <TextInput style={styles.teamInput} value={upacharyaCount} onChangeText={setUpacharyaCount} keyboardType="numeric" placeholderTextColor="gray" />
-              <View style={styles.teamInputWithPrefix}>
-                <Text style={styles.rupeePrefix}>₹</Text>
-                <TextInput style={styles.prefixInput} value={upacharyaPerDay} onChangeText={setUpacharyaPerDay} keyboardType="numeric" placeholderTextColor="gray" />
-              </View>
-            </View>
-
-            {/* Pandit Row */}
-            <View style={styles.teamRow}>
-              <View style={styles.teamInfo}>
-                <View style={styles.teamIconWrapper}>
-                  <MaterialCommunityIcons name="account" size={24} color="#800000" />
-                </View>
-                <View style={{ flex: 1, paddingRight: 4 }}>
-                  <Text style={styles.teamRole} numberOfLines={1}>{t('dakshina_calc.pandit', 'Pandit')}</Text>
-                  <Text style={styles.teamRoleSub}>{t('dakshina_calc.pandit_sub', 'Mantras & Rituals')}</Text>
-                </View>
-              </View>
-              <TextInput style={styles.teamInput} value={panditCount} onChangeText={setPanditCount} keyboardType="numeric" placeholderTextColor="gray" />
-              <View style={styles.teamInputWithPrefix}>
-                <Text style={styles.rupeePrefix}>₹</Text>
-                <TextInput style={styles.prefixInput} value={panditPerDay} onChangeText={setPanditPerDay} keyboardType="numeric" placeholderTextColor="gray" />
-              </View>
-            </View>
-          </View>
-
-          {/* Additional Amount Section */}
-          <View style={[styles.card, styles.highlightedCard]}>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="currency-inr" size={20} color="#800000" />
-              <View style={styles.cardHeaderTexts}>
-                <Text style={styles.cardTitle}>{t('dakshina_calc.additional_amt', 'Additional Amount')}</Text>
-                <Text style={styles.cardSubtitle}>{t('dakshina_calc.additional_amt_sub', 'Pooja Samagri and other expenses')}</Text>
-              </View>
-            </View>
-
-            <View style={styles.datesRow}>
-              <View style={styles.datePickerContainer}>
-                <Text style={styles.label}>{t('dakshina_calc.samagri_amt_label', 'Samagri Amount')} <Text style={styles.required}>*</Text></Text>
-                <View style={styles.teamInputWithPrefix}>
-                  <Text style={styles.rupeePrefix}>₹</Text>
-                  <TextInput style={styles.prefixInput} value={samagriAmount} onChangeText={setSamagriAmount} keyboardType="numeric" placeholderTextColor="gray" />
-                  <Feather name="shopping-cart" size={16} color="#666" style={{ marginRight: 8 }} />
-                </View>
-                {/* Spacer to match the height of the allowance hint text */}
-                <Text style={{ fontSize: 10, color: 'transparent', marginTop: 4 }}>{t('dakshina_calc.allowance_hint', 'Spacer')}</Text>
-              </View>
-              <View style={{ width: 12 }} />
-              <View style={styles.datePickerContainer}>
-                <Text style={styles.label}>{t('dakshina_calc.allowance_amt_label', 'Allowance Amount')} <Text style={styles.required}>*</Text></Text>
-                <View style={styles.teamInputWithPrefix}>
-                  <Text style={styles.rupeePrefix}>₹</Text>
-                  <TextInput style={styles.prefixInput} value={transportAmount} onChangeText={setTransportAmount} keyboardType="numeric" placeholderTextColor="gray" />
-                  <Feather name="briefcase" size={16} color="#666" style={{ marginRight: 8 }} />
-                </View>
-                <Text style={{ fontSize: 10, color: '#888', marginTop: 4 }}>{t('dakshina_calc.allowance_hint', 'If Acharya buys materials')}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Summary Section */}
-          <View style={[styles.card, { backgroundColor: '#FDF8F0', borderColor: '#F5E4C3' }]}>
-            <View style={[styles.cardHeader, { borderBottomWidth: 0, marginBottom: 5 }]}>
-              <MaterialCommunityIcons name="calculator" size={24} color="#800000" />
-              <Text style={[styles.cardTitle, { marginLeft: 10 }]}>{t('dakshina_calc.details', 'Dakshina Details')}</Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryLabelRow}>
-                <Feather name="calendar" size={16} color="#800000" />
-                <Text style={styles.summaryLabel}>{t('dakshina_calc.total_days_label', 'Total Days')}</Text>
-              </View>
-              <Text style={styles.summaryValue}>{calculatedDays} {t('dakshina_calc.days_suffix_label', 'Days')}</Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryLabelRow}>
-                <MaterialCommunityIcons name="account-group" size={18} color="#800000" />
-                <View>
-                  <Text style={styles.summaryLabel}>{t('dakshina_calc.total_dakshina_label', 'Total Dakshina')}</Text>
-                  <Text style={styles.summarySubLabel}>({acharyaCountNum}x{acharyaRate} + {upacharyaCountNum}x{upacharyaRate} + {panditCountNum}x{panditRate}) x {calculatedDays} {t('dakshina_calc.days_suffix_label', 'Days')}</Text>
-                </View>
-              </View>
-              <Text style={styles.summaryValue}>₹ {finalAmount.toLocaleString('en-IN')}</Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryLabelRow}>
-                <MaterialCommunityIcons name="gold" size={18} color="#800000" />
-                <View>
-                  <Text style={styles.summaryLabel}>{t('dakshina_calc.samagri_plus_allowance_label', 'Samagri + Allowance')}</Text>
-                  <Text style={styles.summarySubLabel}>(₹ {D} + ₹ {E})</Text>
-                </View>
-              </View>
-              <Text style={styles.summaryValue}>₹ {extrasTotal.toLocaleString('en-IN')}</Text>
-            </View>
-
-            <View style={styles.grandTotalBox}>
-              <View style={styles.summaryLabelRow}>
-                <MaterialCommunityIcons name="sack" size={20} color="#B58105" />
-                <Text style={styles.grandTotalLabel}>{t('dakshina_calc.final_total_label', 'Final Total')}</Text>
-              </View>
-              <Text style={styles.grandTotalValue}>₹ {totalAmount.toLocaleString('en-IN')}</Text>
-            </View>
-          </View>
-
-          {/* Export Button */}
-          <TouchableOpacity style={styles.exportButton} onPress={handleExportPDF}>
-            <Text style={styles.exportButtonText}>{t('dakshina_calc.export_pdf_btn', 'Calculate Total / Share PDF')}</Text>
-          </TouchableOpacity>
-
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <DatePicker
-        modal
-        open={pickerVisible}
-        date={
-          calendarMode === 'start' && startDate
-            ? new Date(startDate)
-            : calendarMode === 'end' && endDate
-              ? new Date(endDate)
-              : new Date()
-        }
-        mode="date"
-        onConfirm={handleDateConfirm}
-        onCancel={() => setPickerVisible(false)}
-        minimumDate={calendarMode === 'end' && startDate ? new Date(startDate) : undefined}
+    <View style={[styles.mainContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader
+        title={t('dakshina_calc.title', 'Dakshina Calculator')}
+        showThemeToggle={true}
+        showBack={false}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
       />
+
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Pooja Name Section */}
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.inputContainer}>
+                <Text style={[styles.label, { color: colors.text }]}>{t('dakshina_calc.pooja_name', 'Pooja Name')} <Text style={styles.required}>*</Text></Text>
+                <View style={[styles.inputWrapper, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                  <MaterialCommunityIcons name="flower-tulip-outline" size={20} color={isDark ? '#FFF' : colors.primary} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    value={poojaName}
+                    onChangeText={setPoojaName}
+                    placeholder={t('dakshina_calc.pooja_placeholder', 'Enter Pooja Name')}
+                    placeholderTextColor={colors.textLight}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.datesRow}>
+                <View style={styles.datePickerContainer}>
+                  <Text style={[styles.label, { color: colors.text }]}>{t('dakshina_calc.start_date', 'Start Date')} <Text style={styles.required}>*</Text></Text>
+                  <TouchableOpacity
+                    style={[styles.dateButton, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                    onPress={() => { setCalendarMode('start'); setPickerVisible(true); }}
+                  >
+                    <Text style={[styles.dateText, { color: startDate ? colors.text : colors.textLight }]} numberOfLines={1}>
+                      {formatDate(startDate) || 'DD/MM/YYYY'}
+                    </Text>
+                    <Feather name="calendar" size={16} color={colors.textLight} />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ width: 12 }} />
+                <View style={styles.datePickerContainer}>
+                  <Text style={[styles.label, { color: colors.text }]}>{t('dakshina_calc.end_date', 'End Date')} <Text style={styles.required}>*</Text></Text>
+                  <TouchableOpacity
+                    style={[styles.dateButton, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                    onPress={() => { setCalendarMode('end'); setPickerVisible(true); }}
+                  >
+                    <Text style={[styles.dateText, { color: endDate ? colors.text : colors.textLight }]} numberOfLines={1}>
+                      {formatDate(endDate) || 'DD/MM/YYYY'}
+                    </Text>
+                    <Feather name="calendar" size={16} color={colors.textLight} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Service Team Section */}
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
+                <MaterialCommunityIcons name="account-group-outline" size={24} color={isDark ? '#FFF' : colors.primary} />
+                <View style={styles.cardHeaderTexts}>
+                  <Text style={[styles.cardTitle, { color: isDark ? '#FFF' : colors.primary }]}>{t('dakshina_calc.seva_dal', 'Service Team')}</Text>
+                  <Text style={[styles.cardSubtitle, { color: colors.textLight }]}>{t('dakshina_calc.seva_dal_sub', 'Number of Acharyas and Pandits involved')}</Text>
+                </View>
+              </View>
+
+              {/* Headers */}
+              <View style={styles.teamHeaders}>
+                <View style={{ flex: 1.5 }} />
+                <Text style={[styles.teamHeaderLabel, { color: colors.textLight }]}>{t('dakshina_calc.count', 'Count')} <Text style={styles.required}>*</Text></Text>
+                <Text style={[styles.teamHeaderLabel, { color: colors.textLight }]}>{t('dakshina_calc.per_day', 'Per Day')} <Text style={styles.required}>*</Text></Text>
+              </View>
+
+              {/* Acharya Row */}
+              <View style={styles.teamRow}>
+                <View style={styles.teamInfo}>
+                  <View style={styles.teamIconWrapper}>
+                    <MaterialCommunityIcons name="account-tie-outline" size={24} color={isDark ? '#FFF' : colors.primary} />
+                  </View>
+                  <View style={{ flex: 1, paddingRight: 4 }}>
+                    <Text style={[styles.teamRole, { color: colors.text }]} numberOfLines={1}>{t('dakshina_calc.acharya', 'Acharya')}</Text>
+                    <Text style={[styles.teamRoleSub, { color: colors.textLight }]}>{t('dakshina_calc.acharya_sub', 'Main Yajman & Veda Path')}</Text>
+                  </View>
+                </View>
+                <TextInput style={[styles.teamInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]} value={acharyaCount} onChangeText={setAcharyaCount} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                <View style={[styles.teamInputWithPrefix, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                  <Text style={[styles.rupeePrefix, { color: colors.textLight }]}>₹</Text>
+                  <TextInput style={[styles.prefixInput, { color: colors.text }]} value={acharyaPerDay} onChangeText={setAcharyaPerDay} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                </View>
+              </View>
+
+              {/* Upacharya Row */}
+              <View style={styles.teamRow}>
+                <View style={styles.teamInfo}>
+                  <View style={styles.teamIconWrapper}>
+                    <MaterialCommunityIcons name="account-outline" size={24} color={isDark ? '#FFF' : colors.primary} />
+                  </View>
+                  <View style={{ flex: 1, paddingRight: 4 }}>
+                    <Text style={[styles.teamRole, { color: colors.text }]} numberOfLines={1}>{t('dakshina_calc.upacharya', 'Upacharya')}</Text>
+                    <Text style={[styles.teamRoleSub, { color: colors.textLight }]}>{t('dakshina_calc.upacharya_sub', 'Assistant Acharya')}</Text>
+                  </View>
+                </View>
+                <TextInput style={[styles.teamInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]} value={upacharyaCount} onChangeText={setUpacharyaCount} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                <View style={[styles.teamInputWithPrefix, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                  <Text style={[styles.rupeePrefix, { color: colors.textLight }]}>₹</Text>
+                  <TextInput style={[styles.prefixInput, { color: colors.text }]} value={upacharyaPerDay} onChangeText={setUpacharyaPerDay} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                </View>
+              </View>
+
+              {/* Pandit Row */}
+              <View style={styles.teamRow}>
+                <View style={styles.teamInfo}>
+                  <View style={styles.teamIconWrapper}>
+                    <MaterialCommunityIcons name="account" size={24} color={isDark ? '#FFF' : colors.primary} />
+                  </View>
+                  <View style={{ flex: 1, paddingRight: 4 }}>
+                    <Text style={[styles.teamRole, { color: colors.text }]} numberOfLines={1}>{t('dakshina_calc.pandit', 'Pandit')}</Text>
+                    <Text style={[styles.teamRoleSub, { color: colors.textLight }]}>{t('dakshina_calc.pandit_sub', 'Mantras & Rituals')}</Text>
+                  </View>
+                </View>
+                <TextInput style={[styles.teamInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]} value={panditCount} onChangeText={setPanditCount} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                <View style={[styles.teamInputWithPrefix, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                  <Text style={[styles.rupeePrefix, { color: colors.textLight }]}>₹</Text>
+                  <TextInput style={[styles.prefixInput, { color: colors.text }]} value={panditPerDay} onChangeText={setPanditPerDay} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                </View>
+              </View>
+            </View>
+
+            {/* Additional Amount Section */}
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
+                <MaterialCommunityIcons name="currency-inr" size={20} color={isDark ? '#FFF' : colors.primary} />
+                <View style={styles.cardHeaderTexts}>
+                  <Text style={[styles.cardTitle, { color: isDark ? '#FFF' : colors.primary }]}>{t('dakshina_calc.additional_amt', 'Additional Amount')}</Text>
+                  <Text style={[styles.cardSubtitle, { color: colors.textLight }]}>{t('dakshina_calc.additional_amt_sub', 'Pooja Samagri and other expenses')}</Text>
+                </View>
+              </View>
+
+              <View style={styles.datesRow}>
+                <View style={styles.datePickerContainer}>
+                  <Text style={[styles.label, { color: colors.text }]}>{t('dakshina_calc.samagri_amt_label', 'Samagri Amount')} <Text style={styles.required}>*</Text></Text>
+                  <View style={[styles.teamInputWithPrefix, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                    <Text style={[styles.rupeePrefix, { color: colors.textLight }]}>₹</Text>
+                    <TextInput style={[styles.prefixInput, { color: colors.text }]} value={samagriAmount} onChangeText={setSamagriAmount} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                    <Feather name="shopping-cart" size={16} color={colors.textLight} style={{ marginRight: 8 }} />
+                  </View>
+                  {/* Spacer to match the height of the allowance hint text */}
+                  <Text style={{ fontSize: 10, color: colors.textLight, marginTop: 4 }}>{t('dakshina_calc.allowance_hint', 'Spacer')}</Text>
+                </View>
+                <View style={{ width: 12 }} />
+                <View style={styles.datePickerContainer}>
+                  <Text style={[styles.label, { color: colors.text }]}>{t('dakshina_calc.allowance_amt_label', 'Allowance Amount')} <Text style={styles.required}>*</Text></Text>
+                  <View style={[styles.teamInputWithPrefix, { borderColor: colors.border, backgroundColor: colors.inputBg }]}>
+                    <Text style={[styles.rupeePrefix, { color: colors.textLight }]}>₹</Text>
+                    <TextInput style={[styles.prefixInput, { color: colors.text }]} value={transportAmount} onChangeText={setTransportAmount} keyboardType="numeric" placeholderTextColor={colors.textLight} />
+                    <Feather name="briefcase" size={16} color={colors.textLight} style={{ marginRight: 8 }} />
+                  </View>
+                  <Text style={{ fontSize: 10, color: colors.textLight, marginTop: 4 }}>{t('dakshina_calc.allowance_hint', 'If Acharya buys materials')}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Summary Section */}
+            <View style={[styles.card, { backgroundColor: colors.aajkaBg, borderColor: colors.border }]}>
+              <View style={[styles.cardHeader, { borderBottomWidth: 0, marginBottom: 5 }]}>
+                <MaterialCommunityIcons name="calculator" size={24} color={isDark ? '#FFF' : colors.primary} />
+                <Text style={[styles.cardTitle, { color: isDark ? '#FFF' : colors.primary, marginLeft: 10 }]}>{t('dakshina_calc.details', 'Dakshina Details')}</Text>
+              </View>
+
+              <View style={[styles.summaryRow, { borderBottomColor: colors.border }]}>
+                <View style={styles.summaryLabelRow}>
+                  <Feather name="calendar" size={16} color={isDark ? '#FFF' : colors.primary} />
+                  <Text style={[styles.summaryLabel, { color: colors.text }]}>{t('dakshina_calc.total_days_label', 'Total Days')}</Text>
+                </View>
+                <Text style={[styles.summaryValue, { color: colors.text }]}>{calculatedDays} {t('dakshina_calc.days_suffix_label', 'Days')}</Text>
+              </View>
+
+              <View style={[styles.summaryRow, { borderBottomColor: colors.border }]}>
+                <View style={styles.summaryLabelRow}>
+                  <MaterialCommunityIcons name="account-group" size={18} color={isDark ? '#FFF' : colors.primary} />
+                  <View>
+                    <Text style={[styles.summaryLabel, { color: colors.text }]}>{t('dakshina_calc.total_dakshina_label', 'Total Dakshina')}</Text>
+                    <Text style={[styles.summarySubLabel, { color: colors.textLight }]}>({acharyaCountNum}x{acharyaRate} + {upacharyaCountNum}x{upacharyaRate} + {panditCountNum}x{panditRate}) x {calculatedDays} {t('dakshina_calc.days_suffix_label', 'Days')}</Text>
+                  </View>
+                </View>
+                <Text style={[styles.summaryValue, { color: colors.text }]}>₹ {finalAmount.toLocaleString('en-IN')}</Text>
+              </View>
+
+              <View style={[styles.summaryRow, { borderBottomColor: colors.border }]}>
+                <View style={styles.summaryLabelRow}>
+                  <MaterialCommunityIcons name="gold" size={18} color={isDark ? '#FFF' : colors.primary} />
+                  <View>
+                    <Text style={[styles.summaryLabel, { color: colors.text }]}>{t('dakshina_calc.samagri_plus_allowance_label', 'Samagri + Allowance')}</Text>
+                    <Text style={[styles.summarySubLabel, { color: colors.textLight }]}>(₹ {D} + ₹ {E})</Text>
+                  </View>
+                </View>
+                <Text style={[styles.summaryValue, { color: colors.text }]}>₹ {extrasTotal.toLocaleString('en-IN')}</Text>
+              </View>
+
+              <View style={[styles.grandTotalBox, { backgroundColor: isDark ? colors.primary + '20' : '#FDEED9' }]}>
+                <View style={styles.summaryLabelRow}>
+                  <MaterialCommunityIcons name="sack" size={20} color={isDark ? '#FFF' : '#B58105'} />
+                  <Text style={[styles.grandTotalLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('dakshina_calc.final_total_label', 'Final Total')}</Text>
+                </View>
+                <Text style={[styles.grandTotalValue, { color: isDark ? '#FFF' : colors.primary }]}>₹ {totalAmount.toLocaleString('en-IN')}</Text>
+              </View>
+            </View>
+
+            {/* Export Button */}
+            <TouchableOpacity style={styles.exportButton} onPress={handleExportPDF}>
+              <Text style={styles.exportButtonText}>{t('dakshina_calc.export_pdf_btn', 'Calculate Total / Share PDF')}</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        <DatePicker
+          modal
+          open={pickerVisible}
+          theme={isDark ? 'dark' : 'light'}
+          date={
+            calendarMode === 'start' && startDate
+              ? new Date(startDate)
+              : calendarMode === 'end' && endDate
+                ? new Date(endDate)
+                : new Date()
+          }
+          mode="date"
+          onConfirm={handleDateConfirm}
+          onCancel={() => setPickerVisible(false)}
+          minimumDate={calendarMode === 'end' && startDate ? new Date(startDate) : undefined}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#800000' },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   customHeaderContainer: { backgroundColor: '#800000', paddingBottom: 15 },
   headerContentWrapper: { paddingHorizontal: 20 },
   headerTitleText: { color: '#FFF', fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   headerSubtitleText: { color: '#FFD7D7', fontSize: 12 },
 
-  container: { flex: 1, backgroundColor: '#FFFBF0', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  container: { flex: 1 },
   content: { padding: 16, paddingTop: 10 },
 
-  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 10, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: '#F0F0F0' },
-  highlightedCard: { backgroundColor: '#FDFBF7' },
+  card: { borderRadius: 12, padding: 10, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1 },
+  highlightedCard: {},
 
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#F0F0F0', paddingBottom: 10 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderBottomWidth: 1, paddingBottom: 10 },
   cardHeaderTexts: { marginLeft: 10, flex: 1 },
-  cardTitle: { fontSize: 14, fontWeight: 'bold', color: '#800000' },
-  cardSubtitle: { fontSize: 11, color: '#888', marginTop: 2 },
+  cardTitle: { fontSize: 14, fontWeight: 'bold' },
+  cardSubtitle: { fontSize: 11, marginTop: 2 },
 
-  label: { fontSize: 12, fontWeight: '600', color: '#333', marginBottom: 6 },
+  label: { fontSize: 12, fontWeight: '600', marginBottom: 6 },
   required: { color: '#800000' },
 
   inputContainer: { marginBottom: 10 },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, height: 44, paddingHorizontal: 10, backgroundColor: '#FFF' },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 8, height: 44, paddingHorizontal: 10 },
   inputIcon: { marginRight: 8 },
   input: { flex: 1, fontSize: 12, color: '#333' },
 

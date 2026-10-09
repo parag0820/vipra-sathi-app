@@ -5,14 +5,14 @@ export const lightColors = {
   secondary: '#E8A87C',
   accent: '#16A34A',
   success: '#16A34A',
-  background: '#FFF8F3',
-  surface: '#FFFFFF',
+  background: '#fcefdfff',
+  surface: '#f8e8cdff',
   text: '#1E293B',
   textLight: '#6B7280',
   error: '#DC2626',
-  border: '#F0E0D4',
-  inputBg: '#FFFFFF',
-  notch: '#B5451B',
+  border: '#F3D899',
+  inputBg: '#FFF5E4',
+  notch: '#800000',
   aajkaBg: '#FFF0E6',
   earning: '#16A34A',
   expense: '#DC2626',
@@ -22,26 +22,26 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  primary: '#D4713A',
-  primaryDark: '#B5451B',
-  darkHeader: '#000000',
-  secondary: '#E8A87C',
-  accent: '#22C55E',
+  primary: '#800000',      // Keep header maroon
+  primaryDark: '#5C0000',
+  darkHeader: '#800000',
+  secondary: '#FCE596',    // Bright gold for accents
+  accent: '#E8A87C',
   success: '#22C55E',
-  background: '#000000',
-  surface: '#111111',
-  text: '#F8FAFC',
-  textLight: '#94A3B8',
-  error: '#F87171',
-  border: '#1A1A1A',
-  inputBg: '#1A1A1A',
-  notch: '#000000',
+  background: '#121212',   // Deep dark
+  surface: '#1E1E1E',      // Slightly lighter for cards
+  text: '#F8E6CE',         // Warm off-white
+  textLight: '#A1A1AA',    // Muted light gray
+  error: '#EF4444',
+  border: '#2A2A2A',
+  inputBg: '#2A2A2A',
+  notch: '#800000',
   earning: '#22C55E',
-  expense: '#F87171',
-  dropdownBg: '#111111',
-  dropdownBorder: '#1A1A1A',
-  dropdownItemHover: '#1A1A1A',
-  aajkaBg: '#1A1A1A',
+  expense: '#EF4444',
+  dropdownBg: '#1E1E1E',
+  dropdownBorder: '#2A2A2A',
+  dropdownItemHover: '#2A2A2A',
+  aajkaBg: '#2A1A1A',      // Warm dark red-brown for highlights
 };
 
 export const colors = lightColors;

@@ -78,11 +78,18 @@ const ProfileScreen = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <CustomHeader title="Profile" icon="user" showBack={true} />
+    <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <CustomHeader 
+        title="Profile" 
+        icon="user" 
+        showBack={true} 
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
-          style={[styles.container, { backgroundColor: colors.background }]}
+          style={styles.container}
           contentContainerStyle={{ paddingBottom: 80 }}
           showsVerticalScrollIndicator={false}
         >
@@ -139,6 +146,7 @@ const ProfileScreen = () => {
 
         </ScrollView>
       </KeyboardAvoidingView>
+      </View>
     </View>
   );
 };
@@ -146,6 +154,12 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   headerCard: {
     margin: 16,

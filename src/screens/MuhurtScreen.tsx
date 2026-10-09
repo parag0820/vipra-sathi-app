@@ -5,7 +5,7 @@ import CustomHeader from '../components/CustomHeader';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import Svg, { Circle, Line, Text as SvgText, Path, G, Polygon } from 'react-native-svg';
+import Svg, { Circle, Line, Text as SvgText, Path, G } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 const CHART_SIZE = width * 0.9;
@@ -24,6 +24,31 @@ const MuhurtScreen = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<TabType>('din');
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('lagna');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  const mockSearchResults = [
+    {
+      date: isHi ? '12 अक्टूबर 2026, सोमवार' : '12 October 2026, Monday',
+      time: '07:15 AM - 08:45 AM',
+      type: isHi ? 'अभिजित मुहूर्त' : 'Abhijit Muhurat',
+      badge: isHi ? 'उत्तम' : 'Excellent',
+      badgeColor: '#4CAF50',
+    },
+    {
+      date: isHi ? '18 अक्टूबर 2026, रविवार' : '18 October 2026, Sunday',
+      time: '10:30 AM - 12:00 PM',
+      type: isHi ? 'लग्न मुहूर्त' : 'Lagna Muhurat',
+      badge: isHi ? 'शुभ' : 'Auspicious',
+      badgeColor: '#5C9CE6',
+    },
+    {
+      date: isHi ? '25 अक्टूबर 2026, रविवार' : '25 October 2026, Sunday',
+      time: '06:20 AM - 07:40 AM',
+      type: isHi ? 'अभिजित मुहूर्त' : 'Abhijit Muhurat',
+      badge: isHi ? 'शुभ' : 'Auspicious',
+      badgeColor: '#5C9CE6',
+    },
+  ];
 
   const TABS = [
     { id: 'din', label: isHi ? 'दिन' : 'Day' },
@@ -42,9 +67,9 @@ const MuhurtScreen = () => {
   ];
 
   const chartTheme = {
-    bg: '#480918', // Deep maroon from the logo
-    lines: '#FCE4E8', // Light matching color for contrast
-    highlightBg: 'rgba(252, 228, 232, 0.25)', // translucent light color
+    bg: '#480918',
+    lines: '#FCE4E8',
+    highlightBg: 'rgba(252, 228, 232, 0.25)',
     green: 'rgba(34, 197, 94, 0.6)',
     red: 'rgba(239, 68, 68, 0.6)',
     darkWedge: 'rgba(0, 0, 0, 0.3)'
@@ -154,7 +179,6 @@ const MuhurtScreen = () => {
   };
 
   const timeToAngle = (time: number) => {
-    // 6 AM = -90 deg (top)
     return (time - 6) * 15 - 90;
   };
 
@@ -319,7 +343,7 @@ const MuhurtScreen = () => {
   const renderTabContent = () => {
     if (activeTab === 'din') {
       return (
-        <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ backgroundColor: chartTheme.bg }}>
           <View style={styles.chartContainer}>
             <View style={[styles.chartWrapper, { backgroundColor: chartTheme.bg }]}>
               <Svg width={CHART_SIZE} height={CHART_SIZE} viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}>
@@ -445,53 +469,123 @@ const MuhurtScreen = () => {
     );
   };
 
-  return (
-    <View style={[styles.container, { backgroundColor: activeTab === 'din' ? chartTheme.bg : colors.background, paddingBottom: insets.bottom }]}>
-      <CustomHeader title={isHi ? 'मुहूर्त' : 'Muhurt'} showBack={true} />
+  const renderFindMuhuratSection = () => {
+    return (
+      <View style={[styles.findMuhuratContainer, { backgroundColor: activeTab === 'din' ? chartTheme.bg : colors.background }]}>
+        <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Form Row 1 */}
+          <View style={styles.formRow}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>{isHi ? 'कार्य का प्रकार' : 'Type of work'}</Text>
+            <View style={[styles.formInputContainer, { borderColor: colors.border }]}>
+              <Text style={[styles.formInputText, { color: colors.text }]}>{isHi ? 'विवाह' : 'Marriage'}</Text>
+              <Icon name="chevron-down" size={16} color={colors.textLight || colors.text} />
+            </View>
+          </View>
+          {/* Form Row 2 */}
+          <View style={styles.formRow}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>{isHi ? 'स्थान' : 'Location'}</Text>
+            <View style={[styles.formInputContainer, { borderColor: colors.border }]}>
+              <Text style={[styles.formInputText, { color: colors.text }]}>{isHi ? 'जयपुर, राजस्थान' : 'Jaipur, Rajasthan'}</Text>
+              <Icon name="chevron-down" size={16} color={colors.textLight || colors.text} />
+            </View>
+          </View>
+          {/* Form Row 3 */}
+          <View style={styles.formRow}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>{isHi ? 'तिथि अवधि' : 'Date Range'}</Text>
+            <View style={[styles.formInputContainer, { borderColor: colors.border }]}>
+              <Text style={[styles.formInputText, { color: colors.text }]}>{isHi ? 'अक्टूबर 2026' : 'October 2026'}</Text>
+              <Icon name="calendar" size={16} color={colors.textLight || colors.text} />
+            </View>
+          </View>
 
-      {/* Date Navigator */}
-      <View style={[styles.dateNav, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={goToPreviousDay} style={styles.navBtn}>
-          <Icon name="chevron-left" size={24} color={colors.primary} />
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.findButton, { backgroundColor: '#B71C1C' }]} onPress={() => setShowSearchResults(true)}>
+            <Text style={styles.findButtonText}>{isHi ? 'मुहूर्त खोजें' : 'Find Muhurat'}</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.dateSelector}>
-          <Text style={[styles.dateText, { color: colors.text }]}>
-            {currentDate.toLocaleDateString(isHi ? 'hi-IN' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={goToNextDay} style={styles.navBtn}>
-          <Icon name="chevron-right" size={24} color={colors.primary} />
-        </TouchableOpacity>
+        {showSearchResults && (
+          <View style={styles.searchResultsContainer}>
+            <Text style={[styles.searchResultsTitle, { color: activeTab === 'din' ? '#FFFFFF' : colors.text }]}>{isHi ? 'उपयुक्त मुहूर्त' : 'Suitable Muhurat'}</Text>
+            {mockSearchResults.map((item, index) => (
+              <View key={index} style={[styles.searchResultCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.searchResultLeftBorder, { backgroundColor: item.badgeColor }]} />
+                <View style={styles.searchResultContent}>
+                  <Text style={[styles.searchResultDate, { color: colors.text }]}>{item.date}</Text>
+                  <Text style={[styles.searchResultTime, { color: colors.textLight || '#666' }]}>{item.time}</Text>
+                  <Text style={[styles.searchResultType, { color: colors.textLight || '#666' }]}>{item.type}</Text>
+                </View>
+                <View style={styles.searchResultRight}>
+                  <View style={[styles.badgeContainer, { backgroundColor: item.badgeColor }]}>
+                    <Text style={styles.badgeText}>{item.badge}</Text>
+                  </View>
+                  <Icon name="chevron-right" size={20} color={colors.textLight || '#666'} />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
+    );
+  };
 
-      {/* Custom Fixed Top Tabs */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.tabButton, activeTab === tab.id && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
-            onPress={() => setActiveTab(tab.id as TabType)}
-          >
-            <Text
-              style={[styles.tabText, { color: activeTab === tab.id ? colors.primary : colors.textLight }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {tab.label}
+  return (
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader 
+        title={isHi ? 'मुहूर्त' : 'Muhurt'} 
+        showBack={true} 
+        headerBgColor={colors.primary} 
+        headerTextColor="#FFF"
+      />
+      
+      <View style={[styles.mainCard, { backgroundColor: activeTab === 'din' ? chartTheme.bg : colors.background }]}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {renderFindMuhuratSection()}
+
+        {/* Date Navigator */}
+        <View style={[styles.dateNav, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={goToPreviousDay} style={styles.navBtn}>
+            <Icon name="chevron-left" size={24} color={colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.dateSelector}>
+            <Text style={[styles.dateText, { color: colors.text }]}>
+              {currentDate.toLocaleDateString(isHi ? 'hi-IN' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
             </Text>
           </TouchableOpacity>
-        ))}
-      </View>
 
-      {activeTab === 'din' ? (
-        renderTabContent()
-      ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {renderTabContent()}
-        </ScrollView>
-      )}
+          <TouchableOpacity onPress={goToNextDay} style={styles.navBtn}>
+            <Icon name="chevron-right" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Custom Fixed Top Tabs */}
+        <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          {TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.tabButton, activeTab === tab.id && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
+              onPress={() => setActiveTab(tab.id as TabType)}
+            >
+              <Text
+                style={[styles.tabText, { color: activeTab === tab.id ? colors.primary : (colors.textLight || '#666') }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {activeTab === 'din' ? (
+          renderTabContent()
+        ) : (
+          <View style={styles.scrollContent}>
+            {renderTabContent()}
+          </View>
+        )}
+      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -499,6 +593,12 @@ const MuhurtScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   dateNav: {
     flexDirection: 'row',
@@ -541,7 +641,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   chartContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
@@ -611,7 +710,101 @@ const styles = StyleSheet.create({
   itemTime: {
     fontSize: 11,
     fontWeight: 'bold',
-  }
+  },
+  findMuhuratContainer: {
+    padding: 16,
+  },
+  formCard: {
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+  },
+  formRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  formInputContainer: {
+    flex: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  formInputText: {
+    fontSize: 14,
+  },
+  findButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  findButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  searchResultsContainer: {
+    marginTop: 20,
+  },
+  searchResultsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  searchResultCard: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  searchResultLeftBorder: {
+    width: 4,
+  },
+  searchResultContent: {
+    flex: 1,
+    padding: 12,
+  },
+  searchResultDate: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  searchResultTime: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  searchResultType: {
+    fontSize: 12,
+  },
+  searchResultRight: {
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  badgeContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });
 
 export default MuhurtScreen;

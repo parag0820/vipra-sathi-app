@@ -44,10 +44,10 @@ const YajmanListScreen = () => {
   const renderUpcomingEvent = ({ item }: { item: any }) => (
     <View style={[styles.eventCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.eventIconContainer}>
-        <Icon 
-          name={item.type === 'birthday' ? 'gift' : item.type === 'anniversary' ? 'heart' : 'calendar'} 
-          size={20} 
-          color={colors.primary} 
+        <Icon
+          name={item.type === 'birthday' ? 'gift' : item.type === 'anniversary' ? 'heart' : 'calendar'}
+          size={20}
+          color={colors.primary}
         />
       </View>
       <View style={styles.eventInfo}>
@@ -61,7 +61,7 @@ const YajmanListScreen = () => {
   );
 
   const renderYajmanCard = ({ item }: { item: Yajman }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.yajmanCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => navigation.navigate('YajmanDetail', { yajman: item })}
       onLongPress={() => setYajmanToDelete(item)}
@@ -79,13 +79,13 @@ const YajmanListScreen = () => {
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 6 }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('YajmanForm', { yajman: item })}
               style={{ padding: 4 }}
             >
               <Icon name="edit-2" size={18} color={colors.textLight} />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setYajmanToDelete(item)}
               style={{ padding: 4 }}
             >
@@ -97,7 +97,7 @@ const YajmanListScreen = () => {
           </View>
         </View>
       </View>
-      
+
       <View style={styles.contactRow}>
         <View style={styles.contactItem}>
           <Icon name="phone" size={14} color={colors.textLight} />
@@ -114,113 +114,120 @@ const YajmanListScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
-      <CustomHeader title="Yajman Manager" icon="users" />
-      
-      <ScrollView 
-        style={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refreshYajmans} tintColor={colors.primary} />}
-      >
-        {/* Upcoming Events Section */}
-        {upcomingEvents.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Events ({upcomingEvents.length})</Text>
-            <FlatList
-              data={upcomingEvents}
-              keyExtractor={(item) => item.id}
-              renderItem={renderUpcomingEvent}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.eventsList}
-            />
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader
+        title="Yajman Manager"
+        icon="users"
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+
+      <View style={[styles.mainCard, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
+        <ScrollView
+          style={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refreshYajmans} tintColor={colors.primary} />}
+        >
+          {/* Upcoming Events Section */}
+          {upcomingEvents.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Events ({upcomingEvents.length})</Text>
+              <FlatList
+                data={upcomingEvents}
+                keyExtractor={(item) => item.id}
+                renderItem={renderUpcomingEvent}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.eventsList}
+              />
+            </View>
+          )}
+
+          {/* All Yajmans List */}
+          <View style={[styles.section, styles.listSection]}>
+            <View style={styles.listHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>All Yajmans ({yajmans.length})</Text>
+            </View>
+
+            {yajmans.length === 0 && !isLoading ? (
+              <View style={styles.emptyState}>
+                <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Icon name="users" size={40} color={colors.textLight} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>No Yajmans Yet</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textLight }]}>
+                  Add your clients to easily manage their details and receive reminders for important dates.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.emptyButton, { backgroundColor: colors.primary }]}
+                  onPress={() => navigation.navigate('YajmanForm', {})}
+                >
+                  <Icon name="plus" size={20} color="#FFF" style={styles.emptyButtonIcon} />
+                  <Text style={styles.emptyButtonText}>Add New Yajman</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <FlatList
+                data={yajmans}
+                keyExtractor={(item) => item.id}
+                renderItem={renderYajmanCard}
+                scrollEnabled={false} // Since it's inside a ScrollView
+                contentContainerStyle={styles.yajmanList}
+              />
+            )}
           </View>
+        </ScrollView>
+
+        {/* Floating Action Button */}
+        {yajmans.length > 0 && (
+          <TouchableOpacity
+            style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary, bottom: Math.max(insets.bottom + 24, 24) }]}
+            onPress={() => navigation.navigate('YajmanForm', {})}
+            activeOpacity={0.8}
+          >
+            <Icon name="plus" size={24} color="#FFF" />
+          </TouchableOpacity>
         )}
 
-        {/* All Yajmans List */}
-        <View style={[styles.section, styles.listSection]}>
-          <View style={styles.listHeaderRow}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>All Yajmans ({yajmans.length})</Text>
-          </View>
-
-          {yajmans.length === 0 && !isLoading ? (
-            <View style={styles.emptyState}>
-              <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Icon name="users" size={40} color={colors.textLight} />
-              </View>
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>No Yajmans Yet</Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textLight }]}>
-                Add your clients to easily manage their details and receive reminders for important dates.
-              </Text>
-              <TouchableOpacity 
-                style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-                onPress={() => navigation.navigate('YajmanForm', {})}
-              >
-                <Icon name="plus" size={20} color="#FFF" style={styles.emptyButtonIcon} />
-                <Text style={styles.emptyButtonText}>Add New Yajman</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <FlatList
-              data={yajmans}
-              keyExtractor={(item) => item.id}
-              renderItem={renderYajmanCard}
-              scrollEnabled={false} // Since it's inside a ScrollView
-              contentContainerStyle={styles.yajmanList}
-            />
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Floating Action Button */}
-      {yajmans.length > 0 && (
-        <TouchableOpacity 
-          style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary, bottom: Math.max(insets.bottom + 24, 24) }]}
-          onPress={() => navigation.navigate('YajmanForm', {})}
-          activeOpacity={0.8}
+        {/* Modern Delete Modal */}
+        <Modal
+          visible={!!yajmanToDelete}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setYajmanToDelete(null)}
         >
-          <Icon name="plus" size={24} color="#FFF" />
-        </TouchableOpacity>
-      )}
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+              <View style={[styles.modalIconContainer, { backgroundColor: '#fee2e2' }]}>
+                <Icon name="alert-triangle" size={28} color="#ef4444" />
+              </View>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Delete Yajman?</Text>
+              <Text style={[styles.modalMessage, { color: colors.textLight }]}>
+                Are you sure you want to remove <Text style={{ fontWeight: 'bold', color: colors.text }}>{yajmanToDelete?.name}</Text>? This action cannot be undone.
+              </Text>
 
-      {/* Modern Delete Modal */}
-      <Modal
-        visible={!!yajmanToDelete}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setYajmanToDelete(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={[styles.modalIconContainer, { backgroundColor: '#fee2e2' }]}>
-              <Icon name="alert-triangle" size={28} color="#ef4444" />
-            </View>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Delete Yajman?</Text>
-            <Text style={[styles.modalMessage, { color: colors.textLight }]}>
-              Are you sure you want to remove <Text style={{fontWeight: 'bold', color: colors.text}}>{yajmanToDelete?.name}</Text>? This action cannot be undone.
-            </Text>
-            
-            <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={[styles.modalBtn, styles.modalCancelBtn, { borderColor: colors.border }]} 
-                onPress={() => setYajmanToDelete(null)}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalBtn, styles.modalDeleteBtn]} 
-                onPress={async () => {
-                  if (yajmanToDelete) {
-                    await deleteYajman(yajmanToDelete.id);
-                    setYajmanToDelete(null);
-                  }
-                }}
-              >
-                <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Delete</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.modalCancelBtn, { borderColor: colors.border }]}
+                  onPress={() => setYajmanToDelete(null)}
+                >
+                  <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.modalDeleteBtn]}
+                  onPress={async () => {
+                    if (yajmanToDelete) {
+                      await deleteYajman(yajmanToDelete.id);
+                      setYajmanToDelete(null);
+                    }
+                  }}
+                >
+                  <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </View>
     </View>
   );
 };
@@ -228,6 +235,13 @@ const YajmanListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#F8E6CE', // Default fallback
   },
   scrollContent: {
     flex: 1,
@@ -237,7 +251,7 @@ const styles = StyleSheet.create({
   },
   listSection: {
     paddingHorizontal: 16,
-    paddingBottom: 80, // Space for FAB
+    paddingBottom: 20, // Reduced from 80 for better bottom spacing
   },
   sectionTitle: {
     fontSize: 18,

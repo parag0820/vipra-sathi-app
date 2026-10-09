@@ -89,8 +89,9 @@ const AartiDetailScreen = () => {
   }
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
-      <CustomHeader title={aarti.title} showBack={true} />
+    <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader title={aarti.title} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       
       {/* Fixed top visualizer instead of scrollable */}
       <View style={[styles.musicVisualizerContainer, { backgroundColor: colors.primary + '10' }]}>
@@ -118,12 +119,19 @@ const AartiDetailScreen = () => {
         audioUrl={aarti.audioUrl} 
         onPlaybackStatusUpdate={setIsPlaying}
       />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   screenContainer: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: {
     paddingBottom: 40,

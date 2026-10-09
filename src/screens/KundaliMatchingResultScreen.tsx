@@ -9,7 +9,7 @@ import { MOCK_KUNDALI_RESULT } from '../data/mockKundali';
 const { width } = Dimensions.get('window');
 
 const KundaliMatchingResultScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const result = MOCK_KUNDALI_RESULT;
 
@@ -29,36 +29,36 @@ const KundaliMatchingResultScreen = () => {
   const matchText = getMatchText(result.totalScore);
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F8E6CE' }]}>
-      <CustomHeader title={t('kundali_match.title', 'Kundali Matching')} showBack={true} headerBgColor="#800000" headerTextColor="#FFF" />
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader title={t('kundali_match.title', 'Kundali Matching')} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
 
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.mainCard}>
           {/* Couple Profiles */}
-          <View style={styles.coupleRow}>
+          <View style={[styles.coupleRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.profileBox}>
-              <View style={styles.avatarContainer}>
+              <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '15' }]}>
                 <Image source={require('../assets/images/groom_avatar.jpg')} style={styles.avatar} />
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileLabel}>{t('kundali_match.groom', 'Groom')}</Text>
-                <Text style={styles.profileName}>Amit</Text>
-                <Text style={styles.profileDate}>24 Sep 1990</Text>
+                <Text style={[styles.profileLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('kundali_match.groom', 'Groom')}</Text>
+                <Text style={[styles.profileName, { color: colors.text }]}>Amit</Text>
+                <Text style={[styles.profileDate, { color: colors.textLight }]}>24 Sep 1990</Text>
               </View>
             </View>
 
             <View style={styles.vsContainer}>
-              <View style={styles.dot} />
+              <View style={[styles.dot, { backgroundColor: colors.border }]} />
             </View>
 
             <View style={styles.profileBox}>
-              <View style={styles.avatarContainer}>
+              <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '15' }]}>
                 <Image source={require('../assets/images/bride_avatar.jpg')} style={styles.avatar} />
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileLabel}>{t('kundali_match.bride', 'Bride')}</Text>
-                <Text style={styles.profileName}>Priya</Text>
-                <Text style={styles.profileDate}>12 May 1994</Text>
+                <Text style={[styles.profileLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('kundali_match.bride', 'Bride')}</Text>
+                <Text style={[styles.profileName, { color: colors.text }]}>Priya</Text>
+                <Text style={[styles.profileDate, { color: colors.textLight }]}>12 May 1994</Text>
               </View>
             </View>
           </View>
@@ -67,19 +67,19 @@ const KundaliMatchingResultScreen = () => {
           <View style={styles.gaugeSection}>
             <View style={styles.gaugeContainer}>
               {/* Fake Arch for Semi-Circle */}
-              <View style={styles.archOuter} />
+              <View style={[styles.archOuter, { borderColor: scoreColor }]} />
 
               <View style={styles.scoreTextContainer}>
                 <Text style={styles.scoreMainText}>
-                  <Text style={styles.scoreNumberRed}>{result.totalScore}</Text>
-                  <Text style={styles.scoreNumberBlack}> / {result.maxScore}</Text>
+                  <Text style={[styles.scoreNumberRed, { color: scoreColor }]}>{result.totalScore}</Text>
+                  <Text style={[styles.scoreNumberBlack, { color: colors.text }]}> / {result.maxScore}</Text>
                 </Text>
-                <Text style={styles.gunaText}>{t('kundali_match.guna_milan', 'Guna Milan')}</Text>
+                <Text style={[styles.gunaText, { color: colors.text }]}>{t('kundali_match.guna_milan', 'Guna Milan')}</Text>
               </View>
             </View>
 
             <View style={styles.matchStatusRow}>
-              <Icon name="heart" size={16} color="#E53935" />
+              <Icon name="heart" size={16} color={scoreColor} />
               <Text style={[styles.matchStatusText, { color: scoreColor }]}>{matchText}</Text>
             </View>
           </View>
@@ -88,9 +88,9 @@ const KundaliMatchingResultScreen = () => {
           <View style={styles.kootasContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kootasScroll}>
               {result.ashtaKoota.map((koota, index) => (
-                <View key={index} style={styles.kootaBox}>
-                  <Text style={styles.kootaScoreText}>{koota.obtained}</Text>
-                  <Text style={styles.kootaLabelText}>{koota.name}</Text>
+                <View key={index} style={[styles.kootaBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Text style={[styles.kootaScoreText, { color: colors.primary }]}>{koota.obtained}</Text>
+                  <Text style={[styles.kootaLabelText, { color: colors.text }]}>{koota.name}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -98,55 +98,55 @@ const KundaliMatchingResultScreen = () => {
 
           {/* Special Analysis */}
           <View style={styles.analysisSection}>
-            <Text style={styles.analysisTitle}>{t('kundali_match.special_analysis', 'Special Analysis')}</Text>
+            <Text style={[styles.analysisTitle, { color: colors.text }]}>{t('kundali_match.special_analysis', 'Special Analysis')}</Text>
 
-            <View style={styles.analysisRow}>
+            <View style={[styles.analysisRow, { borderBottomColor: colors.border }]}>
               <View style={styles.analysisLeft}>
-                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
-                <Text style={styles.analysisLabel}>{t('kundali_match.manglik_groom', 'Manglik Groom')}</Text>
+                <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={[styles.analysisLabel, { color: colors.text }]}>{t('kundali_match.manglik_groom', 'Manglik Groom')}</Text>
               </View>
-              <Text style={styles.analysisValueGreen}>{result.manglikGroom}</Text>
+              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{result.manglikGroom}</Text>
             </View>
 
-            <View style={styles.analysisRow}>
+            <View style={[styles.analysisRow, { borderBottomColor: colors.border }]}>
               <View style={styles.analysisLeft}>
-                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
-                <Text style={styles.analysisLabel}>{t('kundali_match.manglik_bride', 'Manglik Bride')}</Text>
+                <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={[styles.analysisLabel, { color: colors.text }]}>{t('kundali_match.manglik_bride', 'Manglik Bride')}</Text>
               </View>
-              <Text style={styles.analysisValueGreen}>{result.manglikBride}</Text>
+              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{result.manglikBride}</Text>
             </View>
 
-            <View style={styles.analysisRow}>
+            <View style={[styles.analysisRow, { borderBottomColor: colors.border }]}>
               <View style={styles.analysisLeft}>
-                <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
-                <Text style={styles.analysisLabel}>{t('kundali_match.for_marriage', 'For Marriage')}</Text>
+                <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                <Text style={[styles.analysisLabel, { color: colors.text }]}>{t('kundali_match.for_marriage', 'For Marriage')}</Text>
               </View>
-              <Text style={styles.analysisValueGreen}>{result.totalScore >= 18 ? t('kundali_match.auspicious', 'Auspicious') : t('kundali_match.inauspicious', 'Inauspicious')}</Text>
+              <Text style={[styles.analysisValueGreen, { color: result.totalScore >= 18 ? colors.success : colors.error }]}>{result.totalScore >= 18 ? t('kundali_match.auspicious', 'Auspicious') : t('kundali_match.inauspicious', 'Inauspicious')}</Text>
             </View>
 
             {result.observations.map((obs, idx) => (
-              <View key={idx} style={[styles.analysisRow, idx === result.observations.length - 1 && { borderBottomWidth: 0 }]}>
+              <View key={idx} style={[styles.analysisRow, { borderBottomColor: colors.border }, idx === result.observations.length - 1 && { borderBottomWidth: 0 }]}>
                 <View style={styles.analysisLeft}>
-                  <View style={styles.iconCircle}><Icon name="arrow-down" size={12} color="#FFF" /></View>
-                  <Text style={[styles.analysisLabel, { flex: 1, paddingRight: 10 }]} numberOfLines={2}>{obs}</Text>
+                  <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
+                  <Text style={[styles.analysisLabel, { color: colors.text, flex: 1, paddingRight: 10 }]} numberOfLines={2}>{obs}</Text>
                 </View>
               </View>
             ))}
 
           </View>
 
-        </View>
       </ScrollView>
+      </View>
 
       {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.pdfBtn}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <TouchableOpacity style={[styles.pdfBtn, { backgroundColor: colors.primary }]}>
           <Icon name="file-text" size={18} color="#FFF" />
           <Text style={styles.pdfBtnText}>{t('kundali_match.detailed_report', 'Detailed Report (PDF)')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.shareBtn}>
-          <Icon name="share-2" size={18} color="#800000" />
+        <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : '#f0f0f0' }]}>
+          <Icon name="share-2" size={18} color={isDark ? '#FFF' : colors.text} />
         </TouchableOpacity>
       </View>
     </View>
@@ -156,33 +156,25 @@ const KundaliMatchingResultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#800000',
   },
   scrollContent: {
-    // padding: 12,
+    padding: 16,
     paddingBottom: 100, // Space for bottom bar
   },
   mainCard: {
-    backgroundColor: '#F8E6CE',
-    borderRadius: 20,
-    padding: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    minHeight: Dimensions.get('window').height * 0.8,
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   coupleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8E6CE',
     borderRadius: 12,
     padding: 12,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#f5d9b4ff',
   },
   profileBox: {
     flexDirection: 'row',
@@ -193,7 +185,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FCE4EC',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -297,13 +288,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   kootaBox: {
-    backgroundColor: '#F8E6CE',
     paddingVertical: 4,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#f5d9b4ff',
     minWidth: 70,
     marginRight: 5,
   },

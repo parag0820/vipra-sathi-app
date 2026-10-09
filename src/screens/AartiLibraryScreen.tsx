@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -12,7 +12,7 @@ import CustomDropdown from '../components/CustomDropdown';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AartiLibraryScreen = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,83 +25,98 @@ const AartiLibraryScreen = () => {
 
   const renderAartiCard = ({ item }: { item: typeof MOCK_AARTIS[0] }) => (
     <TouchableOpacity
-      activeOpacity={0.8}
       style={[styles.aartiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => navigation.navigate('AartiDetail', { aartiId: item.id })}
+      activeOpacity={0.7}
     >
-      <View style={styles.cardLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
-          <Icon name="book-open" size={24} color={colors.primary} />
+      <View style={styles.cardBody}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '12' }]}>
+          <Icon name="book-open" size={18} color={colors.primary} />
         </View>
-        <View style={styles.cardTextContent}>
-          <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
-          <View style={[styles.badge, { backgroundColor: colors.primary + '20' }]}>
-            <Text style={[styles.badgeText, { color: colors.primary }]}>{item.category}</Text>
-          </View>
+        <View style={styles.textContainer}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.category, { color: colors.textLight }]}>{item.category}</Text>
         </View>
-      </View>
-
-      <View style={styles.cardRight}>
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Icon name="heart" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-        <View style={[styles.playButtonSmall, { backgroundColor: colors.primary }]}>
-          <Icon name="play" size={16} color="#FFF" style={styles.playIconSmall} />
+        <View style={[styles.playBadge, { backgroundColor: colors.primary + '12' }]}>
+          <Icon name="play" size={14} color={colors.primary} />
         </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="Aarti Library" showBack={true} />
-
-      <View style={styles.filtersRow}>
-        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Search Aarti..."
-            placeholderTextColor={colors.textLight}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Icon name="x" size={20} color={colors.textLight} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.dropdownContainer}>
-          <CustomDropdown
-            value={selectedCategory}
-            options={AARTI_CATEGORIES}
-            onSelect={setSelectedCategory}
-          />
-        </View>
-      </View>
-
-      <FlatList
-        data={filteredAartis}
-        keyExtractor={(item) => item.id}
-        renderItem={renderAartiCard}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: colors.textLight }]}>
-              No aartis found in this category.
-            </Text>
-          </View>
-        }
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader
+        title="Aarti Library"
+        showBack={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
       />
+
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        {/* Filters */}
+        <View style={styles.filtersRow}>
+          <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search Aarti..."
+              placeholderTextColor={colors.textLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Icon name="x" size={20} color={colors.textLight} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.dropdownContainer}>
+            <CustomDropdown
+              value={selectedCategory}
+              options={AARTI_CATEGORIES}
+              onSelect={setSelectedCategory}
+              placeholder="Category"
+            />
+          </View>
+        </View>
+
+        <View style={styles.countRow}>
+          <Text style={[styles.countText, { color: colors.textLight }]}>
+            {filteredAartis.length} aartis
+          </Text>
+        </View>
+
+        <FlatList
+          data={filteredAartis}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAartiCard}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="book-open" size={48} color={colors.border} />
+              <Text style={[styles.emptyText, { color: colors.textLight }]}>
+                No aartis found in this category.
+              </Text>
+            </View>
+          }
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+    paddingTop: 10,
+  },
   filtersRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -114,8 +129,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    height: 45,
-    borderRadius: 12,
+    height: 40,
+    borderRadius: 10,
     borderWidth: 1,
   },
   searchIcon: {
@@ -123,79 +138,55 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
   },
   dropdownContainer: {
     flex: 1,
   },
+  countRow: {
+    paddingHorizontal: 20,
+  },
+  countText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
   listContainer: { padding: 16, paddingBottom: 30 },
   aartiCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 10,
+    overflow: 'hidden',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
   },
-  cardLeft: {
+  cardBody: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    padding: 12,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  cardTextContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  cardRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  favoriteButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  playButtonSmall: {
+  textContainer: { flex: 1 },
+  title: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
+  category: { fontSize: 12, fontWeight: '500' },
+  playBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  playIconSmall: {
-    marginLeft: 2,
-  },
-  emptyContainer: { padding: 32, alignItems: 'center' },
-  emptyText: { fontSize: 16 }
+  emptyContainer: { padding: 40, alignItems: 'center', gap: 12 },
+  emptyText: { fontSize: 14, fontWeight: '500' },
 });
 
 export default AartiLibraryScreen;

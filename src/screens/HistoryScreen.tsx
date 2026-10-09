@@ -21,12 +21,12 @@ const HistoryScreen = () => {
   const navigation = useNavigation();
   const [filter, setFilter] = useState<HistoryItemType | 'all'>('all');
 
-  const filteredHistory = filter === 'all' 
-    ? MOCK_HISTORY 
+  const filteredHistory = filter === 'all'
+    ? MOCK_HISTORY
     : MOCK_HISTORY.filter(h => h.type === filter);
 
   const getIconProps = (type: HistoryItemType) => {
-    switch(type) {
+    switch (type) {
       case 'pdf': return { name: 'file-text', color: '#DC2626' }; // Red
       case 'download': return { name: 'download', color: '#16A34A' }; // Green
       case 'invoice': return { name: 'dollar-sign', color: '#2563EB' }; // Blue
@@ -37,22 +37,22 @@ const HistoryScreen = () => {
 
   const renderHistoryItem = ({ item }: { item: HistoryItem }) => {
     const iconProps = getIconProps(item.type);
-    
+
     return (
       <View style={[styles.historyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={[styles.iconContainer, { backgroundColor: iconProps.color + '15' }]}>
-          <Icon name={iconProps.name} size={24} color={iconProps.color} />
+          <Icon name={iconProps.name as any} size={20} color={iconProps.color} />
         </View>
-        
+
         <View style={styles.cardContent}>
           <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
           <Text style={[styles.cardDesc, { color: colors.textLight }]} numberOfLines={2}>{item.description}</Text>
-          
+
           <View style={styles.cardFooter}>
             <Text style={[styles.timeText, { color: colors.textLight }]}>
               {new Date(item.createdAt).toLocaleString()}
             </Text>
-            
+
             {/* Optional Metadata Badges */}
             {item.metadata?.fileSize && (
               <View style={[styles.metaBadge, { backgroundColor: colors.background }]}>
@@ -71,54 +71,67 @@ const HistoryScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <CustomHeader title="History & Activity" showBack={true} />
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
+      <CustomHeader
+        title="History & Activity"
+        showBack={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
 
-      <View style={styles.filterWrapper}>
+        <View style={styles.filterWrapper}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={FILTERS}
+            keyExtractor={(item) => item.value}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.filterPill,
+                  filter === item.value
+                    ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                    : { backgroundColor: colors.surface, borderColor: colors.border }
+                ]}
+                onPress={() => setFilter(item.value)}
+              >
+                <Text style={[
+                  styles.filterText,
+                  { color: filter === item.value ? '#FFF' : colors.text }
+                ]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+
         <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={FILTERS}
-          keyExtractor={(item) => item.value}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.filterPill,
-                filter === item.value 
-                  ? { backgroundColor: colors.primary, borderColor: colors.primary } 
-                  : { backgroundColor: colors.surface, borderColor: colors.border }
-              ]}
-              onPress={() => setFilter(item.value)}
-            >
-              <Text style={[
-                styles.filterText, 
-                { color: filter === item.value ? '#FFF' : colors.text }
-              ]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
+          data={filteredHistory}
+          keyExtractor={item => item.id}
+          renderItem={renderHistoryItem}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="inbox" size={48} color={colors.textLight} />
+              <Text style={[styles.emptyText, { color: colors.textLight }]}>No history found for this category.</Text>
+            </View>
+          }
         />
       </View>
-
-      <FlatList
-        data={filteredHistory}
-        keyExtractor={item => item.id}
-        renderItem={renderHistoryItem}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="inbox" size={48} color={colors.textLight} />
-            <Text style={[styles.emptyText, { color: colors.textLight }]}>No history found for this category.</Text>
-          </View>
-        }
-      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
   filterWrapper: {
     paddingVertical: 12,
     paddingHorizontal: 8,
@@ -131,7 +144,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   filterText: { fontSize: 14, fontWeight: '600' },
-  
+
   listContainer: { padding: 16, paddingBottom: 40 },
   historyCard: {
     flexDirection: 'row',
@@ -163,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   metaText: { fontSize: 12, fontWeight: 'bold' },
-  
+
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -171,7 +184,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 16,
-    fontSize: 16,
+    fontSize: 12,
   }
 });
 

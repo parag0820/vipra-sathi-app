@@ -27,7 +27,7 @@ const VerifyOtpScreen = ({ route, navigation }: any) => {
       Toast.show({ type: 'success', text1: 'Verified', text2: 'OTP verified successfully' });
       
       const mockUid = `usr_${Math.random().toString(36).substr(2, 9)}`;
-      await login(mockUid);
+      await login({ uid: mockUid } as any);
     }, 1000);
   };
 

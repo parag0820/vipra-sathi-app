@@ -59,10 +59,16 @@ const MenuScreen = () => {
   );
 
   return (
-    <View style={styles.mainContainer}>
-      <CustomHeader title={t('menu.title', 'Menu')} icon="grid" />
+    <View style={[styles.mainContainer, { backgroundColor: colors.primary }]}>
+      <CustomHeader 
+        title={t('menu.title', 'Menu')} 
+        icon="grid" 
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -97,6 +103,7 @@ const MenuScreen = () => {
 
         <View style={{ height: 30 }} />
       </ScrollView>
+      </View>
     </View>
   );
 };
@@ -104,6 +111,12 @@ const MenuScreen = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+  },
+  mainCard: {
+    flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   container: {
     flex: 1,

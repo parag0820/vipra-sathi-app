@@ -23,6 +23,7 @@ interface CustomHeaderProps {
   showThemeToggle?: boolean;
   headerBgColor?: string;
   headerTextColor?: string;
+  onBackPress?: () => void;
 }
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
@@ -35,7 +36,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   showThemeToggle = false,
   headerBgColor,
   headerTextColor,
-
+  onBackPress,
 }) => {
   const { colors, isDark, setTheme } = useTheme();
   const navigation = useNavigation();
@@ -54,7 +55,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
     <View style={{ backgroundColor: bgColor, paddingTop: insets.top }}>
       <StatusBar
         backgroundColor={bgColor}
-        barStyle={headerBgColor ? 'light-content' : (isDark ? 'light-content' : 'dark-content')}
+        barStyle="light-content"
         translucent={true}
       />
       <View
@@ -80,10 +81,10 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
           <View style={styles.titleContainer}>
             {showBack && (
               <TouchableOpacity
-                onPress={() => navigation.goBack()}
+                onPress={onBackPress ? onBackPress : () => navigation.goBack()}
                 style={styles.backButton}
               >
-                <View style={[styles.backBtnCircle, { backgroundColor: headerBgColor ? 'transparent' : (isDark ? '#334155' : '#F3E8DB') }]}>
+                <View style={[styles.backBtnCircle, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
                   <Icon name="arrow-left" size={20} color={textColor} />
                 </View>
               </TouchableOpacity>
@@ -99,13 +100,13 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
 
         <View style={styles.rightActions}>
           {showThemeToggle && (
-            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: isDark ? colors.border : '#F3E8DB' }]} onPress={toggleTheme}>
+            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)' }]} onPress={toggleTheme}>
               <Icon name={isDark ? 'sun' : 'moon'} size={16} color={iconColor} />
             </TouchableOpacity>
           )}
 
           {isHome && (
-            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: isDark ? colors.surface : '#FFFFFF', borderColor: isDark ? colors.border : '#F3E8DB' }]} onPress={onNotificationPress}>
+            <TouchableOpacity style={[styles.iconBtn, { backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.3)' }]} onPress={onNotificationPress}>
               <Icon name="bell" size={16} color={iconColor} />
               {notificationCount > 0 && (
                 <View style={styles.badge}>

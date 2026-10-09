@@ -25,7 +25,7 @@ const PanchangWidget: React.FC<Props> = ({ data }) => {
 
   const renderItem = (iconName: string, label: string, value: string, highlight: boolean = false) => (
     <View style={[styles.gridItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Icon name={iconName} size={18} color={highlight ? colors.primary : colors.textLight} />
+      <Icon name={iconName as any} size={18} color={highlight ? colors.primary : colors.textLight} />
       <View style={styles.itemTextContainer}>
         <Text style={[styles.itemLabel, { color: colors.textLight }]}>{label}</Text>
         <Text style={[styles.itemValue, { color: highlight ? colors.primary : colors.text }]} numberOfLines={1}>
