@@ -11,6 +11,7 @@ import CustomHeader from '../components/CustomHeader';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +26,7 @@ const PoojaDetailScreen = () => {
   const navigation = useNavigation();
   const { poojaId } = route.params;
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   const [isCeremonyMode, setIsCeremonyMode] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -33,6 +35,26 @@ const PoojaDetailScreen = () => {
   useKeepAwake();
 
   const pooja = MOCK_POOJAS.find(p => p.id === poojaId);
+
+  const getPoojaTitle = (id: string, defTitle: string) => {
+    if (id === 'p1') return t('pooja_library.poojas.ganesh_chaturthi', defTitle);
+    if (id === 'p2') return t('pooja_library.poojas.satyanarayan', defTitle);
+    if (id === 'p3') return t('pooja_library.poojas.shivratri', defTitle);
+    if (id === 'p4') return t('pooja_library.poojas.comprehensive', defTitle);
+    return defTitle;
+  };
+
+  const getSubCategoryLabel = (sub?: string) => {
+    if (!sub) return t('pooja_library.subcategories.pauranik', 'Pauranik');
+    switch (sub) {
+      case 'Shodashopchar Pooja': return t('pooja_library.subcategories.shodashopchar', 'Shodashopchar Pooja');
+      case 'Panchopchar Pooja': return t('pooja_library.subcategories.panchopchar', 'Panchopchar Pooja');
+      case 'Rajopchar Pooja': return t('pooja_library.subcategories.rajopchar', 'Rajopchar Pooja');
+      case 'Complete Setup': return t('pooja_library.subcategories.complete_setup', 'Complete Setup');
+      case 'Pauranik': return t('pooja_library.subcategories.pauranik', 'Pauranik');
+      default: return sub;
+    }
+  };
 
   const { favorites, toggleFavorite, notes, saveNotes, isReady } = usePoojaLibrary(poojaId);
   const [localNotes, setLocalNotes] = useState(notes);
@@ -51,8 +73,8 @@ const PoojaDetailScreen = () => {
   const handleDuplicate = () => {
     Toast.show({
       type: 'success',
-      text1: 'Template Created',
-      text2: 'My Satyanarayan Pooja has been added to your personal library.',
+      text1: t('pooja_detail.template_created', 'Template Created'),
+      text2: t('pooja_detail.template_created_msg', 'Pooja template has been added to your personal library.'),
     });
   };
 
@@ -78,6 +100,8 @@ const PoojaDetailScreen = () => {
     return grouped;
   }, [pooja]);
 
+  const currentDisplayTitle = pooja ? getPoojaTitle(pooja.id, pooja.title) : '';
+
   const renderCeremonyMode = () => {
     if (steps.length === 0) return null;
     const currentStep = steps[currentStepIndex];
@@ -85,7 +109,7 @@ const PoojaDetailScreen = () => {
     return (
       <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
         <CustomHeader 
-          title={pooja?.title} 
+          title={currentDisplayTitle} 
           showBack={true} 
           onBackPress={() => setIsCeremonyMode(false)}
           headerBgColor={colors.primary} 
@@ -119,7 +143,7 @@ const PoojaDetailScreen = () => {
                 <View key={idx} style={styles.ceremonySection}>
                   <View style={styles.sectionTitleRow}>
                     <Icon name="book-open" size={20} color={colors.primaryDark} />
-                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>Vidhi</Text>
+                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>{t('pooja_detail.vidhi', 'Vidhi')}</Text>
                   </View>
                   <View style={[styles.vidhiCard, { backgroundColor: isDark ? colors.surface : '#FDF7F5' }]}>
                     {sentences.map((sentence: string, sIdx: number) => (
@@ -140,7 +164,7 @@ const PoojaDetailScreen = () => {
                 <View key={idx} style={styles.ceremonySection}>
                   <View style={styles.sectionTitleRow}>
                     <Icon name="music" size={20} color={colors.primaryDark} />
-                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>Mantra</Text>
+                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>{t('pooja_detail.mantra', 'Mantra')}</Text>
                   </View>
                   <View style={[styles.mantraAudioCard, { backgroundColor: isDark ? colors.surface : '#F4EAE9' }]}>
                     <TouchableOpacity style={[styles.mantraPlayButton, { backgroundColor: colors.primary }]}>
@@ -168,7 +192,7 @@ const PoojaDetailScreen = () => {
                     <Icon name="play" size={20} color="#FFF" style={{ marginLeft: 2 }} />
                   </TouchableOpacity>
                   <View style={styles.audioDetails}>
-                    <Text style={[styles.audioTitle, { color: colors.primaryDark }]}>Audio Track</Text>
+                    <Text style={[styles.audioTitle, { color: colors.primaryDark }]}>{t('pooja_detail.audio_track', 'Audio Track')}</Text>
                     <Text style={[styles.audioSubtitle, { color: colors.primary }]}>{sec.content}</Text>
                   </View>
                 </View>
@@ -181,12 +205,14 @@ const PoojaDetailScreen = () => {
           <View style={[styles.notesContainer, { backgroundColor: isDark ? colors.surface : '#FDFCF4', marginTop: 20 }]}>
             <View style={styles.notesHeaderRow}>
               <Icon name="edit-3" size={18} color={colors.primary} />
-              <Text style={[styles.notesTitle, { color: colors.primaryDark, marginBottom: 0, marginLeft: 8 }]}>Personal Notes</Text>
+              <Text style={[styles.notesTitle, { color: colors.primaryDark, marginBottom: 0, marginLeft: 8 }]}>
+                {t('pooja_detail.personal_notes', 'Personal Notes')}
+              </Text>
             </View>
             <TextInput
               style={[styles.notesInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
               multiline
-              placeholder="Add your personal notes for this step..."
+              placeholder={t('pooja_detail.add_notes_step', 'Add your personal notes for this step...')}
               placeholderTextColor={colors.textLight}
               value={localNotes}
               onChangeText={handleSaveNotes}
@@ -202,7 +228,7 @@ const PoojaDetailScreen = () => {
             disabled={currentStepIndex === 0}
           >
             <Icon name="chevron-left" size={20} color={colors.primary} />
-            <Text style={[styles.navButtonText, { color: colors.primary }]}>Previous</Text>
+            <Text style={[styles.navButtonText, { color: colors.primary }]}>{t('pooja_detail.prev_btn', 'Previous')}</Text>
           </TouchableOpacity>
 
           {currentStepIndex < steps.length - 1 ? (
@@ -210,18 +236,22 @@ const PoojaDetailScreen = () => {
               style={[styles.nextButton, { backgroundColor: colors.primary }]}
               onPress={() => setCurrentStepIndex(currentStepIndex + 1)}
             >
-              <Text style={styles.nextButtonText}>Next Step</Text>
+              <Text style={styles.nextButtonText}>{t('pooja_detail.next_btn', 'Next Step')}</Text>
               <Icon name="arrow-right" size={18} color="#FFF" />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={[styles.nextButton, { backgroundColor: '#10B981' }]}
               onPress={() => {
-                Toast.show({ type: 'success', text1: 'Pooja Completed', text2: 'May God bless you!' });
+                Toast.show({
+                  type: 'success',
+                  text1: t('pooja_detail.pooja_completed', 'Pooja Completed'),
+                  text2: t('pooja_detail.pooja_completed_msg', 'May God bless you!'),
+                });
                 setIsCeremonyMode(false);
               }}
             >
-              <Text style={styles.nextButtonText}>Complete Pooja</Text>
+              <Text style={styles.nextButtonText}>{t('pooja_detail.complete_btn', 'Complete Pooja')}</Text>
               <Icon name="check-circle" size={18} color="#FFF" />
             </TouchableOpacity>
           )}
@@ -235,7 +265,7 @@ const PoojaDetailScreen = () => {
     if (item.isNotesSection) {
       return (
         <View style={[styles.notesContainer, { backgroundColor: isDark ? colors.surface : '#f8f9fa' }]}>
-          <Text style={[styles.notesTitle, { color: colors.primaryDark }]}>My Notes</Text>
+          <Text style={[styles.notesTitle, { color: colors.primaryDark }]}>{t('pooja_detail.my_notes', 'My Notes')}</Text>
           <TextInput
             style={[
               styles.notesInput,
@@ -246,7 +276,7 @@ const PoojaDetailScreen = () => {
               }
             ]}
             multiline
-            placeholder="Add your personal notes for this pooja..."
+            placeholder={t('pooja_detail.add_notes_pooja', 'Add your personal notes for this pooja...')}
             placeholderTextColor={colors.textLight}
             value={localNotes}
             onChangeText={handleSaveNotes}
@@ -265,13 +295,15 @@ const PoojaDetailScreen = () => {
               resizeMode="cover"
             />
             <View style={styles.headerImageOverlay}>
-              <Text style={styles.headerImageTitle}>Pooja Detail & Samagri</Text>
+              <Text style={styles.headerImageTitle}>{t('pooja_detail.header_title', 'Pooja Detail & Samagri')}</Text>
               <View style={styles.headerPillsRow}>
                 <View style={styles.headerPill}>
-                  <Text style={styles.headerPillText}>{steps.length} Steps • 45 Mins</Text>
+                  <Text style={styles.headerPillText}>
+                    {t('pooja_detail.steps_mins', { steps: steps.length, defaultValue: `${steps.length} Steps • 45 Mins` })}
+                  </Text>
                 </View>
                 <View style={styles.headerPill}>
-                  <Text style={styles.headerPillText}>{pooja?.subCategory || 'Pauranik'}</Text>
+                  <Text style={styles.headerPillText}>{getSubCategoryLabel(pooja?.subCategory)}</Text>
                 </View>
               </View>
             </View>
@@ -285,7 +317,7 @@ const PoojaDetailScreen = () => {
                 setIsCeremonyMode(true);
               }}
             >
-              <Text style={styles.primaryActionText}>Start Pooja Mode (Focus Mode)</Text>
+              <Text style={styles.primaryActionText}>{t('pooja_detail.start_ceremony', 'Start Pooja Mode (Focus Mode)')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -293,24 +325,26 @@ const PoojaDetailScreen = () => {
               onPress={handleDuplicate}
             >
               <Icon name="copy" size={16} color={colors.primary} />
-              <Text style={[styles.secondaryActionText, { color: colors.primary }]}>Copy & Customize Paddhati</Text>
+              <Text style={[styles.secondaryActionText, { color: colors.primary }]}>
+                {t('pooja_detail.copy_paddhati', 'Copy & Customize Paddhati')}
+              </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.tabsRow}>
             <View style={[styles.tabActive, { borderColor: colors.border }]}>
               <Icon name="list" size={16} color={colors.primaryDark} />
-              <Text style={[styles.tabActiveText, { color: colors.primaryDark }]}>Steps & Vidhi</Text>
+              <Text style={[styles.tabActiveText, { color: colors.primaryDark }]}>{t('pooja_detail.steps_vidhi_tab', 'Steps & Vidhi')}</Text>
             </View>
             <View style={[styles.tabInactive, { backgroundColor: '#FDF7F5' }]}>
               <Icon name="package" size={16} color={colors.textLight} />
-              <Text style={[styles.tabInactiveText, { color: colors.textLight }]}>Samagri List (24/28)</Text>
+              <Text style={[styles.tabInactiveText, { color: colors.textLight }]}>{t('pooja_detail.samagri_tab', 'Samagri List')} (24/28)</Text>
             </View>
           </View>
 
           <View style={styles.stepsListHeader}>
-            <Text style={styles.stepsListTitle}>Anushthan Kram</Text>
-            <Text style={styles.stepsListSubtitle}>{steps.length} Total</Text>
+            <Text style={styles.stepsListTitle}>{t('pooja_detail.anushthan_kram', 'Anushthan Kram')}</Text>
+            <Text style={styles.stepsListSubtitle}>{steps.length} {t('pooja_detail.total', 'Total')}</Text>
           </View>
         </View>
       );
@@ -346,7 +380,7 @@ const PoojaDetailScreen = () => {
                   <Icon name="play" size={12} color="#FFF" style={{ marginLeft: 2 }} />
                 </View>
                 <Text style={styles.smallAudioText}>
-                  {audioSection ? `Audio: ${audioSection.content}` : 'Mantra Audio Available'}
+                  {audioSection ? `${t('pooja_detail.audio_track', 'Audio')}: ${audioSection.content}` : t('pooja_detail.mantra_audio_available', 'Mantra Audio Available')}
                 </Text>
               </View>
             )}
@@ -384,7 +418,7 @@ const PoojaDetailScreen = () => {
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
-      <CustomHeader title={pooja.title} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <CustomHeader title={currentDisplayTitle} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
         <FlatList
           data={listData}

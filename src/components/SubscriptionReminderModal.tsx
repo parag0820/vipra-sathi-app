@@ -4,6 +4,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 const SubscriptionReminderModal = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -11,6 +12,7 @@ const SubscriptionReminderModal = () => {
   const { colors } = useTheme();
   const { isGuest } = useAuth();
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
 
   const hasSubscription = false;
 
@@ -43,6 +45,12 @@ const SubscriptionReminderModal = () => {
 
   if (!isVisible) return null;
 
+  const features = [
+    t('subscription_modal.feature_poojas', 'All Pooja Guides'),
+    t('subscription_modal.feature_kundali', 'Personalized Kundali'),
+    t('subscription_modal.feature_panchang', 'Advanced Panchang'),
+  ];
+
   return (
     <Modal transparent visible={isVisible} animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
@@ -65,14 +73,16 @@ const SubscriptionReminderModal = () => {
             </View>
           </View>
 
-          <Text style={[styles.title, { color: colors.text }]}>Unlock Premium</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t('subscription_modal.title', 'Unlock Premium')}
+          </Text>
           <Text style={[styles.subtitle, { color: colors.textLight }]}>
-            Get access to all poojas, personalized kundalis, and advanced panchangs.
+            {t('subscription_modal.subtitle', 'Get access to all poojas, personalized kundalis, and advanced panchangs.')}
           </Text>
 
           {/* Feature bullets */}
           <View style={styles.featureList}>
-            {['All Pooja Guides', 'Personalized Kundali', 'Advanced Panchang'].map((feat, i) => (
+            {features.map((feat, i) => (
               <View key={i} style={styles.featureRow}>
                 <View style={[styles.featureDot, { backgroundColor: colors.primary }]} />
                 <Text style={[styles.featureText, { color: colors.text }]}>{feat}</Text>
@@ -85,7 +95,9 @@ const SubscriptionReminderModal = () => {
             onPress={handleSubscribe}
             activeOpacity={0.8}
           >
-            <Text style={styles.subscribeText}>Subscribe Now</Text>
+            <Text style={styles.subscribeText}>
+              {t('subscription_modal.subscribe_now', 'Subscribe Now')}
+            </Text>
             <Icon name="arrow-right" size={18} color="#FFF" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </Animated.View>
@@ -131,8 +143,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircle: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -140,14 +152,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   iconInner: {
-    width: 56,
-    height: 56,
+    width: 36,
+    height: 36,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
     marginBottom: 8,
     textAlign: 'center',
@@ -181,7 +193,7 @@ const styles = StyleSheet.create({
   },
   subscribeButton: {
     flexDirection: 'row',
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 32,
     borderRadius: 14,
     width: '85%',
@@ -191,7 +203,7 @@ const styles = StyleSheet.create({
   },
   subscribeText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

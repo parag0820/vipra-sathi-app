@@ -4,6 +4,7 @@ import { useTheme } from '../theme/ThemeContext';
 import CustomHeader from '../components/CustomHeader';
 import CustomDropdown from '../components/CustomDropdown';
 import { Feather as Icon } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const POOJA_OPTIONS = ['Satyanarayan Pooja', 'Griha Pravesh', 'Vivah (Wedding)', 'Namakaran', 'Mundan', 'Vastu Shanti'];
 
@@ -34,11 +35,51 @@ const HAWAN_SAMAGRI = [
 
 const SamagriScreen = () => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const [selectedPooja, setSelectedPooja] = useState('Satyanarayan Pooja');
   const [includeHawan, setIncludeHawan] = useState(false);
 
   // State for checkboxes and responsibility. Defaults to Yajman organizing it.
   const [itemStates, setItemStates] = useState<Record<string, { checked: boolean, responsibility: 'pandit' | 'yajman' }>>({});
+
+  const getPoojaLabel = (pooja: string) => {
+    switch (pooja) {
+      case 'Satyanarayan Pooja': return t('samagri.poojas.satyanarayan', 'Satyanarayan Pooja');
+      case 'Griha Pravesh': return t('samagri.poojas.griha_pravesh', 'Griha Pravesh');
+      case 'Vivah (Wedding)': return t('samagri.poojas.vivah', 'Vivah (Wedding)');
+      case 'Namakaran': return t('samagri.poojas.namakaran', 'Namakaran');
+      case 'Mundan': return t('samagri.poojas.mundan', 'Mundan');
+      case 'Vastu Shanti': return t('samagri.poojas.vastu_shanti', 'Vastu Shanti');
+      default: return pooja;
+    }
+  };
+
+  const getItemName = (item: { id: string, name: string }) => {
+    switch (item.id) {
+      case '1': return t('samagri.items.kalash', item.name);
+      case '2': return t('samagri.items.coconut', item.name);
+      case '3': return t('samagri.items.supari', item.name);
+      case '4': return t('samagri.items.haldi', item.name);
+      case '5': return t('samagri.items.kumkum', item.name);
+      case '6': return t('samagri.items.paan', item.name);
+      case '7': return t('samagri.items.flowers', item.name);
+      case '8': return t('samagri.items.fruits', item.name);
+      case '9': return t('samagri.items.panchamrit', item.name);
+      case '10': return t('samagri.items.prasad', item.name);
+      case 'h1': return t('samagri.items.havan_kund', item.name);
+      case 'h2': return t('samagri.items.mango_wood', item.name);
+      case 'h3': return t('samagri.items.havan_mixture', item.name);
+      case 'h4': return t('samagri.items.ghee', item.name);
+      case 'h5': return t('samagri.items.navagraha_samidha', item.name);
+      case 'h6': return t('samagri.items.camphor', item.name);
+      default: return item.name;
+    }
+  };
+
+  const poojaOptionsWithLabels = POOJA_OPTIONS.map(p => ({
+    label: getPoojaLabel(p),
+    value: p
+  }));
 
   const currentSamagri = MOCK_SAMAGRI[selectedPooja] || FALLBACK_SAMAGRI;
   const fullList = includeHawan ? [...currentSamagri, ...HAWAN_SAMAGRI] : currentSamagri;
@@ -58,14 +99,16 @@ const SamagriScreen = () => {
   };
 
   const handleShareWhatsApp = async () => {
-    let message = `🕉️ *${selectedPooja} - Samagri List* 🕉️\n\n`;
+    const poojaTitle = getPoojaLabel(selectedPooja);
+    let message = `🕉️ *${poojaTitle} - ${t('samagri.list_title', 'Samagri List')}* 🕉️\n\n`;
 
     const panditItems: string[] = [];
     const yajmanItems: string[] = [];
 
     fullList.forEach(item => {
       const state = itemStates[item.id] || { checked: false, responsibility: 'yajman' };
-      const line = `• ${item.name} × ${item.qty}${state.checked ? ' (Done ✅)' : ''}`;
+      const itemName = getItemName(item);
+      const line = `• ${itemName} × ${item.qty}${state.checked ? ` (${t('samagri.done', 'Done')} ✅)` : ''}`;
       if (state.responsibility === 'pandit') {
         panditItems.push(line);
       } else {
@@ -74,13 +117,13 @@ const SamagriScreen = () => {
     });
 
     if (yajmanItems.length > 0) {
-      message += `*To be arranged by Yajman:*\n${yajmanItems.join('\n')}\n\n`;
+      message += `*${t('samagri.to_be_arranged_yajman', 'To be arranged by Yajman:')}*\n${yajmanItems.join('\n')}\n\n`;
     }
     if (panditItems.length > 0) {
-      message += `*Panditji will bring:*\n${panditItems.join('\n')}\n\n`;
+      message += `*${t('samagri.pandit_bring', 'Panditji will bring:')}*\n${panditItems.join('\n')}\n\n`;
     }
 
-    message += `_Shared via VipraSathi App_`;
+    message += `_${t('samagri.shared_via', 'Shared via VipraSathi App')}_`;
 
     try {
       await Share.share({ message });
@@ -91,19 +134,20 @@ const SamagriScreen = () => {
 
   const handleShareOptions = () => {
     Alert.alert(
-      "Share Samagri List",
-      "How would you like to share the list with Yajman?",
+      t('samagri.share_title', 'Share Samagri List'),
+      t('samagri.share_subtitle', 'How would you like to share the list with Yajman?'),
       [
-        { text: "WhatsApp Text", onPress: handleShareWhatsApp },
-        { text: "Branded PDF", onPress: () => Alert.alert("Coming Soon", "PDF export will be available in the next update.") },
-        { text: "Image", onPress: () => Alert.alert("Coming Soon", "Image export will be available in the next update.") },
-        { text: "Cancel", style: "cancel" }
+        { text: t('samagri.whatsapp_text', 'WhatsApp Text'), onPress: handleShareWhatsApp },
+        { text: t('samagri.branded_pdf', 'Branded PDF'), onPress: () => Alert.alert(t('samagri.coming_soon', 'Coming Soon'), t('samagri.coming_soon_msg', 'This export will be available in the next update.')) },
+        { text: t('samagri.image', 'Image'), onPress: () => Alert.alert(t('samagri.coming_soon', 'Coming Soon'), t('samagri.coming_soon_msg', 'This export will be available in the next update.')) },
+        { text: t('samagri.cancel', 'Cancel'), style: "cancel" }
       ]
     );
   };
 
   const renderItem = (item: { id: string, name: string, qty: string }, index: number) => {
     const state = itemStates[item.id] || { checked: false, responsibility: 'yajman' };
+    const itemName = getItemName(item);
 
     return (
       <View key={item.id} style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -116,15 +160,15 @@ const SamagriScreen = () => {
             />
             <View style={styles.itemTextContainer}>
               <Text style={[styles.itemName, { color: colors.text, textDecorationLine: state.checked ? 'line-through' : 'none' }]}>
-                {item.name}
+                {itemName}
               </Text>
-              <Text style={[styles.itemQty, { color: colors.textLight }]}>Qty: {item.qty}</Text>
+              <Text style={[styles.itemQty, { color: colors.textLight }]}>{t('samagri.qty', 'Qty')}: {item.qty}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         <View style={[styles.responsibilityRow, { borderTopColor: colors.border, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }]}>
-          <Text style={[styles.responsibilityLabel, { color: colors.textLight }]}>Who will arrange?</Text>
+          <Text style={[styles.responsibilityLabel, { color: colors.textLight }]}>{t('samagri.who_arrange', 'Who will arrange?')}</Text>
           <View style={[styles.segmentedControl, { borderColor: colors.border, backgroundColor: isDark ? '#111' : '#F5F5F5' }]}>
             <TouchableOpacity
               style={[styles.segmentBtn, state.responsibility === 'yajman' && [styles.segmentActive, { backgroundColor: colors.primary }]]}
@@ -132,7 +176,7 @@ const SamagriScreen = () => {
               activeOpacity={0.8}
             >
               <Text style={[styles.segmentText, state.responsibility === 'yajman' ? { color: '#FFF' } : { color: colors.textLight }]}>
-                Yajman
+                {t('samagri.yajman', 'Yajman')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -141,7 +185,7 @@ const SamagriScreen = () => {
               activeOpacity={0.8}
             >
               <Text style={[styles.segmentText, state.responsibility === 'pandit' ? { color: '#FFF' } : { color: colors.textLight }]}>
-                Pandit
+                {t('samagri.pandit', 'Pandit')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -154,32 +198,81 @@ const SamagriScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <CustomHeader title="Samagri Planner" showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <CustomHeader title={t('samagri.header_title', 'Samagri Planner')} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
 
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
 
         {/* Configuration Section */}
         <View style={[styles.configSection, { backgroundColor: isDark ? colors.surface : '#FFF', borderBottomColor: colors.border }]}>
-          <CustomDropdown
-            label="Select Pooja"
-            value={selectedPooja}
-            options={POOJA_OPTIONS}
-            onSelect={setSelectedPooja}
-          />
-
-          <View style={[styles.hawanToggleRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            <View style={styles.hawanInfo}>
-              <View style={[styles.hawanIconWrap, { backgroundColor: colors.primary + '15' }]}>
-                <Icon name="sun" size={18} color={colors.primary} />
-              </View>
-              <Text style={[styles.hawanLabel, { color: colors.text }]}>Include Hawan Samagri?</Text>
+          <View style={styles.configRow}>
+            {/* Pooja Dropdown */}
+            <View style={styles.dropdownCol}>
+              <CustomDropdown
+                label={t('samagri.select_pooja', 'Select Pooja')}
+                value={selectedPooja}
+                options={poojaOptionsWithLabels}
+                onSelect={setSelectedPooja}
+                containerStyle={styles.dropdownContainer}
+                triggerStyle={styles.dropdownTrigger}
+              />
             </View>
-            <Switch
-              value={includeHawan}
-              onValueChange={setIncludeHawan}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={includeHawan ? colors.primary : '#f4f3f4'}
-            />
+
+            {/* Hawan Samagri Toggle */}
+            <View style={styles.hawanCol}>
+              <Text style={[styles.controlLabel, { color: colors.text }]}>{t('samagri.hawan_samagri', 'Hawan Samagri')}</Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setIncludeHawan(prev => !prev)}
+                style={[
+                  styles.hawanToggleCard,
+                  {
+                    backgroundColor: includeHawan
+                      ? (isDark ? colors.primary + '22' : colors.primary + '12')
+                      : (isDark ? 'rgba(255,255,255,0.03)' : colors.background),
+                    borderColor: includeHawan ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.hawanCardContent}>
+                  <View
+                    style={[
+                      styles.hawanIconWrap,
+                      {
+                        backgroundColor: includeHawan ? colors.primary : colors.primary + '18',
+                      },
+                    ]}
+                  >
+                    <Icon name="sun" size={13} color={includeHawan ? '#FFF' : colors.primary} />
+                  </View>
+                  <Text
+                    style={[
+                      styles.hawanStatusText,
+                      {
+                        color: includeHawan ? colors.primary : colors.text,
+                        fontWeight: includeHawan ? '700' : '500',
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {includeHawan ? t('samagri.added', 'Added') : t('samagri.include', 'Include')}
+                  </Text>
+                </View>
+
+                <View pointerEvents="none" style={styles.switchContainer}>
+                  <Switch
+                    value={includeHawan}
+                    onValueChange={setIncludeHawan}
+                    trackColor={{ false: colors.border, true: colors.primary + '75' }}
+                    thumbColor={includeHawan ? colors.primary : '#f4f3f4'}
+                    style={
+                      Platform.OS === 'ios'
+                        ? { transform: [{ scaleX: 0.68 }, { scaleY: 0.68 }] }
+                        : { transform: [{ scaleX: 0.78 }, { scaleY: 0.78 }] }
+                    }
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -187,9 +280,9 @@ const SamagriScreen = () => {
         <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
 
           <View style={styles.listHeader}>
-            <Text style={[styles.listTitle, { color: colors.text }]}>Samagri List</Text>
+            <Text style={[styles.listTitle, { color: colors.text }]}>{t('samagri.list_title', 'Samagri List')}</Text>
             <Text style={[styles.listSubtitle, { color: colors.textLight }]}>
-              {samagriProgress} / {fullList.length} Collected
+              {samagriProgress} / {fullList.length} {t('samagri.collected', 'Collected')}
             </Text>
           </View>
 
@@ -199,7 +292,7 @@ const SamagriScreen = () => {
             <View style={styles.hawanSectionGroup}>
               <View style={styles.hawanSectionTitleRow}>
                 <Icon name="sun" size={18} color={colors.primary} />
-                <Text style={[styles.hawanSectionTitle, { color: colors.primary }]}>Hawan Requirements</Text>
+                <Text style={[styles.hawanSectionTitle, { color: colors.primary }]}>{t('samagri.hawan_requirements', 'Hawan Requirements')}</Text>
               </View>
               {HAWAN_SAMAGRI.map(renderItem)}
             </View>
@@ -212,7 +305,7 @@ const SamagriScreen = () => {
         <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity style={[styles.shareBtn, { backgroundColor: colors.primary }]} onPress={handleShareOptions} activeOpacity={0.8}>
             <Icon name="share-2" size={18} color="#FFF" />
-            <Text style={styles.shareBtnText}>Share with Yajman</Text>
+            <Text style={styles.shareBtnText}>{t('samagri.share_btn', 'Share with Yajman')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -232,41 +325,71 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   configSection: {
-    padding: 12,
-    paddingTop: 16,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    elevation: 4,
+    elevation: 3,
     shadowColor: '#000',
     shadowOpacity: 0.05,
-    shadowRadius: 5,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     zIndex: 10,
   },
-  hawanToggleRow: {
+  configRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  dropdownCol: {
+    flex: 1.25,
+  },
+  dropdownContainer: {
+    marginBottom: 0,
+  },
+  dropdownTrigger: {
+    paddingHorizontal: 10,
+    height: 44,
+  },
+  hawanCol: {
+    flex: 1,
+  },
+  controlLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  hawanToggleCard: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 0,
+    paddingHorizontal: 8,
   },
-  hawanInfo: {
+  hawanCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: 4,
   },
   hawanIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 6,
   },
-  hawanLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+  hawanStatusText: {
+    fontSize: 11,
+    flexShrink: 1,
+  },
+  switchContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContent: {
     padding: 12,

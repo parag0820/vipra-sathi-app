@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { PoojaSection } from '../types/pooja';
 import { useTheme } from '../theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface DynamicSectionProps {
   section: PoojaSection;
@@ -12,6 +13,7 @@ interface DynamicSectionProps {
 
 const DynamicSection: React.FC<DynamicSectionProps> = ({ section, isFavorite, onToggleFavorite }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   switch (section.sectionType) {
     case 'Heading':
@@ -65,7 +67,9 @@ const DynamicSection: React.FC<DynamicSectionProps> = ({ section, isFavorite, on
         <View style={[styles.vidhiContainer, { backgroundColor: isDark ? colors.surface : '#FDF7F5', borderColor: 'transparent' }]}>
           <View style={styles.vidhiHeaderRow}>
             <Icon name="information-circle-outline" size={16} color={colors.primaryDark} />
-            <Text style={[styles.vidhiHeader, { color: colors.primaryDark }]}>Vidhi</Text>
+            <Text style={[styles.vidhiHeader, { color: colors.primaryDark }]}>
+              {t('pooja_detail.vidhi', 'Vidhi')}
+            </Text>
           </View>
           {sentences.map((sentence, sIdx) => (
             <View key={sIdx} style={styles.vidhiRow}>
@@ -85,7 +89,9 @@ const DynamicSection: React.FC<DynamicSectionProps> = ({ section, isFavorite, on
             <Icon name="play" size={20} color="#FFF" style={{ marginLeft: 2 }} />
           </TouchableOpacity>
           <View style={styles.audioDetails}>
-            <Text style={[styles.audioTitle, { color: colors.primaryDark }]}>Audio Track</Text>
+            <Text style={[styles.audioTitle, { color: colors.primaryDark }]}>
+              {t('pooja_detail.audio_track', 'Audio Track')}
+            </Text>
             <Text style={[styles.audioSubtitle, { color: colors.primary }]}>{section.content}</Text>
           </View>
         </View>

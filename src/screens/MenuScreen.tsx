@@ -10,36 +10,36 @@ import CustomHeader from '../components/CustomHeader';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const MENU_SECTIONS = [
-  {
-    title: 'Manage',
-    items: [
-      { title: 'Account Manager', icon: 'pie-chart', screen: 'AccountManagerDashboard', color: '#C75B12' },
-      { title: 'Yajman Manager', icon: 'users', screen: 'YajmanList', color: '#7C3AED' },
-      { title: 'Work History', icon: 'clock', screen: 'History', color: '#2563EB' },
-    ],
-  },
-  {
-    title: 'Community & Support',
-    items: [
-      { title: 'Community', icon: 'message-circle', screen: 'Community', color: '#16A34A' },
-      { title: 'Help Center', icon: 'help-circle', screen: 'HelpCenter', color: '#F59E0B' },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      { title: 'Profile & Branding', icon: 'user', screen: 'Profile', color: '#C75B12' },
-      { title: 'Subscription & Wallet', icon: 'credit-card', screen: 'Subscription', color: '#7C3AED' },
-      { title: 'Settings', icon: 'settings', screen: 'Settings', color: '#6B7280' },
-    ],
-  },
-];
-
 const MenuScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
+
+  const menuSections = [
+    {
+      title: t('menu.manage', 'Manage'),
+      items: [
+        { title: t('menu.account_manager', 'Account Manager'), icon: 'pie-chart', screen: 'AccountManagerDashboard', color: '#C75B12' },
+        { title: t('menu.yajman_manager', 'Yajman Manager'), icon: 'users', screen: 'YajmanList', color: '#7C3AED' },
+        { title: t('menu.history', 'Work History'), icon: 'clock', screen: 'History', color: '#2563EB' },
+      ],
+    },
+    {
+      title: t('menu.community_support', 'Community & Support'),
+      items: [
+        { title: t('menu.community', 'Community'), icon: 'message-circle', screen: 'Community', color: '#16A34A' },
+        { title: t('menu.help', 'Help Center'), icon: 'help-circle', screen: 'HelpCenter', color: '#F59E0B' },
+      ],
+    },
+    {
+      title: t('menu.account', 'Account'),
+      items: [
+        { title: t('menu.profile', 'Profile & Branding'), icon: 'user', screen: 'Profile', color: '#C75B12' },
+        { title: t('menu.subscription', 'Subscription & Wallet'), icon: 'credit-card', screen: 'Subscription', color: '#7C3AED' },
+        { title: t('menu.settings', 'Settings'), icon: 'settings', screen: 'Settings', color: '#6B7280' },
+      ],
+    },
+  ];
 
   const renderMenuItem = ({ title, icon, screen, color }: any) => (
     <TouchableOpacity
@@ -73,19 +73,23 @@ const MenuScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Card */}
-        <TouchableOpacity style={[styles.profileCard, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.profileCard, { backgroundColor: colors.surface }]}
+          onPress={() => navigation.navigate('Profile')}
+          activeOpacity={0.7}
+        >
           <View style={[styles.profileAvatar, { backgroundColor: colors.primary + '15' }]}>
             <Icon name="user" size={28} color={colors.primary} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text }]}>Pandit Ji</Text>
-            <Text style={[styles.profileRole, { color: colors.textLight }]}>View Profile & Settings</Text>
+            <Text style={[styles.profileName, { color: colors.text }]}>{t('menu.pandit_ji', 'Pandit Ji')}</Text>
+            <Text style={[styles.profileRole, { color: colors.textLight }]}>{t('menu.view_profile', 'View Profile & Settings')}</Text>
           </View>
           <Icon name="chevron-right" size={20} color={colors.textLight} />
         </TouchableOpacity>
 
         {/* Menu Sections */}
-        {MENU_SECTIONS.map((section) => (
+        {menuSections.map((section) => (
           <View key={section.title} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textLight }]}>{section.title}</Text>
             <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>

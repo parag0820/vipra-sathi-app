@@ -6,10 +6,12 @@ import { Feather as Icon } from '@expo/vector-icons';
 import { NotificationItem, NotificationType } from '../types/notifications';
 import { MOCK_NOTIFICATIONS } from '../data/mockNotifications';
 import CustomHeader from '../components/CustomHeader';
+import { useTranslation } from 'react-i18next';
 
 const NotificationsScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
   
   // Use state so we can 'mark all as read'
   const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
@@ -37,6 +39,8 @@ const NotificationsScreen = () => {
 
   const renderNotification = ({ item }: { item: NotificationItem }) => {
     const iconConfig = getNotificationIcon(item.type);
+    const itemTitle = t(`notifications.${item.id}_title`, item.title);
+    const itemMessage = t(`notifications.${item.id}_message`, item.message);
     
     return (
       <TouchableOpacity 
@@ -56,13 +60,13 @@ const NotificationsScreen = () => {
           
           <View style={styles.textContainer}>
             <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-              {item.title}
+              {itemTitle}
             </Text>
             <Text style={[styles.message, { color: colors.textLight }]}>
-              {item.message}
+              {itemMessage}
             </Text>
             <Text style={[styles.time, { color: colors.textLight }]}>
-              {new Date(item.createdAt).toLocaleString()}
+              {new Date(item.createdAt).toLocaleString(i18n.language === 'hi' ? 'hi-IN' : 'en-US')}
             </Text>
           </View>
           
@@ -76,11 +80,18 @@ const NotificationsScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <CustomHeader title="Notifications" showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
+      <CustomHeader
+        title={t('notifications.title', 'Notifications')}
+        showBack={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
+      />
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
       {notifications.some(n => !n.isRead) && (
         <TouchableOpacity onPress={handleMarkAllRead} style={styles.markReadBtn}>
-          <Text style={[styles.markReadText, { color: colors.primary }]}>Mark all read</Text>
+          <Text style={[styles.markReadText, { color: colors.primary }]}>
+            {t('notifications.mark_all_read', 'Mark all read')}
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -92,7 +103,9 @@ const NotificationsScreen = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="bell-off" size={48} color={colors.textLight} />
-            <Text style={[styles.emptyText, { color: colors.textLight }]}>You have no notifications right now.</Text>
+            <Text style={[styles.emptyText, { color: colors.textLight }]}>
+              {t('notifications.empty', 'You have no notifications right now.')}
+            </Text>
           </View>
         }
       />

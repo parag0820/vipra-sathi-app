@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
+
+export interface DropdownOption {
+  label: string;
+  value: string;
+}
 
 interface CustomDropdownProps {
   label?: string;
   placeholder?: string;
   value: string;
-  options: string[];
+  options: (string | DropdownOption)[];
   onSelect: (value: string) => void;
   error?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+  triggerStyle?: StyleProp<ViewStyle>;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -19,15 +26,21 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   onSelect,
   error,
+  containerStyle,
+  triggerStyle,
 }) => {
   const { colors } = useTheme();
-  const [visible, setVisible] = useState(false);
+  const [setVisible, setVisibleState] = useState(false);
 
-  const selected = value || '';
+  const getOptionLabel = (opt: string | DropdownOption) => (typeof opt === 'string' ? opt : opt.label);
+  const getOptionValue = (opt: string | DropdownOption) => (typeof opt === 'string' ? opt : opt.value);
+
+  const selectedOpt = options.find((opt) => getOptionValue(opt) === value);
+  const selectedText = selectedOpt ? getOptionLabel(selectedOpt) : (value || '');
 
   return (
     <>
-      <View style={styles.fieldContainer}>
+      <View style={[styles.fieldContainer, containerStyle]}>
         {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
         <TouchableOpacity
           style={[
@@ -36,18 +49,19 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               backgroundColor: colors.surface,
               borderColor: error ? colors.error : colors.border,
             },
+            triggerStyle,
           ]}
-          onPress={() => setVisible(true)}
+          onPress={() => setVisibleState(true)}
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.triggerText,
-              { color: selected ? colors.text : colors.textLight },
+              { color: selectedText ? colors.text : colors.textLight },
             ]}
             numberOfLines={1}
           >
-            {selected || placeholder}
+            {selectedText || placeholder}
           </Text>
           <Icon name="chevron-down" size={18} color={colors.textLight} />
         </TouchableOpacity>
@@ -55,12 +69,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       </View>
 
       <Modal
-        visible={visible}
+        visible={setVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setVisible(false)}
+        onRequestClose={() => setVisibleState(false)}
       >
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
+        <Pressable style={styles.overlay} onPress={() => setVisibleState(false)}>
           <View style={styles.modalWrapper}>
             <Pressable
               style={[
@@ -80,7 +94,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => setVisible(false)}
+                  onPress={() => setVisibleState(false)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   style={[styles.closeBtn, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
                 >
@@ -90,9 +104,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
               <FlatList
                 data={options}
-                keyExtractor={(item) => item}
+                keyExtractor={(item) => getOptionValue(item)}
                 renderItem={({ item }) => {
-                  const isSelected = item === selected;
+                  const optVal = getOptionValue(item);
+                  const optLabel = getOptionLabel(item);
+                  const isSelected = optVal === value;
                   return (
                     <TouchableOpacity
                       style={[
@@ -101,8 +117,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                         isSelected && { backgroundColor: colors.primary + '10' },
                       ]}
                       onPress={() => {
-                        onSelect(item);
-                        setVisible(false);
+                        onSelect(optVal);
+                        setVisibleState(false);
                       }}
                       activeOpacity={0.6}
                     >
@@ -118,7 +134,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                           ]}
                           numberOfLines={1}
                         >
-                          {item}
+                          {optLabel}
                         </Text>
                       </View>
                       {isSelected && (
@@ -142,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 6,
     marginLeft: 4,
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
     height: 45,
   },
   triggerText: {
-    fontSize: 14,
+    fontSize: 12,
     flex: 1,
     fontWeight: '500',
   },
@@ -208,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
   closeBtn: {

@@ -8,18 +8,49 @@ import { AARTI_CATEGORIES, MOCK_AARTIS } from '../data/mockLibrary';
 import { Feather as Icon } from '@expo/vector-icons';
 import CustomHeader from '../components/CustomHeader';
 import CustomDropdown from '../components/CustomDropdown';
+import { useTranslation } from 'react-i18next';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AartiLibraryScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case 'All': return t('aarti_library.categories.all', 'All');
+      case 'Ganesh Aarti': return t('aarti_library.categories.ganesh', 'Ganesh Aarti');
+      case 'Shiva Aarti': return t('aarti_library.categories.shiva', 'Shiva Aarti');
+      case 'Durga Aarti': return t('aarti_library.categories.durga', 'Durga Aarti');
+      case 'Lakshmi Aarti': return t('aarti_library.categories.lakshmi', 'Lakshmi Aarti');
+      case 'Hanuman Aarti': return t('aarti_library.categories.hanuman', 'Hanuman Aarti');
+      case 'Vishnu Aarti': return t('aarti_library.categories.vishnu', 'Vishnu Aarti');
+      default: return cat;
+    }
+  };
+
+  const getAartiTitle = (item: typeof MOCK_AARTIS[0]) => {
+    switch (item.id) {
+      case 'a1': return t('aarti_library.aartis.jai_ganesh', item.title);
+      case 'a2': return t('aarti_library.aartis.om_jai_jagdish', item.title);
+      case 'a3': return t('aarti_library.aartis.aarti_kije_hanuman', item.title);
+      default: return item.title;
+    }
+  };
+
+  const categoryOptions = AARTI_CATEGORIES.map(cat => ({
+    label: getCategoryLabel(cat),
+    value: cat,
+  }));
+
   const filteredAartis = MOCK_AARTIS.filter(a => {
     const matchesCategory = selectedCategory === 'All' || a.category === selectedCategory;
-    const matchesSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const translatedTitle = getAartiTitle(a);
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = a.title.toLowerCase().includes(q) || translatedTitle.toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
 
@@ -34,8 +65,8 @@ const AartiLibraryScreen = () => {
           <Icon name="book-open" size={18} color={colors.primary} />
         </View>
         <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
-          <Text style={[styles.category, { color: colors.textLight }]}>{item.category}</Text>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{getAartiTitle(item)}</Text>
+          <Text style={[styles.category, { color: colors.textLight }]}>{getCategoryLabel(item.category)}</Text>
         </View>
         <View style={[styles.playBadge, { backgroundColor: colors.primary + '12' }]}>
           <Icon name="play" size={14} color={colors.primary} />
@@ -47,7 +78,7 @@ const AartiLibraryScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <CustomHeader
-        title="Aarti Library"
+        title={t('aarti_library.title', 'Aarti Library')}
         showBack={true}
         headerBgColor={colors.primary}
         headerTextColor="#FFF"
@@ -60,7 +91,7 @@ const AartiLibraryScreen = () => {
             <Icon name="search" size={20} color={colors.textLight} style={styles.searchIcon} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
-              placeholder="Search Aarti..."
+              placeholder={t('aarti_library.search_placeholder', 'Search Aarti...')}
               placeholderTextColor={colors.textLight}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -75,16 +106,16 @@ const AartiLibraryScreen = () => {
           <View style={styles.dropdownContainer}>
             <CustomDropdown
               value={selectedCategory}
-              options={AARTI_CATEGORIES}
+              options={categoryOptions}
               onSelect={setSelectedCategory}
-              placeholder="Category"
+              placeholder={t('aarti_library.category_placeholder', 'Category')}
             />
           </View>
         </View>
 
         <View style={styles.countRow}>
           <Text style={[styles.countText, { color: colors.textLight }]}>
-            {filteredAartis.length} aartis
+            {filteredAartis.length} {t('aarti_library.count_suffix', 'aartis')}
           </Text>
         </View>
 
@@ -98,7 +129,7 @@ const AartiLibraryScreen = () => {
             <View style={styles.emptyContainer}>
               <Icon name="book-open" size={48} color={colors.border} />
               <Text style={[styles.emptyText, { color: colors.textLight }]}>
-                No aartis found in this category.
+                {t('aarti_library.empty', 'No aartis found in this category.')}
               </Text>
             </View>
           }

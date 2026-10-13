@@ -7,12 +7,14 @@ import { useTheme } from '../theme/ThemeContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomHeader from '../components/CustomHeader';
+import { useTranslation } from 'react-i18next';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LibraryHubScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const { height, width } = useWindowDimensions();
 
   // Calculate dynamic card height so 5 cards take ~75-80% of the screen height 
@@ -58,7 +60,7 @@ const LibraryHubScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <CustomHeader
-        title="Spiritual Hub"
+        title={t('spiritual_hub.title', 'Spiritual Hub')}
         icon="book-open"
         showThemeToggle={true}
         headerBgColor={colors.primary}
@@ -68,8 +70,8 @@ const LibraryHubScreen = () => {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
           {renderFullCard(
-            'Samagri',
-            'Find complete samagri lists for every pooja and hawan.',
+            t('spiritual_hub.samagri_title', 'Samagri'),
+            t('spiritual_hub.samagri_desc', 'Find complete samagri lists for every pooja and hawan.'),
             'shopping-bag',
             null,
             'Samagri',
@@ -78,8 +80,8 @@ const LibraryHubScreen = () => {
           )}
 
           {renderFullCard(
-            'Pooja Library',
-            'Detailed rituals, samagri lists, and dynamic mantras for every auspicious occasion.',
+            t('spiritual_hub.pooja_title', 'Pooja Library'),
+            t('spiritual_hub.pooja_desc', 'Detailed rituals, samagri lists, and dynamic mantras for every auspicious occasion.'),
             'book-open',
             require('../assets/images/lotus_pooja.png'),
             'PoojaLibrary',
@@ -88,8 +90,8 @@ const LibraryHubScreen = () => {
           )}
 
           {renderFullCard(
-            'Stotram',
-            'A rich collection of powerful stotras with audio support for daily recitation.',
+            t('spiritual_hub.stotram_title', 'Stotram'),
+            t('spiritual_hub.stotram_desc', 'A rich collection of powerful stotras with audio support for daily recitation.'),
             'music',
             require('../assets/images/stotram.png'),
             'StotramLibrary',
@@ -98,8 +100,8 @@ const LibraryHubScreen = () => {
           )}
 
           {renderFullCard(
-            'Aarti',
-            'Beautifully organized aartis with high-quality deity images and lyrics.',
+            t('spiritual_hub.aarti_title', 'Aarti'),
+            t('spiritual_hub.aarti_desc', 'Beautifully organized aartis with high-quality deity images and lyrics.'),
             'sun',
             require('../assets/images/icn_12.png'),
             'AartiLibrary',
@@ -108,8 +110,8 @@ const LibraryHubScreen = () => {
           )}
 
           {renderFullCard(
-            'Hawan',
-            'Detailed procedures, mantras, and guidelines for performing various hawans.',
+            t('spiritual_hub.hawan_title', 'Hawan'),
+            t('spiritual_hub.hawan_desc', 'Detailed procedures, mantras, and guidelines for performing various hawans.'),
             'sun',
             require('../assets/images/icn_13.png'),
             'Hawan',

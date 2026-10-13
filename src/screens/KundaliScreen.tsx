@@ -111,13 +111,13 @@ const KundaliScreen = () => {
             style={[styles.tabButton, activeTab === 'create' ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }]}
             onPress={() => setActiveTab('create')}
           >
-            <Text style={[styles.tabText, activeTab === 'create' ? { color: '#FFF' } : { color: colors.textLight }]}>Create Kundali</Text>
+            <Text style={[styles.tabText, activeTab === 'create' ? { color: '#FFF' } : { color: colors.textLight }]}>{t('kundali.create_tab', 'Create Kundali')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'match' ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }]}
             onPress={() => setActiveTab('match')}
           >
-            <Text style={[styles.tabText, activeTab === 'match' ? { color: '#FFF' } : { color: colors.textLight }]}>Kundali Matching</Text>
+            <Text style={[styles.tabText, activeTab === 'match' ? { color: '#FFF' } : { color: colors.textLight }]}>{t('kundali.match_tab', 'Kundali Matching')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -128,33 +128,33 @@ const KundaliScreen = () => {
               <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.sectionHeader}>
                   <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Bride Details</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.bride_details', 'Bride Details')}</Text>
                 </View>
 
-                {renderInput('Name', brideDetails.name, (text) => setBrideDetails({ ...brideDetails, name: text }), 'Enter Bride Name')}
-                {renderDateTimePicker('Date of Birth', brideDetails.dob, 'bride', 'dob', 'DD/MM/YYYY')}
-                {renderDateTimePicker('Time of Birth', brideDetails.tob, 'bride', 'tob', 'HH:MM AM/PM')}
-                {renderInput('Place of Birth', brideDetails.place, (text) => setBrideDetails({ ...brideDetails, place: text }), 'City, State')}
+                {renderInput(t('kundali.name_label', 'Name'), brideDetails.name, (text) => setBrideDetails({ ...brideDetails, name: text }), t('kundali.enter_bride_name', 'Enter Bride Name'))}
+                {renderDateTimePicker(t('kundali.dob_label', 'Date of Birth'), brideDetails.dob, 'bride', 'dob', 'DD/MM/YYYY')}
+                {renderDateTimePicker(t('kundali.tob_label', 'Time of Birth'), brideDetails.tob, 'bride', 'tob', 'HH:MM AM/PM')}
+                {renderInput(t('kundali.place_label', 'Place of Birth'), brideDetails.place, (text) => setBrideDetails({ ...brideDetails, place: text }), t('kundali.place_placeholder_match', 'City, State'))}
               </View>
 
               {/* Groom Details Section */}
               <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.sectionHeader}>
                   <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Groom Details</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.groom_details', 'Groom Details')}</Text>
                 </View>
 
-                {renderInput('Name', groomDetails.name, (text) => setGroomDetails({ ...groomDetails, name: text }), 'Enter Groom Name')}
-                {renderDateTimePicker('Date of Birth', groomDetails.dob, 'groom', 'dob', 'DD/MM/YYYY')}
-                {renderDateTimePicker('Time of Birth', groomDetails.tob, 'groom', 'tob', 'HH:MM AM/PM')}
-                {renderInput('Place of Birth', groomDetails.place, (text) => setGroomDetails({ ...groomDetails, place: text }), 'City, State')}
+                {renderInput(t('kundali.name_label', 'Name'), groomDetails.name, (text) => setGroomDetails({ ...groomDetails, name: text }), t('kundali.enter_groom_name', 'Enter Groom Name'))}
+                {renderDateTimePicker(t('kundali.dob_label', 'Date of Birth'), groomDetails.dob, 'groom', 'dob', 'DD/MM/YYYY')}
+                {renderDateTimePicker(t('kundali.tob_label', 'Time of Birth'), groomDetails.tob, 'groom', 'tob', 'HH:MM AM/PM')}
+                {renderInput(t('kundali.place_label', 'Place of Birth'), groomDetails.place, (text) => setGroomDetails({ ...groomDetails, place: text }), t('kundali.place_placeholder_match', 'City, State'))}
               </View>
 
               <TouchableOpacity
                 style={[styles.matchBtn, { backgroundColor: colors.primary }]}
                 onPress={() => navigation.navigate('KundaliMatchingResult')}
               >
-                <Text style={styles.matchBtnText}>Match Kundali</Text>
+                <Text style={styles.matchBtnText}>{t('kundali.match_btn', 'Match Kundali')}</Text>
                 <Icon name="arrow-right" size={20} color="#FFF" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
             </>

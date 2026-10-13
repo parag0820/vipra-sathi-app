@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, AppState, AppStateS
 import { useTheme } from '../theme/ThemeContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useTranslation } from 'react-i18next';
 
 interface AudioPlayerUIProps {
   title: string;
@@ -12,6 +13,7 @@ interface AudioPlayerUIProps {
 
 const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlaybackStatusUpdate }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   const player = useAudioPlayer(audioUrl || null);
   const status = useAudioPlayerStatus(player);
@@ -120,7 +122,7 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
 
         <View style={styles.infoContainer}>
           <Text style={[styles.nowPlaying, { color: colors.textLight }]}>
-            {isLoading ? 'Loading...' : isPlaying ? 'Now Playing' : 'Paused'}
+            {isLoading ? t('audio.loading', 'Loading...') : isPlaying ? t('audio.now_playing', 'Now Playing') : t('audio.paused', 'Paused')}
           </Text>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{title}</Text>
           <Text style={[styles.timeText, { color: colors.textLight }]}>

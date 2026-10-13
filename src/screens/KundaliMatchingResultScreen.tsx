@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Share, Alert } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import CustomHeader from '../components/CustomHeader';
 import { Feather as Icon } from '@expo/vector-icons';
@@ -25,6 +25,59 @@ const KundaliMatchingResultScreen = () => {
     return t('kundali_match.poor', 'Poor Match');
   };
 
+  const getKootaName = (name: string) => {
+    const normalized = name.toLowerCase().replace(/[^a-z]/g, '');
+    const fallbackMap: Record<string, string> = {
+      varna: 'Varna',
+      vashya: 'Vashya',
+      tara: 'Tara',
+      yoni: 'Yoni',
+      grahamaitri: 'Graha Maitri',
+      gana: 'Gana',
+      bhakoot: 'Bhakoot',
+      nadi: 'Nadi',
+    };
+    return t(`kundali_match.kootas.${normalized}`, fallbackMap[normalized] || name.replace(/\s+/g, ' ').trim());
+  };
+
+  const getManglikText = (val: string) => {
+    const lower = val.toLowerCase();
+    if (lower.includes('non') || lower.includes('not')) {
+      return t('kundali_match.non_manglik', 'Non-Manglik');
+    }
+    if (lower.includes('low') || lower.includes('anshik')) {
+      return t('kundali_match.low_manglik', 'Low Manglik (Anshik)');
+    }
+    if (lower.includes('manglik')) {
+      return t('kundali_match.manglik', 'Manglik');
+    }
+    return val;
+  };
+
+  const getObservationText = (obs: string, idx: number) => {
+    return t(`kundali_match.observations.obs_${idx + 1}`, obs);
+  };
+
+  const handleShare = async () => {
+    try {
+      const groomInfo = `${t('kundali_match.groom', 'Groom')}: ${t('kundali_match.groom_name', 'Amit')}`;
+      const brideInfo = `${t('kundali_match.bride', 'Bride')}: ${t('kundali_match.bride_name', 'Priya')}`;
+      const scoreInfo = `${t('kundali_match.guna_milan', 'Guna Milan')}: ${result.totalScore}/${result.maxScore} (${matchText})`;
+      await Share.share({
+        message: `🕉️ *${t('kundali_match.title', 'Kundali Matching')}* 🕉️\n\n${groomInfo}\n${brideInfo}\n\n${scoreInfo}\n\n_VipraSathi_`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handlePdfReport = () => {
+    Alert.alert(
+      t('kundali_match.detailed_report', 'Detailed Report (PDF)'),
+      t('kundali_match.pdf_notice', 'PDF report generation will be available in the next update.')
+    );
+  };
+
   const scoreColor = getScoreColor(result.totalScore);
   const matchText = getMatchText(result.totalScore);
 
@@ -33,7 +86,7 @@ const KundaliMatchingResultScreen = () => {
       <CustomHeader title={t('kundali_match.title', 'Kundali Matching')} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
 
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Couple Profiles */}
           <View style={[styles.coupleRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.profileBox}>
@@ -42,8 +95,8 @@ const KundaliMatchingResultScreen = () => {
               </View>
               <View style={styles.profileInfo}>
                 <Text style={[styles.profileLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('kundali_match.groom', 'Groom')}</Text>
-                <Text style={[styles.profileName, { color: colors.text }]}>Amit</Text>
-                <Text style={[styles.profileDate, { color: colors.textLight }]}>24 Sep 1990</Text>
+                <Text style={[styles.profileName, { color: colors.text }]}>{t('kundali_match.groom_name', 'Amit')}</Text>
+                <Text style={[styles.profileDate, { color: colors.textLight }]}>{t('kundali_match.groom_dob', '24 Sep 1990')}</Text>
               </View>
             </View>
 
@@ -57,8 +110,8 @@ const KundaliMatchingResultScreen = () => {
               </View>
               <View style={styles.profileInfo}>
                 <Text style={[styles.profileLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('kundali_match.bride', 'Bride')}</Text>
-                <Text style={[styles.profileName, { color: colors.text }]}>Priya</Text>
-                <Text style={[styles.profileDate, { color: colors.textLight }]}>12 May 1994</Text>
+                <Text style={[styles.profileName, { color: colors.text }]}>{t('kundali_match.bride_name', 'Priya')}</Text>
+                <Text style={[styles.profileDate, { color: colors.textLight }]}>{t('kundali_match.bride_dob', '12 May 1994')}</Text>
               </View>
             </View>
           </View>
@@ -84,16 +137,32 @@ const KundaliMatchingResultScreen = () => {
             </View>
           </View>
 
-          {/* 8 Kootas Horizontal Scroll */}
-          <View style={styles.kootasContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kootasScroll}>
-              {result.ashtaKoota.map((koota, index) => (
-                <View key={index} style={[styles.kootaBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Text style={[styles.kootaScoreText, { color: colors.primary }]}>{koota.obtained}</Text>
-                  <Text style={[styles.kootaLabelText, { color: colors.text }]}>{koota.name}</Text>
-                </View>
-              ))}
-            </ScrollView>
+          {/* 8 Kootas Grid Card (4 Columns) */}
+          <View style={[styles.kootasCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {[result.ashtaKoota.slice(0, 4), result.ashtaKoota.slice(4, 8)].map((row, rowIndex) => (
+              <View
+                key={rowIndex}
+                style={[
+                  styles.kootasRow,
+                  rowIndex === 0 && [styles.kootasRowDivider, { borderBottomColor: colors.border }],
+                ]}
+              >
+                {row.map((koota, colIndex) => (
+                  <View
+                    key={colIndex}
+                    style={[
+                      styles.kootaCell,
+                      colIndex < row.length - 1 && [styles.kootaCellDivider, { borderRightColor: colors.border }],
+                    ]}
+                  >
+                    <Text style={[styles.kootaScoreText, { color: colors.primary }]}>{koota.obtained}</Text>
+                    <Text style={[styles.kootaLabelText, { color: colors.text }]} numberOfLines={2}>
+                      {getKootaName(koota.name)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ))}
           </View>
 
           {/* Special Analysis */}
@@ -105,7 +174,7 @@ const KundaliMatchingResultScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
                 <Text style={[styles.analysisLabel, { color: colors.text }]}>{t('kundali_match.manglik_groom', 'Manglik Groom')}</Text>
               </View>
-              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{result.manglikGroom}</Text>
+              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{getManglikText(result.manglikGroom)}</Text>
             </View>
 
             <View style={[styles.analysisRow, { borderBottomColor: colors.border }]}>
@@ -113,7 +182,7 @@ const KundaliMatchingResultScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
                 <Text style={[styles.analysisLabel, { color: colors.text }]}>{t('kundali_match.manglik_bride', 'Manglik Bride')}</Text>
               </View>
-              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{result.manglikBride}</Text>
+              <Text style={[styles.analysisValueGreen, { color: colors.success }]}>{getManglikText(result.manglikBride)}</Text>
             </View>
 
             <View style={[styles.analysisRow, { borderBottomColor: colors.border }]}>
@@ -128,24 +197,26 @@ const KundaliMatchingResultScreen = () => {
               <View key={idx} style={[styles.analysisRow, { borderBottomColor: colors.border }, idx === result.observations.length - 1 && { borderBottomWidth: 0 }]}>
                 <View style={styles.analysisLeft}>
                   <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}><Icon name="arrow-down" size={12} color="#FFF" /></View>
-                  <Text style={[styles.analysisLabel, { color: colors.text, flex: 1, paddingRight: 10 }]} numberOfLines={2}>{obs}</Text>
+                  <Text style={[styles.analysisLabel, { color: colors.text, flex: 1, paddingRight: 10 }]} numberOfLines={2}>
+                    {getObservationText(obs, idx)}
+                  </Text>
                 </View>
               </View>
             ))}
 
           </View>
 
-      </ScrollView>
+        </ScrollView>
       </View>
 
       {/* Bottom Action Bar */}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-        <TouchableOpacity style={[styles.pdfBtn, { backgroundColor: colors.primary }]}>
+        <TouchableOpacity style={[styles.pdfBtn, { backgroundColor: colors.primary }]} onPress={handlePdfReport} activeOpacity={0.8}>
           <Icon name="file-text" size={18} color="#FFF" />
           <Text style={styles.pdfBtnText}>{t('kundali_match.detailed_report', 'Detailed Report (PDF)')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : '#f0f0f0' }]}>
+        <TouchableOpacity style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : '#f0f0f0' }]} onPress={handleShare} activeOpacity={0.8}>
           <Icon name="share-2" size={18} color={isDark ? '#FFF' : colors.text} />
         </TouchableOpacity>
       </View>
@@ -253,12 +324,12 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   scoreNumberRed: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '900',
     color: '#B71C1C',
   },
   scoreNumberBlack: {
-    fontSize: 20,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#424242',
   },
@@ -275,43 +346,54 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   matchStatusText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 6,
   },
-  kootasContainer: {
-    marginBottom: 10,
-    marginHorizontal: -8,
-  },
-  kootasScroll: {
-    paddingHorizontal: 8,
-    flexDirection: 'row',
-  },
-  kootaBox: {
-    paddingVertical: 4,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
+  kootasCard: {
+    borderRadius: 14,
     borderWidth: 1,
-    minWidth: 70,
-    marginRight: 5,
+    marginBottom: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  kootasRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  kootasRowDivider: {
+    borderBottomWidth: 1,
+  },
+  kootaCell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  kootaCellDivider: {
+    borderRightWidth: 1,
   },
   kootaScoreText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
     color: '#B71C1C',
-    marginBottom: 5,
   },
   kootaLabelText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '600',
     color: '#424242',
+    textAlign: 'center',
   },
   analysisSection: {
     marginTop: 5,
   },
   analysisTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 6,
@@ -339,12 +421,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   analysisLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#424242',
     fontWeight: '500',
   },
   analysisValueGreen: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#2E7D32',
   },

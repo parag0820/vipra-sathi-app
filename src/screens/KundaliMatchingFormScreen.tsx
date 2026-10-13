@@ -87,7 +87,7 @@ const KundaliMatchingFormScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <CustomHeader
-        title={t('kundali.match_title', 'Kundali Matching')}
+        title={t('kundali_match.title', 'Kundali Matching')}
         showBack={true}
         headerBgColor="#800000"
         headerTextColor="#FFF"
@@ -99,16 +99,16 @@ const KundaliMatchingFormScreen = () => {
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.sectionHeader}>
               <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Bride Details</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.bride_details', 'Bride Details')}</Text>
             </View>
 
             <View style={styles.row}>
-              {renderCompactInput('Name', brideDetails.name, (text) => setBrideDetails({ ...brideDetails, name: text }), 'Name')}
-              {renderCompactDateTimePicker('DOB', brideDetails.dob, 'bride', 'dob', 'DD/MM/YY')}
+              {renderCompactInput(t('kundali.name_label', 'Name'), brideDetails.name, (text) => setBrideDetails({ ...brideDetails, name: text }), t('kundali.name_label', 'Name'))}
+              {renderCompactDateTimePicker(t('kundali.dob_short', 'DOB'), brideDetails.dob, 'bride', 'dob', 'DD/MM/YY')}
             </View>
             <View style={styles.row}>
-              {renderCompactDateTimePicker('TOB', brideDetails.tob, 'bride', 'tob', 'HH:MM AM')}
-              {renderCompactInput('Place', brideDetails.place, (text) => setBrideDetails({ ...brideDetails, place: text }), 'City')}
+              {renderCompactDateTimePicker(t('kundali.tob_short', 'TOB'), brideDetails.tob, 'bride', 'tob', 'HH:MM AM')}
+              {renderCompactInput(t('kundali.place_short', 'Place'), brideDetails.place, (text) => setBrideDetails({ ...brideDetails, place: text }), t('kundali.city_placeholder', 'City'))}
             </View>
           </View>
 
@@ -116,16 +116,16 @@ const KundaliMatchingFormScreen = () => {
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.sectionHeader}>
               <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Groom Details</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.groom_details', 'Groom Details')}</Text>
             </View>
 
             <View style={styles.row}>
-              {renderCompactInput('Name', groomDetails.name, (text) => setGroomDetails({ ...groomDetails, name: text }), 'Name')}
-              {renderCompactDateTimePicker('DOB', groomDetails.dob, 'groom', 'dob', 'DD/MM/YY')}
+              {renderCompactInput(t('kundali.name_label', 'Name'), groomDetails.name, (text) => setGroomDetails({ ...groomDetails, name: text }), t('kundali.name_label', 'Name'))}
+              {renderCompactDateTimePicker(t('kundali.dob_short', 'DOB'), groomDetails.dob, 'groom', 'dob', 'DD/MM/YY')}
             </View>
             <View style={styles.row}>
-              {renderCompactDateTimePicker('TOB', groomDetails.tob, 'groom', 'tob', 'HH:MM AM')}
-              {renderCompactInput('Place', groomDetails.place, (text) => setGroomDetails({ ...groomDetails, place: text }), 'City')}
+              {renderCompactDateTimePicker(t('kundali.tob_short', 'TOB'), groomDetails.tob, 'groom', 'tob', 'HH:MM AM')}
+              {renderCompactInput(t('kundali.place_short', 'Place'), groomDetails.place, (text) => setGroomDetails({ ...groomDetails, place: text }), t('kundali.city_placeholder', 'City'))}
             </View>
           </View>
 
@@ -133,7 +133,7 @@ const KundaliMatchingFormScreen = () => {
             style={[styles.matchBtn, { backgroundColor: colors.primary }]}
             onPress={() => navigation.navigate('KundaliMatchingResult')}
           >
-            <Text style={styles.matchBtnText}>Match Kundali</Text>
+            <Text style={styles.matchBtnText}>{t('kundali.match_btn', 'Match Kundali')}</Text>
             <Icon name="arrow-right" size={20} color="#FFF" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
 

@@ -107,8 +107,7 @@ const CalendarScreen = () => {
               onMonthChange={(month: DateData) => setCurrentMonth(month.dateString.substring(0, 7))}
               markingType={'multi-dot'}
               markedDates={markedDates}
-              // @ts-ignore
-              theme={{
+              theme={({
                 calendarBackground: 'transparent',
                 textSectionTitleColor: colors.textLight,
                 dayTextColor: colors.text,
@@ -146,7 +145,7 @@ const CalendarScreen = () => {
                     justifyContent: 'center'
                   }
                 }
-              }}
+              } as any)}
               style={styles.calendar}
             />
           </View>

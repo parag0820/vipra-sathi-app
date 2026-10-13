@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Modal, FlatList, ActivityIndicator } from 'react-native';
 import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -24,11 +24,86 @@ const LOCATIONS = [
   { id: '4', name: { en: 'Mumbai, Maharashtra', hi: 'मुंबई, महाराष्ट्र' } },
 ];
 
+const getMuhuratData = (isHi: boolean) => ({
+  lagna: [
+    { name: isHi ? 'कन्या' : 'Virgo', time: '06:18 - 07:56', current: false },
+    { name: isHi ? 'तुला' : 'Libra', time: '07:56 - 10:11', current: false },
+    { name: isHi ? 'वृश्चिक' : 'Scorpio', time: '10:11 - 12:27', current: false },
+    { name: isHi ? 'धनु' : 'Sagittarius', time: '12:27 - 14:32', current: false },
+    { name: isHi ? 'मकर' : 'Capricorn', time: '14:32 - 16:19', current: false },
+    { name: isHi ? 'कुम्भ' : 'Aquarius', time: '16:19 - 17:52', current: true },
+    { name: isHi ? 'मीन' : 'Pisces', time: '17:52 - 19:22', current: false },
+    { name: isHi ? 'मेष' : 'Aries', time: '19:22 - 21:02', current: false },
+    { name: isHi ? 'वृषभ' : 'Taurus', time: '21:02 - 23:00', current: false },
+    { name: isHi ? 'मिथुन' : 'Gemini', time: '23:00 - 01:15', current: false },
+    { name: isHi ? 'कर्क' : 'Cancer', time: '01:15 - 03:36', current: false },
+    { name: isHi ? 'सिंह' : 'Leo', time: '03:36 - 05:49', current: false },
+    { name: isHi ? 'कन्या' : 'Virgo', time: '05:49 - 06:18', current: false },
+  ],
+  muhurat: [
+    { name: isHi ? 'राहु काल' : 'Rahu Kaal', time: '10:48 - 12:18', type: 'ashubh' },
+    { name: isHi ? 'यम घंटा' : 'Yam Ghanta', time: '15:19 - 16:49', type: 'ashubh' },
+    { name: isHi ? 'गुली काल' : 'Guli Kaal', time: '07:48 - 09:18', type: 'ashubh' },
+    { name: isHi ? 'अभिजित' : 'Abhijit', time: '11:54 - 12:43', type: 'shubh', current: true },
+    { name: isHi ? 'दूर मुहूर्त 1' : 'Dur Muhurat 1', time: '08:42 - 09:30', type: 'ashubh' },
+    { name: isHi ? 'दूर मुहूर्त 2' : 'Dur Muhurat 2', time: '12:42 - 13:30', type: 'ashubh' },
+  ],
+  choghadiya: {
+    day: [
+      { name: isHi ? 'चर' : 'Char', time: '06:18 - 07:48', type: 'shubh' },
+      { name: isHi ? 'लाभ' : 'Labh', time: '07:48 - 09:18', type: 'shubh' },
+      { name: isHi ? 'अमृत' : 'Amrut', time: '09:18 - 10:48', type: 'shubh' },
+      { name: isHi ? 'काल' : 'Kaal', time: '10:48 - 12:18', type: 'ashubh' },
+      { name: isHi ? 'शुभ' : 'Shubh', time: '12:18 - 13:49', type: 'shubh' },
+      { name: isHi ? 'रोग' : 'Rog', time: '13:49 - 15:19', type: 'ashubh' },
+      { name: isHi ? 'उद्वेग' : 'Udveg', time: '15:19 - 16:49', type: 'ashubh', current: true },
+      { name: isHi ? 'चर' : 'Char', time: '16:49 - 18:18', type: 'shubh' },
+    ],
+    night: [
+      { name: isHi ? 'रोग' : 'Rog', time: '18:18 - 19:48', type: 'ashubh' },
+      { name: isHi ? 'काल' : 'Kaal', time: '19:48 - 21:18', type: 'ashubh' },
+      { name: isHi ? 'लाभ' : 'Labh', time: '21:18 - 22:48', type: 'shubh' },
+      { name: isHi ? 'उद्वेग' : 'Udveg', time: '22:48 - 00:18', type: 'ashubh' },
+      { name: isHi ? 'शुभ' : 'Shubh', time: '00:18 - 01:48', type: 'shubh' },
+      { name: isHi ? 'अमृत' : 'Amrut', time: '01:48 - 03:18', type: 'shubh' },
+      { name: isHi ? 'चर' : 'Char', time: '03:18 - 04:48', type: 'shubh' },
+      { name: isHi ? 'रोग' : 'Rog', time: '04:48 - 06:18', type: 'ashubh' },
+    ],
+  },
+  hora: [
+    { name: isHi ? 'शुक्र' : 'Venus', time: '06:18 - 07:18' },
+    { name: isHi ? 'बुध' : 'Mercury', time: '07:18 - 08:18' },
+    { name: isHi ? 'चन्द्र' : 'Moon', time: '08:18 - 09:18' },
+    { name: isHi ? 'शनि' : 'Saturn', time: '09:18 - 10:18' },
+    { name: isHi ? 'बृहस्पति' : 'Jupiter', time: '10:18 - 11:18' },
+    { name: isHi ? 'मंगल' : 'Mars', time: '11:18 - 12:18' },
+    { name: isHi ? 'सूर्य' : 'Sun', time: '12:18 - 13:19' },
+    { name: isHi ? 'शुक्र' : 'Venus', time: '13:19 - 14:19' },
+    { name: isHi ? 'बुध' : 'Mercury', time: '14:19 - 15:19' },
+    { name: isHi ? 'चन्द्र' : 'Moon', time: '15:19 - 16:19' },
+    { name: isHi ? 'शनि' : 'Saturn', time: '16:19 - 17:19' },
+    { name: isHi ? 'बृहस्पति' : 'Jupiter', time: '17:19 - 18:19', current: true },
+    { name: isHi ? 'मंगल' : 'Mars', time: '18:19 - 19:19' },
+    { name: isHi ? 'सूर्य' : 'Sun', time: '19:19 - 20:19' },
+    { name: isHi ? 'शुक्र' : 'Venus', time: '20:19 - 21:19' },
+    { name: isHi ? 'बुध' : 'Mercury', time: '21:19 - 22:19' },
+    { name: isHi ? 'चन्द्र' : 'Moon', time: '22:19 - 23:19' },
+    { name: isHi ? 'शनि' : 'Saturn', time: '23:19 - 00:19' },
+    { name: isHi ? 'बृहस्पति' : 'Jupiter', time: '00:19 - 01:19' },
+    { name: isHi ? 'मंगल' : 'Mars', time: '01:19 - 02:19' },
+    { name: isHi ? 'सूर्य' : 'Sun', time: '02:19 - 03:19' },
+    { name: isHi ? 'शुक्र' : 'Venus', time: '03:19 - 04:19' },
+    { name: isHi ? 'बुध' : 'Mercury', time: '04:19 - 05:19' },
+    { name: isHi ? 'चन्द्र' : 'Moon', time: '05:19 - 06:18' },
+  ],
+});
+
 const PanchangScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
+  const isHi = i18n.language === 'hi';
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [panchangData, setPanchangData] = useState<PanchangDetails | null>(null);
@@ -38,12 +113,14 @@ const PanchangScreen = () => {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
+  const muhuratData = useMemo(() => getMuhuratData(isHi), [isHi]);
+
   const TABS = [
     { key: 'summary', label: t('panchang_screen.tabs.summary') },
-    { key: 'tithi', label: t('panchang_screen.tabs.tithi') },
-    { key: 'nakshatra', label: t('panchang_screen.tabs.nakshatra') },
-    { key: 'yoga', label: t('panchang_screen.tabs.yoga') },
-    { key: 'karana', label: t('panchang_screen.tabs.karana') }
+    { key: 'choghadiya', label: t('panchang_screen.tabs.choghadiya') },
+    { key: 'hora', label: t('panchang_screen.tabs.hora') },
+    { key: 'muhurat', label: t('panchang_screen.tabs.muhurat') },
+    { key: 'lagna', label: t('panchang_screen.tabs.lagna') },
   ];
 
   useEffect(() => {
@@ -124,6 +201,37 @@ const PanchangScreen = () => {
   const textColor = colors.text;
   const borderColor = colors.border;
 
+  const renderListItem = (item: any, index: number, totalLength: number) => {
+    let statusColor = colors.text;
+    if (item.type === 'shubh') statusColor = '#10B981';
+    if (item.type === 'ashubh') statusColor = '#EF4444';
+
+    const isCurrent = item.current;
+
+    return (
+      <View
+        key={index}
+        style={[
+          styles.listItem,
+          { borderBottomColor: index === totalLength - 1 ? 'transparent' : borderColor },
+          isCurrent && { backgroundColor: colors.primary + '15', borderLeftWidth: 4, borderLeftColor: colors.primary }
+        ]}
+      >
+        <View style={styles.listLeft}>
+          <Text style={[styles.itemName, { color: isCurrent ? colors.primary : textColor }]}>
+            {item.name}
+          </Text>
+          {item.type && (
+            <Text style={[styles.itemType, { color: statusColor }]}>
+              {item.type === 'shubh' ? (isHi ? 'शुभ' : 'Shubh') : (isHi ? 'अशुभ' : 'Ashubh')}
+            </Text>
+          )}
+        </View>
+        <Text style={[styles.itemTime, { color: isCurrent ? colors.primary : textColor }]}>{item.time}</Text>
+      </View>
+    );
+  };
+
   const renderDataRow = (iconName: string, label: string, value: string, subValue?: string) => (
     <View style={[styles.dataRow, { borderBottomColor: borderColor }]}>
       <View style={styles.iconLabelContainer}>
@@ -192,11 +300,16 @@ const PanchangScreen = () => {
                   ]}
                   onPress={() => setActiveTab(tab.key)}
                 >
-                  <Text style={[
-                    styles.tabText, 
-                    isActive && styles.tabTextActive, 
-                    { color: isActive ? colors.primary : colors.textLight }
-                  ]}>{tab.label}</Text>
+                  <Text 
+                    style={[
+                      styles.tabText, 
+                      isActive && styles.tabTextActive, 
+                      { color: isActive ? colors.primary : colors.textLight }
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {tab.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -204,7 +317,7 @@ const PanchangScreen = () => {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {activeTab === 'summary' ? (
+          {activeTab === 'summary' && (
             <>
               {/* Panchang List */}
               <View style={styles.listContainer}>
@@ -234,9 +347,43 @@ const PanchangScreen = () => {
                 </View>
               )}
             </>
-          ) : (
-            <View style={styles.emptyTabContent}>
-              <Text style={{ color: colors.textLight }}>{t('panchang_screen.empty_tab', { tab: TABS.find(t => t.key === activeTab)?.label })}</Text>
+          )}
+
+          {activeTab === 'choghadiya' && (
+            <View style={styles.muhuratTabContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.primary }]}>{isHi ? 'दिन का चौघड़िया' : 'Day Choghadiya'}</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {muhuratData.choghadiya.day.map((item: any, idx: number) => renderListItem(item, idx, muhuratData.choghadiya.day.length))}
+              </View>
+
+              <Text style={[styles.sectionTitle, { color: colors.primary, marginTop: 20 }]}>{isHi ? 'रात का चौघड़िया' : 'Night Choghadiya'}</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {muhuratData.choghadiya.night.map((item: any, idx: number) => renderListItem(item, idx, muhuratData.choghadiya.night.length))}
+              </View>
+            </View>
+          )}
+
+          {activeTab === 'hora' && (
+            <View style={styles.muhuratTabContainer}>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {muhuratData.hora.map((item: any, index: number) => renderListItem(item, index, muhuratData.hora.length))}
+              </View>
+            </View>
+          )}
+
+          {activeTab === 'muhurat' && (
+            <View style={styles.muhuratTabContainer}>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {muhuratData.muhurat.map((item: any, index: number) => renderListItem(item, index, muhuratData.muhurat.length))}
+              </View>
+            </View>
+          )}
+
+          {activeTab === 'lagna' && (
+            <View style={styles.muhuratTabContainer}>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {muhuratData.lagna.map((item: any, index: number) => renderListItem(item, index, muhuratData.lagna.length))}
+              </View>
             </View>
           )}
           <View style={{ height: 40 }} />
@@ -416,9 +563,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  emptyTabContent: {
-    padding: 24,
+  muhuratTabContainer: {
+    paddingVertical: 8,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 0,
+    overflow: 'hidden',
+  },
+  listItem: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  listLeft: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  itemType: {
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  itemTime: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
