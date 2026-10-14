@@ -113,7 +113,7 @@ const LibraryHubScreen = () => {
             t('spiritual_hub.hawan_title', 'Hawan'),
             t('spiritual_hub.hawan_desc', 'Detailed procedures, mantras, and guidelines for performing various hawans.'),
             'sun',
-            require('../assets/images/icn_13.png'),
+            require('../assets/images/hawan.png'),
             'Hawan',
             ['#E53935', '#C62828'],
             '#E53935'

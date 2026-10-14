@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  FlatList,
   Platform,
   StatusBar,
 } from 'react-native';
@@ -18,41 +17,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { calculatePanchang, PanchangData } from '../utils/panchang';
 
 const { width } = Dimensions.get('window');
-
-const SERVICE_CARDS = [
-  {
-    id: '1',
-    title: 'Panchang',
-    subtitle: 'Tithi, Muhurat & Festivals',
-    icon: 'sun',
-    gradient: ['#C75B12', '#E8944A'],
-  },
-  {
-    id: '2',
-    title: 'Kundali',
-    subtitle: 'Birth Chart & Compatibility',
-    icon: 'star',
-    gradient: ['#16A34A', '#4ADE80'],
-  },
-  {
-    id: '3',
-    title: 'Pooja',
-    subtitle: 'Book, Plan & Rituals',
-    icon: 'droplet',
-    gradient: ['#2563EB', '#60A5FA'],
-  },
-  {
-    id: '4',
-    title: 'Muhurat',
-    subtitle: 'Auspicious Times',
-    icon: 'clock',
-    gradient: ['#7C3AED', '#A78BFA'],
-  },
-];
 
 const QUICK_ACTIONS = [
   { id: '1', labelKey: 'pooja', icon: 'droplet', screen: 'Library', image: require('../assets/images/lotus_pooja.png') },
@@ -63,6 +32,7 @@ const QUICK_ACTIONS = [
   { id: '6', labelKey: 'kundali', icon: 'star', screen: 'Kundali', image: require('../assets/images/lotus_kundali.png') },
   { id: '6a', labelKey: 'kundali_match', icon: 'heart', screen: 'KundaliMatchingForm' },
   { id: '6b', labelKey: 'samagri', icon: 'shopping-bag', screen: 'Samagri' },
+  { id: '6c', labelKey: 'hawan', icon: 'sun', screen: 'Hawan', image: require('../assets/images/hawan.png') },
   { id: '7', labelKey: 'yajman', icon: 'users', screen: 'YajmanList', image: require('../assets/images/community.png') },
   { id: '8', labelKey: 'stotram', icon: 'book-open', screen: 'StotramLibrary', image: require('../assets/images/stotram.png') },
   { id: '9', labelKey: 'community', icon: 'message-circle', screen: 'Community', image: require('../assets/images/community.png') },
@@ -93,6 +63,12 @@ const HomeScreen = () => {
   };
 
   const isHindi = i18n.language === 'hi';
+
+  const toggleLanguage = async () => {
+    const nextLang = isHindi ? 'en' : 'hi';
+    await i18n.changeLanguage(nextLang);
+    await AsyncStorage.setItem('language_preference', nextLang);
+  };
   const dayName = isHindi ? HI_DAYS[currentDate.getDay()] : EN_DAYS[currentDate.getDay()];
   const monthName = isHindi ? HI_MONTHS[currentDate.getMonth()] : EN_MONTHS[currentDate.getMonth()];
   const shortDayName = isHindi ? dayName.replace('वार', '') : dayName.substring(0, 3);
@@ -117,7 +93,7 @@ const HomeScreen = () => {
       try {
         let location = await Location.getCurrentPositionAsync({});
         setPanchang(calculatePanchang(location.coords.latitude, location.coords.longitude, currentDate));
-      } catch (error) {
+      } catch {
         // Fallback to New Delhi
         setPanchang(calculatePanchang(28.6139, 77.2090, currentDate));
       }
@@ -151,6 +127,14 @@ const HomeScreen = () => {
             />
           </View>
           <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.headerLangBtn}
+              onPress={toggleLanguage}
+              activeOpacity={0.7}
+              accessibilityLabel="Change Language"
+            >
+              <Text style={styles.headerLangText}>{isHindi ? 'EN' : 'हिं'}</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtnDark} onPress={toggleTheme}>
               <Icon name={isDark ? 'sun' : 'moon'} size={18} color="#FFF" />
             </TouchableOpacity>
@@ -233,7 +217,7 @@ const HomeScreen = () => {
               </View>
               <TouchableOpacity style={styles.sarveBhavantuBtn}>
                 <Text style={[styles.sarveBhavantuText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.sarve_bhavantu', 'सर्वे भवन्तु सुखिनः')}</Text>
-                <Icon name="chevron-right" size={14} color={isDark ? '#FFF' : colors.primary} />
+                <Icon name="chevron-right" size={12} color={isDark ? '#FFF' : colors.primary} />
               </TouchableOpacity>
             </View>
 
@@ -245,11 +229,13 @@ const HomeScreen = () => {
                   onPress={() => navigation.navigate(item.screen)}
                   activeOpacity={0.7}
                 >
-                  {item.image ? (
-                    <Image source={item.image} style={{ width: 20, height: 28, marginBottom: 8, tintColor: isDark ? '#FFF' : undefined }} resizeMode="contain" />
-                  ) : (
-                    <Icon name={item.icon as any} size={20} color={isDark ? '#FFF' : colors.primary} style={styles.quickActionIconImage} />
-                  )}
+                  <View style={styles.quickActionIconBox}>
+                    {item.image ? (
+                      <Image source={item.image} style={{ width: 22, height: 22, tintColor: isDark ? '#FFF' : undefined }} resizeMode="contain" />
+                    ) : (
+                      <Icon name={item.icon as any} size={20} color={isDark ? '#FFF' : colors.primary} />
+                    )}
+                  </View>
                   <Text style={[styles.quickActionLabel, { color: colors.text }]}>{t(`quick_actions.${item.labelKey}`)}</Text>
                 </TouchableOpacity>
               ))}
@@ -283,14 +269,14 @@ const HomeScreen = () => {
               <View style={styles.panchangThreeCols}>
                 <View style={styles.panchangCol}>
                   <Icon name="calendar" size={20} color={isDark ? '#FFF' : colors.primary} />
-                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('tithi', 'तिथि')}</Text>
-                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{panchang ? (t(panchang.tithiKey)) : 'अष्टमी'}</Text>
+                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('panchang_screen.labels.tithi', 'तिथि')}</Text>
+                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{panchang ? (t(panchang.tithiKey)) : (isHindi ? 'अष्टमी' : 'Ashtami')}</Text>
                 </View>
                 <View style={[styles.panchangDividerVertical, { backgroundColor: colors.border }]} />
                 <View style={styles.panchangCol}>
                   <Icon name="star" size={20} color={isDark ? '#FFF' : colors.primary} />
-                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('nakshatra', 'नक्षत्र')}</Text>
-                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{panchang ? ('Rohini') : 'रोहिणी'}</Text>
+                  <Text style={[styles.panchangColLabel, { color: colors.textLight }]}>{t('panchang_screen.labels.nakshatra', 'नक्षत्र')}</Text>
+                  <Text style={[styles.panchangColValue, { color: colors.text }]}>{isHindi ? 'रोहिणी' : 'Rohini'}</Text>
                 </View>
                 <View style={[styles.panchangDividerVertical, { backgroundColor: colors.border }]} />
                 <View style={styles.panchangCol}>
@@ -631,22 +617,32 @@ const styles = StyleSheet.create({
   quickActionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    rowGap: 8,
+    columnGap: 8,
     paddingHorizontal: 5,
   },
   quickActionCard: {
-    width: (width - 60) / 4,
+    width: Math.floor((width - 62) / 4),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 5,
     paddingVertical: 7,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'transparent',
   },
+  quickActionIconBox: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
   quickActionIconImage: {
     width: 28,
     height: 28,
+    textAlign: 'center',
+    textAlignVertical: 'center',
     marginBottom: 8,
   },
   quickActionItem: {
@@ -1012,6 +1008,22 @@ const styles = StyleSheet.create({
     width: 140,
     height: 50,
     tintColor: '#FCE596',
+  },
+  headerLangBtn: {
+    height: 32,
+    paddingHorizontal: 9,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  headerLangText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   headerIconBtnDark: {
     width: 32,

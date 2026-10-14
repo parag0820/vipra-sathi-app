@@ -64,6 +64,7 @@ export type RootStackParamList = {
     dob: string;
     tob: string;
     place: string;
+    gender?: string;
   };
   Panchang: undefined;
   DakshinaCalculator: undefined;

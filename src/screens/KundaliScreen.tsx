@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
@@ -8,42 +18,123 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import CustomHeader from '../components/CustomHeader';
 import { Feather as Icon } from '@expo/vector-icons';
 import DatePicker from 'react-native-date-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SavedKundali, INITIAL_SAVED_KUNDALIS } from '../data/mockKundali';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Kundali'>;
 
 const KundaliScreen = () => {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
 
-  const [brideDetails, setBrideDetails] = useState({
-    name: '',
-    dob: '',
-    tob: '',
-    place: ''
-  });
-
-  const [groomDetails, setGroomDetails] = useState({
-    name: '',
-    dob: '',
-    tob: '',
-    place: ''
-  });
+  const [activeTab, setActiveTab] = useState<'create' | 'saved'>('create');
 
   const [createDetails, setCreateDetails] = useState({
     name: '',
     dob: '',
     tob: '',
     place: '',
-    gender: 'male'
+    gender: 'male' as 'male' | 'female',
   });
 
-  const { t } = useTranslation();
-
-  const [activeTab, setActiveTab] = useState<'match' | 'create'>('create');
+  const [saveToRecent, setSaveToRecent] = useState(true);
+  const [savedKundalis, setSavedKundalis] = useState<SavedKundali[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
-  const [currentPickerField, setCurrentPickerField] = useState<{ person: 'bride' | 'groom' | 'create', field: 'dob' | 'tob' } | null>(null);
+  const [currentField, setCurrentField] = useState<'dob' | 'tob' | null>(null);
+
+  // Load saved kundalis from AsyncStorage
+  useEffect(() => {
+    const loadKundalis = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('@saved_kundalis');
+        if (stored) {
+          setSavedKundalis(JSON.parse(stored));
+        } else {
+          setSavedKundalis(INITIAL_SAVED_KUNDALIS);
+          await AsyncStorage.setItem('@saved_kundalis', JSON.stringify(INITIAL_SAVED_KUNDALIS));
+        }
+      } catch (error) {
+        setSavedKundalis(INITIAL_SAVED_KUNDALIS);
+      }
+    };
+    loadKundalis();
+  }, []);
+
+  const handleGenerateKundali = async () => {
+    const name = createDetails.name.trim() || 'Rahul Sharma';
+    const dob = createDetails.dob.trim() || '24/09/1990';
+    const tob = createDetails.tob.trim() || '10:30 AM';
+    const place = createDetails.place.trim() || 'Jaipur, Rajasthan';
+    const gender = createDetails.gender;
+
+    if (saveToRecent) {
+      const newKundali: SavedKundali = {
+        id: 'k_' + Date.now(),
+        name,
+        gender,
+        dob,
+        tob,
+        place,
+        rashi: 'Mesh (मेष)',
+        nakshatra: 'Ashwini (अश्विनी)',
+        lagna: 'Leo (सिंह)',
+        savedAt: 'Just now',
+      };
+
+      const updated = [newKundali, ...savedKundalis.filter(k => k.name.toLowerCase() !== name.toLowerCase())];
+      setSavedKundalis(updated);
+      try {
+        await AsyncStorage.setItem('@saved_kundalis', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save kundali', err);
+      }
+    }
+
+    navigation.navigate('KundaliGenerated', {
+      name,
+      dob,
+      tob,
+      place,
+      gender,
+    });
+  };
+
+  const handleDeleteKundali = (id: string, name: string) => {
+    Alert.alert(
+      t('kundali.delete_kundali', 'Delete Kundali'),
+      `${t('kundali.confirm_delete_msg', 'Are you sure you want to delete this horoscope profile?')} (${name})`,
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('kundali.delete_kundali', 'Delete'),
+          style: 'destructive',
+          onPress: async () => {
+            const updated = savedKundalis.filter(k => k.id !== id);
+            setSavedKundalis(updated);
+            try {
+              await AsyncStorage.setItem('@saved_kundalis', JSON.stringify(updated));
+            } catch (err) {
+              console.error('Failed to update saved kundalis', err);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const filteredSavedKundalis = savedKundalis.filter((item) => {
+    const matchesQuery =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.place.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGender =
+      genderFilter === 'all' || item.gender === genderFilter;
+    return matchesQuery && matchesGender;
+  });
 
   const renderInput = (
     label: string,
@@ -70,7 +161,6 @@ const KundaliScreen = () => {
   const renderDateTimePicker = (
     label: string,
     value: string,
-    person: 'bride' | 'groom' | 'create',
     field: 'dob' | 'tob',
     placeholder: string,
     iconName?: string
@@ -81,7 +171,7 @@ const KundaliScreen = () => {
         style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => {
           setPickerMode(field === 'dob' ? 'date' : 'time');
-          setCurrentPickerField({ person, field });
+          setCurrentField(field);
           setPickerVisible(true);
         }}
       >
@@ -106,117 +196,653 @@ const KundaliScreen = () => {
       />
 
       <View style={[styles.mainContentWrapper, { backgroundColor: colors.background }]}>
+        {/* Segmented Top Tabs */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'create' ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }]}
+            style={[
+              styles.tabButton,
+              activeTab === 'create'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+            ]}
             onPress={() => setActiveTab('create')}
+            activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'create' ? { color: '#FFF' } : { color: colors.textLight }]}>{t('kundali.create_tab', 'Create Kundali')}</Text>
+            <Icon
+              name="plus-circle"
+              size={14}
+              color={activeTab === 'create' ? '#FFF' : colors.textLight}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'create' ? { color: '#FFF' } : { color: colors.textLight },
+              ]}
+            >
+              {t('kundali.create_tab', 'Create Kundali')}
+            </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'match' ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface }]}
-            onPress={() => setActiveTab('match')}
+            style={[
+              styles.tabButton,
+              activeTab === 'saved'
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+            ]}
+            onPress={() => setActiveTab('saved')}
+            activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, activeTab === 'match' ? { color: '#FFF' } : { color: colors.textLight }]}>{t('kundali.match_tab', 'Kundali Matching')}</Text>
+            <Icon
+              name="bookmark"
+              size={14}
+              color={activeTab === 'saved' ? '#FFF' : colors.textLight}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'saved' ? { color: '#FFF' } : { color: colors.textLight },
+              ]}
+            >
+              {t('kundali.saved_tab', 'Recent / Saved Kundali')}
+            </Text>
+            {savedKundalis.length > 0 && (
+              <View
+                style={[
+                  styles.tabBadge,
+                  {
+                    backgroundColor: activeTab === 'saved' ? 'rgba(255,255,255,0.25)' : colors.primary,
+                  },
+                ]}
+              >
+                <Text style={styles.tabBadgeText}>{savedKundalis.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {activeTab === 'match' ? (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {activeTab === 'create' ? (
             <>
-              {/* Bride Details Section */}
-              <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.bride_details', 'Bride Details')}</Text>
-                </View>
+              {/* Form Card */}
+              <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {renderInput(
+                  t('kundali.name_label', 'Name'),
+                  createDetails.name,
+                  (text) => setCreateDetails({ ...createDetails, name: text }),
+                  t('kundali.name_placeholder', 'Rahul Sharma'),
+                  'user'
+                )}
 
-                {renderInput(t('kundali.name_label', 'Name'), brideDetails.name, (text) => setBrideDetails({ ...brideDetails, name: text }), t('kundali.enter_bride_name', 'Enter Bride Name'))}
-                {renderDateTimePicker(t('kundali.dob_label', 'Date of Birth'), brideDetails.dob, 'bride', 'dob', 'DD/MM/YYYY')}
-                {renderDateTimePicker(t('kundali.tob_label', 'Time of Birth'), brideDetails.tob, 'bride', 'tob', 'HH:MM AM/PM')}
-                {renderInput(t('kundali.place_label', 'Place of Birth'), brideDetails.place, (text) => setBrideDetails({ ...brideDetails, place: text }), t('kundali.place_placeholder_match', 'City, State'))}
-              </View>
+                {renderDateTimePicker(
+                  t('kundali.dob_label', 'Date of Birth'),
+                  createDetails.dob,
+                  'dob',
+                  t('kundali.dob_placeholder', '24/09/1990'),
+                  'calendar'
+                )}
 
-              {/* Groom Details Section */}
-              <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="user" size={20} color={isDark ? '#FFF' : colors.text} />
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('kundali.groom_details', 'Groom Details')}</Text>
-                </View>
+                {renderDateTimePicker(
+                  t('kundali.tob_label', 'Time of Birth'),
+                  createDetails.tob,
+                  'tob',
+                  t('kundali.tob_placeholder', '10:30 AM'),
+                  'clock'
+                )}
 
-                {renderInput(t('kundali.name_label', 'Name'), groomDetails.name, (text) => setGroomDetails({ ...groomDetails, name: text }), t('kundali.enter_groom_name', 'Enter Groom Name'))}
-                {renderDateTimePicker(t('kundali.dob_label', 'Date of Birth'), groomDetails.dob, 'groom', 'dob', 'DD/MM/YYYY')}
-                {renderDateTimePicker(t('kundali.tob_label', 'Time of Birth'), groomDetails.tob, 'groom', 'tob', 'HH:MM AM/PM')}
-                {renderInput(t('kundali.place_label', 'Place of Birth'), groomDetails.place, (text) => setGroomDetails({ ...groomDetails, place: text }), t('kundali.place_placeholder_match', 'City, State'))}
-              </View>
+                {renderInput(
+                  t('kundali.place_label', 'Place of Birth'),
+                  createDetails.place,
+                  (text) => setCreateDetails({ ...createDetails, place: text }),
+                  t('kundali.place_placeholder', 'Jaipur, Rajasthan'),
+                  'map-pin'
+                )}
 
-              <TouchableOpacity
-                style={[styles.matchBtn, { backgroundColor: colors.primary }]}
-                onPress={() => navigation.navigate('KundaliMatchingResult')}
-              >
-                <Text style={styles.matchBtnText}>{t('kundali.match_btn', 'Match Kundali')}</Text>
-                <Icon name="arrow-right" size={20} color="#FFF" style={{ marginLeft: 8 }} />
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              {/* Create Kundali Section */}
-              <View style={{ paddingVertical: 10 }}>
-                {renderInput(t('kundali.name_label', 'Name'), createDetails.name, (text) => setCreateDetails({ ...createDetails, name: text }), t('kundali.name_placeholder', 'Rahul Sharma'), 'user')}
-                {renderDateTimePicker(t('kundali.dob_label', 'Date of Birth'), createDetails.dob, 'create', 'dob', t('kundali.dob_placeholder', '24/09/1990'), 'calendar')}
-                {renderDateTimePicker(t('kundali.tob_label', 'Time of Birth'), createDetails.tob, 'create', 'tob', t('kundali.tob_placeholder', '10:30'), 'clock')}
-                {renderInput(t('kundali.place_label', 'Place of Birth'), createDetails.place, (text) => setCreateDetails({ ...createDetails, place: text }), t('kundali.place_placeholder', 'Jaipur, Rajasthan'), 'map-pin')}
-
+                {/* Modern Visual Gender Selector */}
                 <View style={styles.inputContainer}>
-                  <Text style={[styles.label, { color: colors.text }]}>{t('kundali.gender_label', 'Gender')}</Text>
-                  <View style={styles.genderContainer}>
+                  <Text style={[styles.label, { color: colors.text }]}>
+                    {t('kundali.gender_label', 'Gender')}
+                  </Text>
+                  <View style={styles.modernGenderRow}>
+                    {/* Male Selection Card */}
                     <TouchableOpacity
-                      style={[styles.genderBtn, createDetails.gender === 'male' ? styles.genderBtnActive : [styles.genderBtnInactive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
+                      style={[
+                        styles.modernGenderCard,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor:
+                            createDetails.gender === 'male' ? colors.primary : colors.border,
+                        },
+                        createDetails.gender === 'male' && {
+                          backgroundColor: isDark ? 'rgba(128,0,0,0.25)' : '#FFF6F0',
+                          borderWidth: 1.8,
+                        },
+                      ]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'male' })}
+                      activeOpacity={0.8}
                     >
-                      <Text style={createDetails.gender === 'male' ? styles.genderBtnTextActive : [styles.genderBtnTextInactive, { color: colors.text }]}>
-                        {t('kundali.male', 'Male')}
-                      </Text>
+                      <View
+                        style={[
+                          styles.genderIconCircle,
+                          {
+                            backgroundColor:
+                              createDetails.gender === 'male'
+                                ? colors.primary
+                                : isDark
+                                  ? '#333'
+                                  : '#EDE9E3',
+                          },
+                        ]}
+                      >
+                        <Icon
+                          name="user"
+                          size={17}
+                          color={createDetails.gender === 'male' ? '#FFF' : colors.textLight}
+                        />
+                      </View>
+                      <View style={styles.genderTextCol}>
+                        <Text
+                          style={[
+                            styles.modernGenderTitle,
+                            {
+                              color:
+                                createDetails.gender === 'male'
+                                  ? colors.primary
+                                  : colors.text,
+                            },
+                          ]}
+                        >
+                          {t('kundali.male', 'Male')} <Text style={{ fontSize: 13 }}>♂</Text>
+                        </Text>
+                        <Text style={[styles.modernGenderSub, { color: colors.textLight }]}>
+                          {t('kundali.male_sub', 'Boy / Groom')}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.genderRadioCircle,
+                          {
+                            borderColor:
+                              createDetails.gender === 'male' ? colors.primary : colors.border,
+                            backgroundColor:
+                              createDetails.gender === 'male' ? colors.primary : 'transparent',
+                          },
+                        ]}
+                      >
+                        {createDetails.gender === 'male' && (
+                          <Icon name="check" size={10} color="#FFF" />
+                        )}
+                      </View>
                     </TouchableOpacity>
+
+                    {/* Female Selection Card */}
                     <TouchableOpacity
-                      style={[styles.genderBtn, createDetails.gender === 'female' ? styles.genderBtnActive : [styles.genderBtnInactive, { backgroundColor: colors.surface, borderColor: colors.border }]]}
+                      style={[
+                        styles.modernGenderCard,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor:
+                            createDetails.gender === 'female' ? colors.primary : colors.border,
+                        },
+                        createDetails.gender === 'female' && {
+                          backgroundColor: isDark ? 'rgba(128,0,0,0.25)' : '#FFF6F0',
+                          borderWidth: 1.8,
+                        },
+                      ]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'female' })}
+                      activeOpacity={0.8}
                     >
-                      <Text style={createDetails.gender === 'female' ? styles.genderBtnTextActive : [styles.genderBtnTextInactive, { color: colors.text }]}>
-                        {t('kundali.female', 'Female')}
-                      </Text>
+                      <View
+                        style={[
+                          styles.genderIconCircle,
+                          {
+                            backgroundColor:
+                              createDetails.gender === 'female'
+                                ? colors.primary
+                                : isDark
+                                  ? '#333'
+                                  : '#EDE9E3',
+                          },
+                        ]}
+                      >
+                        <Icon
+                          name="user"
+                          size={17}
+                          color={createDetails.gender === 'female' ? '#FFF' : colors.textLight}
+                        />
+                      </View>
+                      <View style={styles.genderTextCol}>
+                        <Text
+                          style={[
+                            styles.modernGenderTitle,
+                            {
+                              color:
+                                createDetails.gender === 'female'
+                                  ? colors.primary
+                                  : colors.text,
+                            },
+                          ]}
+                        >
+                          {t('kundali.female', 'Female')} <Text style={{ fontSize: 13 }}>♀</Text>
+                        </Text>
+                        <Text style={[styles.modernGenderSub, { color: colors.textLight }]}>
+                          {t('kundali.female_sub', 'Girl / Bride')}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.genderRadioCircle,
+                          {
+                            borderColor:
+                              createDetails.gender === 'female' ? colors.primary : colors.border,
+                            backgroundColor:
+                              createDetails.gender === 'female' ? colors.primary : 'transparent',
+                          },
+                        ]}
+                      >
+                        {createDetails.gender === 'female' && (
+                          <Icon name="check" size={10} color="#FFF" />
+                        )}
+                      </View>
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
 
-              <TouchableOpacity
-                style={styles.generateBtn}
-                onPress={() => navigation.navigate('KundaliGenerated', {
-                  name: createDetails.name || 'Rahul Sharma',
-                  dob: createDetails.dob || '24/09/1990',
-                  tob: createDetails.tob || '10:30 AM',
-                  place: createDetails.place || 'Jaipur, Rajasthan'
-                })}
-              >
-                <Text style={styles.generateBtnText}>{t('kundali.generate_btn', 'Generate Kundali')}</Text>
-                <Icon name="arrow-right" size={18} color="#FFF" style={{ marginLeft: 8 }} />
-              </TouchableOpacity>
+                {/* Save to Recent Checkbox */}
+                <TouchableOpacity
+                  style={styles.saveToggleRow}
+                  onPress={() => setSaveToRecent(!saveToRecent)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.customCheckbox,
+                      {
+                        borderColor: saveToRecent ? colors.primary : colors.border,
+                        backgroundColor: saveToRecent ? colors.primary : 'transparent',
+                      },
+                    ]}
+                  >
+                    {saveToRecent && <Icon name="check" size={12} color="#FFF" />}
+                  </View>
+                  <Text style={[styles.saveToggleText, { color: colors.text }]}>
+                    {t('kundali.save_to_recent', 'Save to Recent Kundalis')}
+                  </Text>
+                </TouchableOpacity>
 
-              <View style={[styles.recentSection, { backgroundColor: isDark ? colors.surface : '#F9F6EE' }]}>
-                <Text style={[styles.recentTitle, { color: colors.text }]}>{t('kundali.recent_title', 'Recent Kundali')}</Text>
-                <TouchableOpacity style={[styles.recentItem, { backgroundColor: isDark ? '#2A2A2A' : '#FFF' }]}>
-                  <View style={[styles.recentIconWrapper, { backgroundColor: isDark ? '#444' : '#F0F0F0' }]}>
-                    <Icon name="user" size={18} color={isDark ? '#FFF' : '#333'} />
-                  </View>
-                  <View style={styles.recentInfo}>
-                    <Text style={[styles.recentName, { color: colors.text }]}>Rakesh Sharma</Text>
-                    <Text style={[styles.recentDate, { color: colors.textLight }]}>24 Sep 1990, 10:30 AM</Text>
-                  </View>
-                  <Icon name="chevron-right" size={18} color={isDark ? '#FFF' : '#333'} />
+                {/* Generate Button */}
+                <TouchableOpacity
+                  style={[styles.generateBtn, { backgroundColor: colors.primary }]}
+                  onPress={handleGenerateKundali}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.generateBtnText}>
+                    {t('kundali.generate_btn', 'Generate Kundali')}
+                  </Text>
+                  <Icon name="arrow-right" size={18} color="#FFF" style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
               </View>
+
+              {/* Kundali Matching Banner Shortcut */}
+              <TouchableOpacity
+                style={[
+                  styles.matchingShortcutBanner,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+                onPress={() => navigation.navigate('KundaliMatchingForm')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.matchingShortcutIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#FFF0E6' }]}>
+                  <Icon name="heart" size={18} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.matchingShortcutTitle, { color: colors.text }]}>
+                    {t('kundali.need_matching', 'Looking for Kundali Milan? Open Kundali Matching')}
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={16} color={colors.primary} />
+              </TouchableOpacity>
+
+              {/* Quick Preview of Recent Kundalis */}
+              {savedKundalis.length > 0 && (
+                <View style={[styles.recentSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.recentSectionHeader}>
+                    <Text style={[styles.recentTitle, { color: colors.text }]}>
+                      {t('kundali.recent_title', 'Recent Kundalis')}
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveTab('saved')}>
+                      <Text style={[styles.viewAllRecentText, { color: colors.primary }]}>
+                        {t('home.view_all', 'View All')} ({savedKundalis.length}) →
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {savedKundalis.slice(0, 2).map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        styles.quickRecentItem,
+                        { backgroundColor: colors.background, borderColor: colors.border },
+                      ]}
+                      onPress={() =>
+                        navigation.navigate('KundaliGenerated', {
+                          name: item.name,
+                          dob: item.dob,
+                          tob: item.tob,
+                          place: item.place,
+                          gender: item.gender,
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={[
+                          styles.recentAvatar,
+                          {
+                            backgroundColor:
+                              item.gender === 'female'
+                                ? 'rgba(236,72,153,0.15)'
+                                : 'rgba(59,130,246,0.15)',
+                          },
+                        ]}
+                      >
+                        <Icon
+                          name="user"
+                          size={16}
+                          color={item.gender === 'female' ? '#DB2777' : '#2563EB'}
+                        />
+                      </View>
+                      <View style={styles.recentInfo}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={[styles.recentName, { color: colors.text }]}>
+                            {item.name}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: colors.textLight }}>
+                            {item.gender === 'female' ? '♀' : '♂'}
+                          </Text>
+                        </View>
+                        <Text style={[styles.recentDate, { color: colors.textLight }]}>
+                          📅 {item.dob} • ⏰ {item.tob}
+                        </Text>
+                      </View>
+                      <Icon name="arrow-right" size={16} color={colors.primary} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </>
+          ) : (
+            /* Tab 2: Saved / Recent Kundalis View */
+            <View style={styles.savedTabContainer}>
+              {/* Search Bar */}
+              <View
+                style={[
+                  styles.searchBarWrapper,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Icon name="search" size={16} color={colors.textLight} style={{ marginRight: 8 }} />
+                <TextInput
+                  style={[styles.searchTextInput, { color: colors.text }]}
+                  placeholder={t('kundali.search_saved_placeholder', 'Search by name or birth place...')}
+                  placeholderTextColor={colors.textLight}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Icon name="x" size={16} color={colors.textLight} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Filter Pills */}
+              <View style={styles.filterPillsRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.filterPill,
+                    genderFilter === 'all'
+                      ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                      : { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                  onPress={() => setGenderFilter('all')}
+                >
+                  <Text
+                    style={[
+                      styles.filterPillText,
+                      { color: genderFilter === 'all' ? '#FFF' : colors.text },
+                    ]}
+                  >
+                    {t('kundali.all_filter', 'All')} ({savedKundalis.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.filterPill,
+                    genderFilter === 'male'
+                      ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                      : { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                  onPress={() => setGenderFilter('male')}
+                >
+                  <Text
+                    style={[
+                      styles.filterPillText,
+                      { color: genderFilter === 'male' ? '#FFF' : colors.text },
+                    ]}
+                  >
+                    {t('kundali.male', 'Male')} ♂ (
+                    {savedKundalis.filter((k) => k.gender === 'male').length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.filterPill,
+                    genderFilter === 'female'
+                      ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                      : { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                  onPress={() => setGenderFilter('female')}
+                >
+                  <Text
+                    style={[
+                      styles.filterPillText,
+                      { color: genderFilter === 'female' ? '#FFF' : colors.text },
+                    ]}
+                  >
+                    {t('kundali.female', 'Female')} ♀ (
+                    {savedKundalis.filter((k) => k.gender === 'female').length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Saved Kundalis List or Empty State */}
+              {filteredSavedKundalis.length === 0 ? (
+                <View
+                  style={[
+                    styles.emptySavedState,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? '#333' : '#FFF0E6' }]}>
+                    <Icon name="bookmark" size={32} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.emptyStateTitle, { color: colors.text }]}>
+                    {t('kundali.no_saved_title', 'No Saved Kundalis Yet')}
+                  </Text>
+                  <Text style={[styles.emptyStateDesc, { color: colors.textLight }]}>
+                    {t(
+                      'kundali.no_saved_desc',
+                      'Generate and save horoscopes to view, analyze, and manage them anytime.'
+                    )}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.emptyCtaBtn, { backgroundColor: colors.primary }]}
+                    onPress={() => setActiveTab('create')}
+                  >
+                    <Icon name="plus" size={16} color="#FFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.emptyCtaText}>
+                      {t('kundali.create_new_btn', '+ Create New Kundali')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.savedList}>
+                  {filteredSavedKundalis.map((item) => (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.savedKundaliCard,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      {/* Card Header */}
+                      <View style={styles.savedCardHeader}>
+                        <View style={styles.savedCardUserRow}>
+                          <View
+                            style={[
+                              styles.savedCardAvatar,
+                              {
+                                backgroundColor:
+                                  item.gender === 'female'
+                                    ? 'rgba(236,72,153,0.15)'
+                                    : 'rgba(59,130,246,0.15)',
+                              },
+                            ]}
+                          >
+                            <Icon
+                              name="user"
+                              size={18}
+                              color={item.gender === 'female' ? '#DB2777' : '#2563EB'}
+                            />
+                          </View>
+                          <View>
+                            <Text style={[styles.savedCardName, { color: colors.text }]}>
+                              {item.name}
+                            </Text>
+                            <View style={styles.genderBadge}>
+                              <Text
+                                style={[
+                                  styles.genderBadgeText,
+                                  { color: item.gender === 'female' ? '#DB2777' : '#2563EB' },
+                                ]}
+                              >
+                                {item.gender === 'female'
+                                  ? `${t('kundali.female', 'Female')} ♀`
+                                  : `${t('kundali.male', 'Male')} ♂`}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Delete Button */}
+                        <TouchableOpacity
+                          style={styles.deleteBtn}
+                          onPress={() => handleDeleteKundali(item.id, item.name)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Icon name="trash-2" size={16} color={colors.error || '#EF4444'} />
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Details Grid */}
+                      <View
+                        style={[
+                          styles.detailsGridBox,
+                          { backgroundColor: colors.background, borderColor: colors.border },
+                        ]}
+                      >
+                        <View style={styles.detailRowItem}>
+                          <Icon name="calendar" size={13} color={colors.primary} style={{ marginRight: 6 }} />
+                          <Text style={[styles.detailItemLabel, { color: colors.textLight }]}>
+                            {t('kundali.dob_label', 'DOB')}:
+                          </Text>
+                          <Text style={[styles.detailItemVal, { color: colors.text }]}>
+                            {item.dob}
+                          </Text>
+                        </View>
+
+                        <View style={styles.detailRowItem}>
+                          <Icon name="clock" size={13} color={colors.primary} style={{ marginRight: 6 }} />
+                          <Text style={[styles.detailItemLabel, { color: colors.textLight }]}>
+                            {t('kundali.tob_label', 'TOB')}:
+                          </Text>
+                          <Text style={[styles.detailItemVal, { color: colors.text }]}>
+                            {item.tob}
+                          </Text>
+                        </View>
+
+                        <View style={styles.detailRowItem}>
+                          <Icon name="map-pin" size={13} color={colors.primary} style={{ marginRight: 6 }} />
+                          <Text style={[styles.detailItemLabel, { color: colors.textLight }]}>
+                            {t('kundali.place_label', 'Place')}:
+                          </Text>
+                          <Text style={[styles.detailItemVal, { color: colors.text }]} numberOfLines={1}>
+                            {item.place}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Astrology Tag Pills */}
+                      {(item.rashi || item.nakshatra || item.lagna) && (
+                        <View style={styles.astroPillsRow}>
+                          {item.rashi && (
+                            <View style={[styles.astroPill, { backgroundColor: isDark ? '#333' : '#F4ECE1' }]}>
+                              <Text style={[styles.astroPillText, { color: colors.text }]}>
+                                ♈ {item.rashi}
+                              </Text>
+                            </View>
+                          )}
+                          {item.nakshatra && (
+                            <View style={[styles.astroPill, { backgroundColor: isDark ? '#333' : '#F4ECE1' }]}>
+                              <Text style={[styles.astroPillText, { color: colors.text }]}>
+                                ⭐ {item.nakshatra}
+                              </Text>
+                            </View>
+                          )}
+                          {item.lagna && (
+                            <View style={[styles.astroPill, { backgroundColor: isDark ? '#333' : '#F4ECE1' }]}>
+                              <Text style={[styles.astroPillText, { color: colors.text }]}>
+                                🪐 {item.lagna}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      {/* Footer: Saved Date & View CTA */}
+                      <View style={styles.savedCardFooter}>
+                        <Text style={[styles.savedTimestamp, { color: colors.textLight }]}>
+                          {item.savedAt ? `Saved: ${item.savedAt}` : 'Saved profile'}
+                        </Text>
+                        <TouchableOpacity
+                          style={[styles.viewKundaliBtn, { backgroundColor: colors.primary }]}
+                          onPress={() =>
+                            navigation.navigate('KundaliGenerated', {
+                              name: item.name,
+                              dob: item.dob,
+                              tob: item.tob,
+                              place: item.place,
+                              gender: item.gender,
+                            })
+                          }
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.viewKundaliBtnText}>
+                            {t('kundali.view_kundali_btn', 'View Kundali')}
+                          </Text>
+                          <Icon name="arrow-right" size={13} color="#FFF" style={{ marginLeft: 4 }} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
           )}
 
           <View style={{ height: 40 }} />
@@ -233,7 +859,9 @@ const KundaliScreen = () => {
           setPickerVisible(false);
           let formattedValue = '';
           if (pickerMode === 'date') {
-            formattedValue = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+            formattedValue = `${String(date.getDate()).padStart(2, '0')}/${String(
+              date.getMonth() + 1
+            ).padStart(2, '0')}/${date.getFullYear()}`;
           } else {
             let hours = date.getHours();
             const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -243,11 +871,8 @@ const KundaliScreen = () => {
             formattedValue = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
           }
 
-          if (currentPickerField) {
-            const { person, field } = currentPickerField;
-            if (person === 'bride') setBrideDetails(prev => ({ ...prev, [field]: formattedValue }));
-            if (person === 'groom') setGroomDetails(prev => ({ ...prev, [field]: formattedValue }));
-            if (person === 'create') setCreateDetails(prev => ({ ...prev, [field]: formattedValue }));
+          if (currentField) {
+            setCreateDetails((prev) => ({ ...prev, [currentField]: formattedValue }));
           }
         }}
         onCancel={() => {
@@ -270,142 +895,189 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 40,
   },
-  sectionCard: {
-    borderRadius: 16,
-    padding: 15,
-    marginBottom: 10,
-    borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  sectionHeader: {
+  tabContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+    gap: 10,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+  },
+  tabText: {
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  tabBadge: {
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+    minWidth: 18,
+    alignItems: 'center',
+  },
+  tabBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  formCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 14,
   },
   inputContainer: {
     marginBottom: 12,
   },
   label: {
     fontSize: 12,
-    marginBottom: 4,
-    fontWeight: 'bold',
+    marginBottom: 6,
+    fontWeight: '700',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
-    height: 40,
+    borderRadius: 10,
+    height: 42,
     paddingHorizontal: 12,
   },
   textInput: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     height: '100%',
   },
-  input: {
-    height: 42,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 14,
-  },
-  genderContainer: {
+  modernGenderRow: {
     flexDirection: 'row',
     gap: 10,
   },
-  genderBtn: {
+  modernGenderCard: {
     flex: 1,
-    height: 38,
-    borderRadius: 8,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 12,
+    padding: 10,
     borderWidth: 1,
   },
-  genderBtnActive: {
-    backgroundColor: '#800000',
-    borderColor: '#800000',
+  genderIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
-  genderBtnInactive: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#E0E0E0',
+  genderTextCol: {
+    flex: 1,
   },
-  genderBtnTextActive: {
-    color: '#FFF',
+  modernGenderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modernGenderSub: {
+    fontSize: 10,
+    marginTop: 1,
+  },
+  genderRadioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  customCheckbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  saveToggleText: {
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  genderBtnTextInactive: {
-    color: '#333',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   generateBtn: {
     flexDirection: 'row',
-    backgroundColor: '#800000',
     height: 44,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 5,
-    marginBottom: 15,
   },
   generateBtnText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  matchBtn: {
+  matchingShortcutBanner: {
     flexDirection: 'row',
-    height: 40,
-    borderRadius: 10,
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 14,
+  },
+  matchingShortcutIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
+    marginRight: 10,
   },
-  matchBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
+  matchingShortcutTitle: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   recentSection: {
-    marginTop: 5,
-    backgroundColor: '#F9F6EE',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+  },
+  recentSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   recentTitle: {
     fontSize: 13,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontWeight: '700',
   },
-  recentItem: {
+  viewAllRecentText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quickRecentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
   },
-  recentIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F0F0F0',
+  recentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -414,36 +1086,182 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   recentName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '700',
   },
   recentDate: {
     fontSize: 11,
-    color: '#666',
     marginTop: 2,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingBottom: 0,
+  savedTabContainer: {
     gap: 12,
   },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 10,
+  searchBarWrapper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    paddingHorizontal: 12,
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
   },
-  tabText: {
-    fontWeight: 'bold',
+  searchTextInput: {
+    flex: 1,
+    fontSize: 13,
+    height: '100%',
+  },
+  filterPillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  savedList: {
+    gap: 12,
+  },
+  savedKundaliCard: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+  },
+  savedCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  savedCardUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  savedCardAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savedCardName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  genderBadge: {
+    marginTop: 2,
+  },
+  genderBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  deleteBtn: {
+    padding: 6,
+  },
+  detailsGridBox: {
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    gap: 6,
+    marginBottom: 10,
+  },
+  detailRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailItemLabel: {
+    fontSize: 11,
+    marginRight: 4,
+  },
+  detailItemVal: {
+    fontSize: 11,
+    fontWeight: '600',
+    flex: 1,
+  },
+  astroPillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+  },
+  astroPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  astroPillText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  savedCardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingTop: 10,
+  },
+  savedTimestamp: {
+    fontSize: 11,
+  },
+  viewKundaliBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  viewKundaliBtnText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  emptySavedState: {
+    padding: 30,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  emptyStateDesc: {
     fontSize: 12,
-  }
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 18,
+    paddingHorizontal: 12,
+  },
+  emptyCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  emptyCtaText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });
 
 export default KundaliScreen;
