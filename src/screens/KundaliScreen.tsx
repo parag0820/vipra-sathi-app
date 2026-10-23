@@ -312,12 +312,7 @@ const KundaliScreen = () => {
                         styles.modernGenderCard,
                         {
                           backgroundColor: colors.background,
-                          borderColor:
-                            createDetails.gender === 'male' ? colors.primary : colors.border,
-                        },
-                        createDetails.gender === 'male' && {
-                          backgroundColor: isDark ? 'rgba(128,0,0,0.25)' : '#FFF6F0',
-                          borderWidth: 1.8,
+                          borderColor: colors.border,
                         },
                       ]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'male' })}
@@ -327,39 +322,26 @@ const KundaliScreen = () => {
                         style={[
                           styles.genderIconCircle,
                           {
-                            backgroundColor:
-                              createDetails.gender === 'male'
-                                ? colors.primary
-                                : isDark
-                                  ? '#333'
-                                  : '#EDE9E3',
+                            backgroundColor: isDark ? '#333' : '#EDE9E3',
                           },
                         ]}
                       >
                         <Icon
                           name="user"
-                          size={17}
-                          color={createDetails.gender === 'male' ? '#FFF' : colors.textLight}
+                          size={13}
+                          color={colors.textLight}
                         />
                       </View>
-                      <View style={styles.genderTextCol}>
-                        <Text
-                          style={[
-                            styles.modernGenderTitle,
-                            {
-                              color:
-                                createDetails.gender === 'male'
-                                  ? colors.primary
-                                  : colors.text,
-                            },
-                          ]}
-                        >
-                          {t('kundali.male', 'Male')} <Text style={{ fontSize: 13 }}>♂</Text>
-                        </Text>
-                        <Text style={[styles.modernGenderSub, { color: colors.textLight }]}>
-                          {t('kundali.male_sub', 'Boy / Groom')}
-                        </Text>
-                      </View>
+                      <Text
+                        style={[
+                          styles.modernGenderTitle,
+                          {
+                            color: colors.text,
+                          },
+                        ]}
+                      >
+                        {t('kundali.male', 'Male')} <Text style={{ fontSize: 13 }}>♂</Text>
+                      </Text>
                       <View
                         style={[
                           styles.genderRadioCircle,
@@ -372,7 +354,7 @@ const KundaliScreen = () => {
                         ]}
                       >
                         {createDetails.gender === 'male' && (
-                          <Icon name="check" size={10} color="#FFF" />
+                          <Icon name="check" size={9} color="#FFF" />
                         )}
                       </View>
                     </TouchableOpacity>
@@ -383,12 +365,7 @@ const KundaliScreen = () => {
                         styles.modernGenderCard,
                         {
                           backgroundColor: colors.background,
-                          borderColor:
-                            createDetails.gender === 'female' ? colors.primary : colors.border,
-                        },
-                        createDetails.gender === 'female' && {
-                          backgroundColor: isDark ? 'rgba(128,0,0,0.25)' : '#FFF6F0',
-                          borderWidth: 1.8,
+                          borderColor: colors.border,
                         },
                       ]}
                       onPress={() => setCreateDetails({ ...createDetails, gender: 'female' })}
@@ -398,39 +375,26 @@ const KundaliScreen = () => {
                         style={[
                           styles.genderIconCircle,
                           {
-                            backgroundColor:
-                              createDetails.gender === 'female'
-                                ? colors.primary
-                                : isDark
-                                  ? '#333'
-                                  : '#EDE9E3',
+                            backgroundColor: isDark ? '#333' : '#EDE9E3',
                           },
                         ]}
                       >
                         <Icon
                           name="user"
-                          size={17}
-                          color={createDetails.gender === 'female' ? '#FFF' : colors.textLight}
+                          size={13}
+                          color={colors.textLight}
                         />
                       </View>
-                      <View style={styles.genderTextCol}>
-                        <Text
-                          style={[
-                            styles.modernGenderTitle,
-                            {
-                              color:
-                                createDetails.gender === 'female'
-                                  ? colors.primary
-                                  : colors.text,
-                            },
-                          ]}
-                        >
-                          {t('kundali.female', 'Female')} <Text style={{ fontSize: 13 }}>♀</Text>
-                        </Text>
-                        <Text style={[styles.modernGenderSub, { color: colors.textLight }]}>
-                          {t('kundali.female_sub', 'Girl / Bride')}
-                        </Text>
-                      </View>
+                      <Text
+                        style={[
+                          styles.modernGenderTitle,
+                          {
+                            color: colors.text,
+                          },
+                        ]}
+                      >
+                        {t('kundali.female', 'Female')} <Text style={{ fontSize: 13 }}>♀</Text>
+                      </Text>
                       <View
                         style={[
                           styles.genderRadioCircle,
@@ -443,7 +407,7 @@ const KundaliScreen = () => {
                         ]}
                       >
                         {createDetails.gender === 'female' && (
-                          <Icon name="check" size={10} color="#FFF" />
+                          <Icon name="check" size={9} color="#FFF" />
                         )}
                       </View>
                     </TouchableOpacity>
@@ -965,33 +929,28 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 10,
+    height: 42,
+    paddingHorizontal: 10,
     borderWidth: 1,
   },
   genderIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
   },
-  genderTextCol: {
-    flex: 1,
-  },
   modernGenderTitle: {
+    flex: 1,
     fontSize: 13,
-    fontWeight: '700',
-  },
-  modernGenderSub: {
-    fontSize: 10,
-    marginTop: 1,
+    fontWeight: '600',
   },
   genderRadioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',

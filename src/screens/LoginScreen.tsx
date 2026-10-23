@@ -58,16 +58,77 @@ const LoginScreen = ({ navigation }: any) => {
         password,
       });
 
-      const userData = response.data.data || response.data.user || response.data;
+      const resData = response.data;
+      // Handle nested structures:
+      // Case 1: resData.data.user
+      // Case 2: resData.data.userData
+      // Case 3: resData.user
+      // Case 4: resData.userData
+      // Case 5: resData.data (contains user fields directly)
+      // Case 6: resData directly
+      let rawUser =
+        resData?.data?.user ||
+        resData?.data?.userData ||
+        resData?.user ||
+        resData?.userData ||
+        resData?.data ||
+        resData;
 
-      await login({
-        id: userData.id || userData._id || 'unknown_id',
-        fullName: userData.fullName || '',
-        displayName: userData.displayName || '',
-        email: userData.email || '',
-        mobileNumber: userData.mobileNumber || mobileNumber,
-        role: userData.role || 'user',
-      });
+      if (rawUser?.user && typeof rawUser.user === 'object') {
+        rawUser = rawUser.user;
+      }
+
+      const token =
+        resData?.token ||
+        resData?.data?.token ||
+        resData?.accessToken ||
+        resData?.data?.accessToken ||
+        rawUser?.token;
+
+      const id =
+        rawUser?.id ||
+        rawUser?._id ||
+        rawUser?.userId ||
+        rawUser?.uid ||
+        resData?.data?.id ||
+        resData?.data?._id ||
+        resData?.data?.userId;
+
+      const fullName =
+        rawUser?.fullName ||
+        rawUser?.name ||
+        rawUser?.displayName ||
+        rawUser?.userName ||
+        rawUser?.username ||
+        '';
+
+      const displayName =
+        rawUser?.displayName ||
+        rawUser?.fullName ||
+        rawUser?.name ||
+        rawUser?.userName ||
+        '';
+
+      const email = rawUser?.email || rawUser?.emailAddress || '';
+      const mobile =
+        rawUser?.mobileNumber ||
+        rawUser?.mobile ||
+        rawUser?.phone ||
+        rawUser?.phoneNumber ||
+        mobileNumber;
+      const role = rawUser?.role || 'user';
+
+      await login(
+        {
+          id,
+          fullName,
+          displayName,
+          email,
+          mobileNumber: mobile,
+          role,
+        },
+        token
+      );
 
       Toast.show({
         type: 'success',
@@ -308,7 +369,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   countryCode: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1E293B',
   },
@@ -319,8 +380,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    paddingHorizontal: 12,
+    fontSize: 13,
     color: '#1E293B',
   },
   eyeIconContainer: {

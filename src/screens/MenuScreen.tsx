@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import CustomHeader from '../components/CustomHeader';
@@ -12,6 +13,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const MenuScreen = () => {
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
 
@@ -82,8 +84,15 @@ const MenuScreen = () => {
             <Icon name="user" size={28} color={colors.primary} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text }]}>{t('menu.pandit_ji', 'Pandit Ji')}</Text>
-            <Text style={[styles.profileRole, { color: colors.textLight }]}>{t('menu.view_profile', 'View Profile & Settings')}</Text>
+            <Text style={[styles.profileName, { color: colors.text }]}>
+              {(user?.fullName || user?.displayName || '')
+                .replace(/\bupdated\b/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim() || t('menu.pandit_ji', 'Pandit Ji')}
+            </Text>
+            <Text style={[styles.profileRole, { color: colors.textLight }]}>
+              {user?.mobileNumber ? `+91 ${user.mobileNumber}` : (user?.email || t('menu.view_profile', 'View Profile & Settings'))}
+            </Text>
           </View>
           <Icon name="chevron-right" size={20} color={colors.textLight} />
         </TouchableOpacity>

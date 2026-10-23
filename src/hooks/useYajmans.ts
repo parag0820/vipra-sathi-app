@@ -3,6 +3,8 @@ import { Yajman, YajmanCategory } from '../types/yajman';
 import { yajmanApi, YajmanApiPayload } from '../api/yajman';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getValidUserId, isValidMongoId } from '../utils/objectId';
 
 export const useYajmans = () => {
   const { user } = useAuth();
@@ -36,9 +38,10 @@ export const useYajmans = () => {
   });
 
   // Map local Yajman type to API payload
-  const mapYajmanToApi = (yajmanData: Partial<Yajman>): Partial<YajmanApiPayload> => {
+  const mapYajmanToApi = (yajmanData: Partial<Yajman>, overrideUserId?: string): Partial<YajmanApiPayload> => {
+    const effectiveUserId = overrideUserId || yajmanData.userId || user?.id || (user as any)?._id || (user as any)?.userId || '';
     const payload: Partial<YajmanApiPayload> = {
-      userId: user?.id || '',
+      userId: effectiveUserId,
       name: yajmanData.name,
       email: yajmanData.email,
       callingMobileNumber: yajmanData.callingMobile,
@@ -49,13 +52,14 @@ export const useYajmans = () => {
       city: yajmanData.city,
       state: yajmanData.state,
       address: yajmanData.address,
-      categoryId: yajmanData.categoryId, // send categoryId instead of category string
+      categoryId: yajmanData.categoryId && yajmanData.categoryId.length > 0 ? yajmanData.categoryId : undefined,
       date: yajmanData.kycDate,
       remark: yajmanData.remark,
     };
-    // Remove undefined fields
+    // Remove undefined and empty string fields for optional attributes
     Object.keys(payload).forEach(key => {
-      if (payload[key as keyof YajmanApiPayload] === undefined) {
+      const val = payload[key as keyof YajmanApiPayload];
+      if (val === undefined || (val === '' && key !== 'userId' && key !== 'name' && key !== 'callingMobileNumber')) {
         delete payload[key as keyof YajmanApiPayload];
       }
     });
@@ -64,16 +68,13 @@ export const useYajmans = () => {
 
   // Load yajmans from API
   const loadYajmans = useCallback(async () => {
-    if (!user?.id) {
-      setYajmans([]);
-      setIsLoading(false);
-      return;
-    }
-    
+    const rawId = user?.id || (user as any)?._id || (user as any)?.userId;
+    const effectiveUserId = await getValidUserId(rawId);
+
     try {
       setIsLoading(true);
       setError(null);
-      const data = await yajmanApi.getByUserId(user.id);
+      const data = await yajmanApi.getByUserId(effectiveUserId);
       if (data && Array.isArray(data)) {
         setYajmans(data.map(mapApiToYajman));
       } else if (data && data.data && Array.isArray(data.data)) {
@@ -95,7 +96,11 @@ export const useYajmans = () => {
 
   const addYajman = async (yajmanData: Omit<Yajman, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const payload = mapYajmanToApi(yajmanData) as YajmanApiPayload;
+      const rawId = user?.id || (user as any)?._id || (user as any)?.userId || (yajmanData as any)?.userId;
+      const resolvedUserId = await getValidUserId(rawId);
+
+      const payload = mapYajmanToApi(yajmanData, resolvedUserId) as YajmanApiPayload;
+      payload.userId = resolvedUserId;
       const response = await yajmanApi.create(payload);
       
       Toast.show({

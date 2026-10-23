@@ -218,16 +218,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 45,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 40,
+    fontSize: 12.5,
   },
   multilineInput: {
     height: 100,

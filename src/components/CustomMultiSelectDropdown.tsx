@@ -67,7 +67,7 @@ const CustomMultiSelectDropdown: React.FC<CustomMultiSelectDropdownProps> = ({
               </View>
             )}
           </View>
-          <Icon name="chevron-down" size={18} color={colors.textLight} />
+          <Icon name="chevron-down" size={16} color={colors.textLight} />
         </TouchableOpacity>
         {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
       </View>
@@ -176,12 +176,12 @@ const CustomMultiSelectDropdown: React.FC<CustomMultiSelectDropdownProps> = ({
 
 const styles = StyleSheet.create({
   fieldContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 6,
+    marginBottom: 4,
     marginLeft: 4,
   },
   trigger: {
@@ -189,35 +189,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 52,
+    paddingVertical: 4,
+    minHeight: 42,
   },
   triggerContent: {
     flex: 1,
     marginRight: 8,
   },
   placeholderText: {
-    fontSize: 15,
-    fontWeight: '500',
-    paddingLeft: 4,
+    fontSize: 13,
+    fontWeight: '400',
+    paddingLeft: 2,
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 4,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
     borderWidth: 1,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600',
   },
   errorText: {

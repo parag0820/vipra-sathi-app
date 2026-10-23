@@ -6,6 +6,7 @@ export interface YajmanCategory {
 
 export interface Yajman {
   id: string;
+  userId?: string;
   name: string;
   email?: string;
   callingMobile: string;

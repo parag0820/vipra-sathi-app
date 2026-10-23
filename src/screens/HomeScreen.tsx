@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { calculatePanchang, PanchangData } from '../utils/panchang';
+import { spiritualCardApi, SpiritualCardData } from '../api/spiritualCard';
 
 const { width } = Dimensions.get('window');
 
@@ -54,7 +55,14 @@ const HomeScreen = () => {
   const { isDark, colors, setTheme } = useTheme();
   const { user } = useAuth();
 
+  const cleanUserName =
+    (user?.fullName || user?.displayName || (user as any)?.name || '')
+      .replace(/\bupdated\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim() || t('home.pandit_ji', 'पंडित जी');
+
   const [panchang, setPanchang] = useState<PanchangData | null>(null);
+  const [spiritualCard, setSpiritualCard] = useState<SpiritualCardData | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [yajmanFilter, setYajmanFilter] = useState<'today' | 'month'>('today');
 
@@ -108,6 +116,35 @@ const HomeScreen = () => {
       }
     }, 60000); // Check every minute for midnight rollover
     return () => clearInterval(timer);
+  }, [currentDate]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSpiritualCard = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('daily_spiritual_card_cache');
+        if (cached && isMounted) {
+          try {
+            setSpiritualCard(JSON.parse(cached));
+          } catch {
+            // ignore cache parse error
+          }
+        }
+        const data = await spiritualCardApi.getTodayCard();
+        if (data && isMounted) {
+          setSpiritualCard(data);
+          await AsyncStorage.setItem('daily_spiritual_card_cache', JSON.stringify(data));
+        }
+      } catch (err) {
+        console.warn('Error fetching spiritual card:', err);
+      }
+    };
+
+    fetchSpiritualCard();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentDate]);
 
   const toggleTheme = () => {
@@ -167,7 +204,7 @@ const HomeScreen = () => {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24, overflow: 'hidden' }}>
             <View style={{ flex: 1, flexShrink: 1, paddingRight: 16 }}>
-              <Text style={styles.greetingTextWhite} numberOfLines={1} ellipsizeMode="tail">{t('home.namaste', 'नमस्ते,')} {user?.fullName || t('home.pandit_ji', 'पंडित जी')}</Text>
+              <Text style={styles.greetingTextWhite} numberOfLines={1} ellipsizeMode="tail">{t('home.namaste', 'नमस्ते,')} {cleanUserName}</Text>
               <Text style={styles.greetingSubtextWhite} numberOfLines={1} ellipsizeMode="tail">{t('home.dharma_seva', 'धर्म सेवा ही परम सेवा है')}</Text>
             </View>
             <View style={{
@@ -190,7 +227,9 @@ const HomeScreen = () => {
                   <Text style={[styles.spiritualTagText, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.spiritual_card', 'Daily Spiritual Card')}</Text>
                 </View>
                 <Text style={[styles.quoteText, { color: colors.text }]}>
-                  {t('home.daily_quote', '"Inner peace begins when you choose not to allow another person or event to control your emotions."')}
+                  {spiritualCard?.thought?.content
+                    ? (spiritualCard.thought.content.startsWith('"') ? spiritualCard.thought.content : `"${spiritualCard.thought.content}"`)
+                    : t('home.daily_quote', '"Inner peace begins when you choose not to allow another person or event to control your emotions."')}
                 </Text>
               </View>
               <Image
@@ -202,7 +241,9 @@ const HomeScreen = () => {
 
             <View style={[styles.mantraContainer, { backgroundColor: colors.aajkaBg }]}>
               <Text style={[styles.mantraLabel, { color: isDark ? '#FFF' : colors.primary }]}>{t('home.todays_mantra', "Today's Mantra")}</Text>
-              <Text style={[styles.mantraText, { color: colors.text }]}>{t('home.mantra_om_gam', 'Om Gam Ganapataye Namaha')}</Text>
+              <Text style={[styles.mantraText, { color: colors.text }]}>
+                {spiritualCard?.mantra?.text || t('home.mantra_om_gam', 'Om Gam Ganapataye Namaha')}
+              </Text>
             </View>
           </View>
 
@@ -543,7 +584,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    // marginBottom: 12,
   },
   spiritualContent: {
     flex: 1,
@@ -575,8 +616,8 @@ const styles = StyleSheet.create({
   mantraContainer: {
     backgroundColor: '#FFF0E6',
     borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+    padding: 7,
+    // alignItems: 'center',
     width: '100%',
   },
   mantraLabel: {
@@ -584,11 +625,13 @@ const styles = StyleSheet.create({
     color: '#C75B12',
     marginBottom: 4,
     fontWeight: '600',
+    textAlign: 'center'
   },
   mantraText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#1E293B',
+    textAlign: 'center'
   },
   ganeshaImage: {
     width: 70,

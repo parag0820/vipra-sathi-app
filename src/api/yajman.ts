@@ -1,4 +1,5 @@
 import { axiosInstance } from './axios';
+import { getValidUserId, isValidMongoId } from '../utils/objectId';
 
 export interface YajmanApiPayload {
   userId: string;
@@ -19,11 +20,29 @@ export interface YajmanApiPayload {
 
 export const yajmanApi = {
   create: async (data: YajmanApiPayload) => {
+    data.userId = await getValidUserId(data.userId);
+
+    if (data.categoryId && Array.isArray(data.categoryId)) {
+      data.categoryId = data.categoryId.filter((id) => isValidMongoId(id));
+      if (data.categoryId.length === 0) {
+        delete data.categoryId;
+      }
+    }
+
     const response = await axiosInstance.post('/yajman-entry/create', data);
     return response.data;
   },
   
   update: async (id: string, data: Partial<YajmanApiPayload>) => {
+    if (data.userId) {
+      data.userId = await getValidUserId(data.userId);
+    }
+    if (data.categoryId && Array.isArray(data.categoryId)) {
+      data.categoryId = data.categoryId.filter((catId) => isValidMongoId(catId));
+      if (data.categoryId.length === 0) {
+        delete data.categoryId;
+      }
+    }
     const response = await axiosInstance.put(`/yajman-entry/update/${id}`, data);
     return response.data;
   },
@@ -39,7 +58,8 @@ export const yajmanApi = {
   },
   
   getByUserId: async (userId: string) => {
-    const response = await axiosInstance.get(`/yajman-entry/get-by-userId/${userId}`);
+    const validId = await getValidUserId(userId);
+    const response = await axiosInstance.get(`/yajman-entry/get-by-userId/${validId}`);
     return response.data;
   },
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { Feather as Icon } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
@@ -21,19 +22,33 @@ import Toast from 'react-native-toast-message';
 const ProfileScreen = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    displayName: '',
-    mobileNumber: '',
-    email: '',
+    fullName: user?.fullName || '',
+    displayName: user?.displayName || '',
+    mobileNumber: user?.mobileNumber || '',
+    email: user?.email || '',
     experience: '',
     specialisations: '',
     city: '',
     address: '',
-    whatsappNumber: '',
+    whatsappNumber: user?.mobileNumber || '',
     pdfFooterText: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.fullName || '',
+        displayName: prev.displayName || user.displayName || '',
+        mobileNumber: prev.mobileNumber || user.mobileNumber || '',
+        email: prev.email || user.email || '',
+        whatsappNumber: prev.whatsappNumber || user.mobileNumber || '',
+      }));
+    }
+  }, [user]);
 
   const [images, setImages] = useState({
     profilePhoto: '',
@@ -79,73 +94,76 @@ const ProfileScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.primary }}>
-      <CustomHeader 
-        title="Profile" 
-        icon="user" 
-        showBack={true} 
+      <CustomHeader
+        title="Profile"
+        icon="user"
+        showBack={true}
         headerBgColor={colors.primary}
         headerTextColor="#FFF"
       />
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={{ paddingBottom: 80 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Profile Header Card */}
-          <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '15' }]}>
-              {images.profilePhoto ? (
-                <Image source={{ uri: images.profilePhoto }} style={styles.avatarImage} />
-              ) : (
-                <Icon name="user" size={36} color={colors.primary} />
-              )}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={{ paddingBottom: 80 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Profile Header Card */}
+            <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.avatarContainer, { backgroundColor: colors.primary + '15' }]}>
+                {images.profilePhoto ? (
+                  <Image source={{ uri: images.profilePhoto }} style={styles.avatarImage} />
+                ) : (
+                  <Icon name="user" size={36} color={colors.primary} />
+                )}
+              </View>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>
+                {user?.fullName || user?.displayName || 'Professional Profile'}
+              </Text>
+              <Text style={[styles.headerSubtitle, { color: colors.textLight }]}>
+                {user?.mobileNumber ? `+91 ${user.mobileNumber}` : 'Manage your public information'}
+              </Text>
             </View>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Professional Profile</Text>
-            <Text style={[styles.headerSubtitle, { color: colors.textLight }]}>Manage your public information</Text>
-          </View>
 
-          {/* Basic Info Section */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <CustomInput label="Full Name" placeholder="Enter your full name" value={formData.fullName} onChangeText={(v) => updateField('fullName', v)} />
-              <CustomInput label="Display Name" placeholder="Name shown to clients" value={formData.displayName} onChangeText={(v) => updateField('displayName', v)} />
-              <CustomInput label="Mobile Number" placeholder="e.g. 9876543210" keyboardType="phone-pad" value={formData.mobileNumber} onChangeText={(v) => updateField('mobileNumber', v)} />
-              <CustomInput label="Email Address" placeholder="e.g. pandit@example.com" keyboardType="email-address" autoCapitalize="none" value={formData.email} onChangeText={(v) => updateField('email', v)} />
+            {/* Basic Info Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <CustomInput label="Full Name" placeholder="Enter your full name" value={formData.fullName} onChangeText={(v) => updateField('fullName', v)} />
+                <CustomInput label="Display Name" placeholder="Name shown to clients" value={formData.displayName} onChangeText={(v) => updateField('displayName', v)} />
+                <CustomInput label="Mobile Number" placeholder="e.g. 9876543210" keyboardType="phone-pad" value={formData.mobileNumber} onChangeText={(v) => updateField('mobileNumber', v)} />
+                <CustomInput label="Email Address" placeholder="e.g. pandit@example.com" keyboardType="email-address" autoCapitalize="none" value={formData.email} onChangeText={(v) => updateField('email', v)} />
+              </View>
             </View>
-          </View>
 
-          {/* Professional Info */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Professional Details</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <CustomInput label="WhatsApp Number" placeholder="e.g. 9876543210" keyboardType="phone-pad" value={formData.whatsappNumber} onChangeText={(v) => updateField('whatsappNumber', v)} />
-              <CustomInput label="Years of Experience" placeholder="e.g. 15 Years" value={formData.experience} onChangeText={(v) => updateField('experience', v)} />
-              <CustomInput label="Specialisations" placeholder="e.g. Vastu, Astrology, Vivah" value={formData.specialisations} onChangeText={(v) => updateField('specialisations', v)} />
-              <CustomInput label="City" placeholder="e.g. Mumbai" value={formData.city} onChangeText={(v) => updateField('city', v)} />
-              <CustomInput label="Full Address" placeholder="Your complete address" value={formData.address} onChangeText={(v) => updateField('address', v)} multiline style={[styles.textArea, { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text }]} />
+            {/* Professional Info */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Professional Details</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <CustomInput label="WhatsApp Number" placeholder="e.g. 9876543210" keyboardType="phone-pad" value={formData.whatsappNumber} onChangeText={(v) => updateField('whatsappNumber', v)} />
+                <CustomInput label="Years of Experience" placeholder="e.g. 15 Years" value={formData.experience} onChangeText={(v) => updateField('experience', v)} />
+                <CustomInput label="Specialisations" placeholder="e.g. Vastu, Astrology, Vivah" value={formData.specialisations} onChangeText={(v) => updateField('specialisations', v)} />
+                <CustomInput label="Full Address" placeholder="Your complete address" value={formData.address} onChangeText={(v) => updateField('address', v)} multiline style={styles.textArea} />
+              </View>
             </View>
-          </View>
 
-          {/* Branding Section */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Branding & Assets</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              {renderImagePicker('Profile Photo', 'profilePhoto')}
-              {renderImagePicker('Personal Logo', 'personalLogo')}
-              {renderImagePicker('Signature', 'signature')}
-              <CustomInput label="PDF Footer Text" placeholder="Text for invoices and reports" value={formData.pdfFooterText} onChangeText={(v) => updateField('pdfFooterText', v)} />
+            {/* Branding Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Branding & Assets</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                {renderImagePicker('Profile Photo', 'profilePhoto')}
+                {renderImagePicker('Personal Logo', 'personalLogo')}
+                {renderImagePicker('Signature', 'signature')}
+                <CustomInput label="PDF Footer Text" placeholder="Text for invoices and reports" value={formData.pdfFooterText} onChangeText={(v) => updateField('pdfFooterText', v)} />
+              </View>
             </View>
-          </View>
 
-          <View style={{ paddingHorizontal: 16, paddingBottom: 20 }}>
-            <CustomButton title="Save Profile" onPress={handleSaveProfile} />
-          </View>
+            <View style={{ paddingHorizontal: 16, paddingBottom: 20 }}>
+              <CustomButton title="Save Profile" onPress={handleSaveProfile} />
+            </View>
 
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </View>
   );
@@ -192,19 +210,19 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
   },
   section: {
     paddingHorizontal: 16,
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -226,19 +244,17 @@ const styles = StyleSheet.create({
     }),
   },
   textArea: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    minHeight: 80,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
+    minHeight: 70,
     textAlignVertical: 'top',
   },
   imagePickerContainer: {
     marginBottom: 16,
   },
   imageLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 8,
   },
@@ -268,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imagePlaceholderText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
 });

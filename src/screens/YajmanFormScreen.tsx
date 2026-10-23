@@ -152,10 +152,10 @@ const YajmanFormScreen = () => {
         style={[styles.dateInput, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => openDatePicker(field)}
       >
-        <Text style={{ color: dates[field] ? colors.text : colors.textLight }}>
+        <Text style={{ color: dates[field] ? colors.text : colors.textLight, fontSize: 13 }}>
           {dates[field] ? dates[field]!.toLocaleDateString() : `Select ${label}`}
         </Text>
-        <Icon name="calendar" size={18} color={colors.textLight} />
+        <Icon name="calendar" size={16} color={colors.textLight} />
       </TouchableOpacity>
     </View>
   );
@@ -163,8 +163,7 @@ const YajmanFormScreen = () => {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.primary }]}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={true} />
 
@@ -179,7 +178,7 @@ const YajmanFormScreen = () => {
         <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
 
           {/* Personal Info */}
-          <View style={styles.section}>
+          <View >
             <Text style={[styles.sectionTitle, { color: colors.primary }]}>Personal Details</Text>
             {renderInput('name', 'Full Name', 'Enter yajman name')}
 
@@ -203,7 +202,7 @@ const YajmanFormScreen = () => {
           </View>
 
           {/* Contact Info */}
-          <View style={styles.section}>
+          <View >
             <Text style={[styles.sectionTitle, { color: colors.primary }]}>Contact Information</Text>
             {renderInput('callingMobile', 'Mobile Number', 'Enter 10-digit number', { keyboardType: 'numeric' })}
             {renderInput('whatsappMobile', 'WhatsApp Number', 'Enter WhatsApp number', { keyboardType: 'numeric' })}
@@ -211,7 +210,7 @@ const YajmanFormScreen = () => {
           </View>
 
           {/* Important Dates */}
-          <View style={styles.section}>
+          <View >
             <Text style={[styles.sectionTitle, { color: colors.primary }]}>Important Dates</Text>
             <View style={styles.row}>
               <View style={styles.col}>{renderDatePicker('birthday', 'Birthday')}</View>
@@ -223,7 +222,7 @@ const YajmanFormScreen = () => {
           </View>
 
           {/* Address */}
-          <View style={styles.section}>
+          <View >
             <Text style={[styles.sectionTitle, { color: colors.primary }]}>Address Details</Text>
             <View style={styles.row}>
               <View style={styles.col}>{renderInput('city', 'City', 'Enter city')}</View>
@@ -233,7 +232,7 @@ const YajmanFormScreen = () => {
           </View>
 
           {/* Other */}
-          <View style={styles.section}>
+          <View >
             <Text style={[styles.sectionTitle, { color: colors.primary }]}>Other Information</Text>
             {renderDatePicker('kycDate', 'KYC Date')}
             {renderInput('remark', 'Remarks / Notes', 'Any additional notes about this yajman', { multiline: true })}
@@ -242,7 +241,16 @@ const YajmanFormScreen = () => {
         </ScrollView>
 
         {/* Bottom Actions */}
-        <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View
+          style={[
+            styles.bottomActions,
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
+              paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 10) : 10,
+            },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.actionBtn, styles.cancelBtn, { borderColor: colors.border }]}
             onPress={() => navigation.goBack()}
@@ -316,50 +324,47 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
-    paddingBottom: 40,
-  },
-  section: {
-    marginBottom: 24,
+    paddingBottom: 16,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
-    marginBottom: 6,
+    marginBottom: 4,
     marginLeft: 4,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 52,
-    fontSize: 15,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 42,
+    fontSize: 13,
   },
   textArea: {
-    height: 100,
-    paddingTop: 12,
+    height: 75,
+    paddingTop: 8,
   },
   errorText: {
     color: '#ef4444',
   },
   errorMsg: {
     color: '#ef4444',
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 2,
     marginLeft: 4,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   col: {
     flex: 1,
@@ -369,24 +374,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 52,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 42,
   },
   categoryWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
   },
   bottomActions: {
     flexDirection: 'row',
-    padding: 10,
+    paddingHorizontal: 16,
     paddingTop: 10,
     borderTopWidth: 1,
     gap: 12,
@@ -398,11 +403,11 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
-    height: 45,
-    borderRadius: 25,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 5
+    marginBottom: 0,
   },
   cancelBtn: {
     borderWidth: 1,

@@ -6,15 +6,21 @@ import {
   StyleSheet,
   TextInputProps,
   TouchableOpacity,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 interface CustomInputProps extends TextInputProps {
-  label: string;
+  label?: string;
   error?: string;
   rightIcon?: React.ReactNode;
   leftIcon?: React.ReactNode;
   onRightIconPress?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputContainerStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -23,26 +29,60 @@ const CustomInput: React.FC<CustomInputProps> = ({
   rightIcon,
   leftIcon,
   onRightIconPress,
+  containerStyle,
+  inputContainerStyle,
+  labelStyle,
+  style,
+  placeholderTextColor,
   ...props
 }) => {
+  const { colors, isDark } = useTheme();
+
+  const activePlaceholderColor =
+    placeholderTextColor || (isDark ? '#64748B' : '#94A3B8');
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.container, containerStyle]}>
+      {label ? (
+        <Text style={[styles.label, { color: isDark ? '#E2E8F0' : '#475569' }, labelStyle]}>
+          {label}
+        </Text>
+      ) : null}
       <View
         style={[
           styles.inputContainer,
-          error ? styles.inputError : null,
+          {
+            backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            borderColor: isDark ? '#334155' : '#E2E8F0',
+          },
           leftIcon ? styles.inputWithLeftIcon : null,
+          inputContainerStyle,
+          error ? styles.inputError : null,
         ]}
       >
-        {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
+        {leftIcon && (
+          <View
+            style={[
+              styles.leftIconContainer,
+              {
+                backgroundColor: isDark ? '#0F172A' : '#FFF5EE',
+                borderRightColor: isDark ? '#334155' : '#E5E7EB',
+              },
+            ]}
+          >
+            {leftIcon}
+          </View>
+        )}
         <TextInput
           style={[
             styles.input,
+            { color: colors.text || (isDark ? '#F8FAFC' : '#1E293B') },
             rightIcon ? styles.inputWithIcon : null,
             leftIcon ? styles.inputWithLeftPadding : null,
+            style,
           ]}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={activePlaceholderColor}
+          textAlignVertical={props.multiline ? 'top' : 'center'}
           {...props}
         />
         {rightIcon && (
@@ -58,46 +98,42 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 12,
     width: '100%',
   },
   label: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 6,
+    fontSize: 12,
+    marginBottom: 4,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   inputWithLeftIcon: {
     borderColor: '#E5E7EB',
   },
   leftIconContainer: {
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    backgroundColor: '#FFF5EE',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
   },
   input: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.text,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 12.5,
+    minHeight: 40,
   },
   inputWithLeftPadding: {
-    paddingLeft: 14,
+    paddingLeft: 10,
   },
   inputWithIcon: {
-    paddingRight: 48,
+    paddingRight: 40,
   },
   iconContainer: {
     position: 'absolute',
@@ -106,12 +142,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputError: {
-    borderColor: colors.error,
+    borderColor: '#EF4444',
   },
   errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginTop: 4,
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 3,
   },
 });
 

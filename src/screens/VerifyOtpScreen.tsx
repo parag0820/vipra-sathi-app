@@ -4,6 +4,7 @@ import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../context/AuthContext';
+import { generateMongoObjectId } from '../utils/objectId';
 
 const BG_COLOR = '#FDF0E6';
 
@@ -26,8 +27,15 @@ const VerifyOtpScreen = ({ route, navigation }: any) => {
       setVerifying(false);
       Toast.show({ type: 'success', text1: 'Verified', text2: 'OTP verified successfully' });
       
-      const mockUid = `usr_${Math.random().toString(36).substr(2, 9)}`;
-      await login({ uid: mockUid } as any);
+      const mockUid = generateMongoObjectId();
+      await login({
+        id: mockUid,
+        mobileNumber: mobile,
+        fullName: 'User',
+        displayName: 'User',
+        email: '',
+        role: 'user',
+      });
     }, 1000);
   };
 

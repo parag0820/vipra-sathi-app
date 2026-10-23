@@ -1,6 +1,8 @@
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export const API_BASE_URL = 'http://backend.viprasaarthi.com';
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +11,21 @@ export const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      // ignore token retrieval error
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 axiosInstance.interceptors.response.use(
   (response) => response,
