@@ -164,7 +164,7 @@ const MainTabNavigator = () => {
         <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('tabs.home', 'Home') }} />
         <Tab.Screen name="Library" component={LibraryHubScreen} options={{ tabBarLabel: t('tabs.pooja', 'Pooja') }} />
         <Tab.Screen name="Calendar" component={CalendarScreen} options={{ tabBarLabel: t('tabs.calendar', 'Calendar') }} />
-        <Tab.Screen name="DakshinaCalculator" component={DakshinaCalculatorScreen} options={{ tabBarLabel: t('tabs.dakshina', 'Dakshina') }} />
+        <Tab.Screen name="DakshinaCalculator" component={DakshinaCalculatorScreen} options={{ tabBarLabel: t('tabs.calculator', 'Calculator') }} />
         <Tab.Screen name="Menu" component={MenuScreen} options={{ tabBarLabel: t('tabs.menu', 'Menu') }} />
       </Tab.Navigator>
       <SubscriptionReminderModal />
