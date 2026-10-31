@@ -15,6 +15,7 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import PersonalBrandingScreen from '../screens/PersonalBrandingScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import LibraryHubScreen from '../screens/LibraryHubScreen';
 import PoojaLibraryScreen from '../screens/PoojaLibraryScreen';
@@ -83,6 +84,7 @@ export type RootStackParamList = {
   History: undefined;
   Notifications: undefined;
   Profile: undefined;
+  PersonalBranding: undefined;
   Settings: undefined;
   YajmanList: undefined;
   YajmanForm: { yajman?: Yajman }; // Optional for edit mode
@@ -213,6 +215,7 @@ const AppNavigator = () => {
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
           <Stack.Screen name="PostDetail" component={PostDetailScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="PersonalBranding" component={PersonalBrandingScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="YajmanList" component={YajmanListScreen} />
           <Stack.Screen name="YajmanForm" component={YajmanFormScreen} options={{ presentation: 'modal' }} />

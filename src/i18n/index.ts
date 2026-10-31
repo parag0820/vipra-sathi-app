@@ -10,7 +10,7 @@ const resources = {
 };
 
 const initI18n = async () => {
-  let savedLanguage = 'en';
+  let savedLanguage = 'hi';
   try {
     const lang = await AsyncStorage.getItem('language_preference');
     if (lang) savedLanguage = lang;
@@ -23,7 +23,7 @@ const initI18n = async () => {
     .init({
       resources,
       lng: savedLanguage,
-      fallbackLng: 'en',
+      fallbackLng: 'hi',
       interpolation: {
         escapeValue: false, // react already safes from xss
       },

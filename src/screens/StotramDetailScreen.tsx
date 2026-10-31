@@ -18,7 +18,7 @@ const StotramDetailScreen = () => {
   const { stotramId } = route.params;
   const { colors } = useTheme();
   const { t } = useTranslation();
-  
+
   const stotram = MOCK_STOTRAS.find(s => s.id === stotramId);
 
   const getStotramTitle = (item: typeof MOCK_STOTRAS[0]) => {
@@ -59,18 +59,18 @@ const StotramDetailScreen = () => {
     <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
       <CustomHeader title={displayTitle} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
       <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.category, { color: colors.secondary }]}>{getCategoryLabel(stotram.category)}</Text>
-        
-        <View style={[styles.contentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.sanskritText, { color: colors.text }]}>
-            {stotram.content}
-          </Text>
-        </View>
-      </ScrollView>
-      
-      {/* Sticky Audio Player */}
-      <AudioPlayerUI title={displayTitle} audioUrl={stotram.audioUrl} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={[styles.category, { color: colors.secondary }]}>{getCategoryLabel(stotram.category)}</Text>
+
+          <View style={[styles.contentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.sanskritText, { color: colors.text }]}>
+              {stotram.content}
+            </Text>
+          </View>
+        </ScrollView>
+
+        {/* Sticky Audio Player */}
+        <AudioPlayerUI title={displayTitle} audioUrl={stotram.audioUrl} />
       </View>
     </View>
   );
@@ -90,24 +90,24 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   category: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 10,
   },
   contentCard: {
-    padding: 24,
-    borderRadius: 16,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
-    elevation: 2,
+    elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
   },
   sanskritText: {
-    fontSize: 20,
-    lineHeight: 36,
+    fontSize: 12,
+    lineHeight: 20,
     fontWeight: '500',
     textAlign: 'center',
   }

@@ -21,12 +21,16 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeType>('light');
-  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(Appearance.getColorScheme() || 'light');
+  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>('light');
 
   useEffect(() => {
-    // Load saved theme
+    // Default theme is light unless explicitly saved otherwise
     AsyncStorage.getItem('theme_preference').then((savedTheme) => {
-      if (savedTheme) setThemeState(savedTheme as ThemeType);
+      if (savedTheme) {
+        setThemeState(savedTheme as ThemeType);
+      } else {
+        setThemeState('light');
+      }
     });
 
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
@@ -41,7 +45,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await AsyncStorage.setItem('theme_preference', newTheme);
   };
 
-  const isDark = theme === 'system' ? systemScheme === 'dark' : theme === 'dark';
+  const isDark = theme === 'dark' || (theme === 'system' && systemScheme === 'dark');
   const colors = isDark ? darkColors : lightColors;
 
   return (

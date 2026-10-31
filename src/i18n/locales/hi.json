@@ -516,6 +516,10 @@
       "aarti_kije_hanuman": "आरती कीजै हनुमान लला की"
     }
   },
+  "aarti_detail": {
+    "verses": "पद",
+    "stanzas": "पद"
+  },
   "audio": {
     "loading": "लोड हो रहा है...",
     "now_playing": "बज रहा है",

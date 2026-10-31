@@ -19,26 +19,27 @@ const MenuScreen = () => {
 
   const menuSections = [
     {
-      title: t('menu.manage', 'Manage'),
+      title: t('menu.manage', 'प्रबंधन'),
       items: [
-        { title: t('menu.account_manager', 'Account Manager'), icon: 'pie-chart', screen: 'AccountManagerDashboard', color: '#C75B12' },
-        { title: t('menu.yajman_manager', 'Yajman Manager'), icon: 'users', screen: 'YajmanList', color: '#7C3AED' },
-        { title: t('menu.history', 'Work History'), icon: 'clock', screen: 'History', color: '#2563EB' },
+        { title: t('menu.account_manager', 'खाता प्रबंधक'), icon: 'pie-chart', screen: 'AccountManagerDashboard', color: '#C75B12' },
+        { title: t('menu.yajman_manager', 'यजमान सूची'), icon: 'users', screen: 'YajmanList', color: '#7C3AED' },
+        { title: t('menu.history', 'कार्य इतिहास'), icon: 'clock', screen: 'History', color: '#2563EB' },
       ],
     },
     {
-      title: t('menu.community_support', 'Community & Support'),
+      title: t('menu.community_support', 'समुदाय एवं सहायता'),
       items: [
-        { title: t('menu.community', 'Community'), icon: 'message-circle', screen: 'Community', color: '#16A34A' },
-        { title: t('menu.help', 'Help Center'), icon: 'help-circle', screen: 'HelpCenter', color: '#F59E0B' },
+        { title: t('menu.community', 'समुदाय'), icon: 'message-circle', screen: 'Community', color: '#16A34A' },
+        { title: t('menu.help', 'सहायता केंद्र'), icon: 'help-circle', screen: 'HelpCenter', color: '#F59E0B' },
       ],
     },
     {
-      title: t('menu.account', 'Account'),
+      title: t('menu.account', 'खाता एवं प्रोफाइल'),
       items: [
-        { title: t('menu.profile', 'Profile & Branding'), icon: 'user', screen: 'Profile', color: '#C75B12' },
-        { title: t('menu.subscription', 'Subscription & Wallet'), icon: 'credit-card', screen: 'Subscription', color: '#7C3AED' },
-        { title: t('menu.settings', 'Settings'), icon: 'settings', screen: 'Settings', color: '#6B7280' },
+        { title: 'मेरी प्रोफाइल', icon: 'user', screen: 'Profile', color: '#991B1B' },
+        { title: 'मेरी ब्रांडिंग', icon: 'file-text', screen: 'PersonalBranding', color: '#C75B12' },
+        { title: t('menu.subscription', 'सदस्यता एवं वॉलेट'), icon: 'credit-card', screen: 'Subscription', color: '#7C3AED' },
+        { title: t('menu.settings', 'सेटिंग्स'), icon: 'settings', screen: 'Settings', color: '#6B7280' },
       ],
     },
   ];
@@ -88,10 +89,10 @@ const MenuScreen = () => {
               {(user?.fullName || user?.displayName || '')
                 .replace(/\bupdated\b/gi, '')
                 .replace(/\s+/g, ' ')
-                .trim() || t('menu.pandit_ji', 'Pandit Ji')}
+                .trim() || 'पं. राजेश शर्मा'}
             </Text>
             <Text style={[styles.profileRole, { color: colors.textLight }]}>
-              {user?.mobileNumber ? `+91 ${user.mobileNumber}` : (user?.email || t('menu.view_profile', 'View Profile & Settings'))}
+              {user?.mobileNumber ? `+91 ${user.mobileNumber}` : '+91 ••••••• 4821'}
             </Text>
           </View>
           <Icon name="chevron-right" size={20} color={colors.textLight} />

@@ -1,19 +1,30 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, TextInput, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useMemo, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  Alert,
+  StatusBar,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import DynamicSection from '../components/DynamicSection';
 import { usePoojaLibrary } from '../hooks/usePoojaLibrary';
 import { MOCK_POOJAS } from '../data/mockPoojas';
-import CustomHeader from '../components/CustomHeader';
-import { Feather as Icon } from '@expo/vector-icons';
-import { useKeepAwake } from 'expo-keep-awake';
+import { PoojaPersonalNote, Pooja } from '../types/pooja';
+import {
+  Feather as Icon,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-import { useTranslation } from 'react-i18next';
-
-const { width } = Dimensions.get('window');
 
 type PoojaDetailRouteProp = {
   key: string;
@@ -24,826 +35,1552 @@ type PoojaDetailRouteProp = {
 const PoojaDetailScreen = () => {
   const route = useRoute<PoojaDetailRouteProp>();
   const navigation = useNavigation();
-  const { poojaId } = route.params;
+  const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { t } = useTranslation();
+  const { poojaId } = route.params || { poojaId: 'p1' };
 
-  const [isCeremonyMode, setIsCeremonyMode] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Screen view mode: 'detail' for Pooja Details, 'notes' for Personal Notes
+  const [viewMode, setViewMode] = useState<'detail' | 'notes'>('detail');
 
-  // Keep screen awake during ceremony mode
-  useKeepAwake();
+  // Search and sort state for notes
+  const [notesSearchQuery, setNotesSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
 
-  const pooja = MOCK_POOJAS.find(p => p.id === poojaId);
+  // Add/Edit Note Modal state
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<PoojaPersonalNote | null>(null);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalContent, setModalContent] = useState('');
+  const [modalIsPinned, setModalIsPinned] = useState(false);
 
-  const getPoojaTitle = (id: string, defTitle: string) => {
-    if (id === 'p1') return t('pooja_library.poojas.ganesh_chaturthi', defTitle);
-    if (id === 'p2') return t('pooja_library.poojas.satyanarayan', defTitle);
-    if (id === 'p3') return t('pooja_library.poojas.shivratri', defTitle);
-    if (id === 'p4') return t('pooja_library.poojas.comprehensive', defTitle);
-    return defTitle;
+  // Card Context Menu state
+  const [activeMenuNoteId, setActiveMenuNoteId] = useState<string | null>(null);
+
+  // Scroll ref for anchor jumps
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Find pooja from data or fallback to first
+  const pooja: Pooja = useMemo(() => {
+    return MOCK_POOJAS.find(p => p.id === poojaId) || MOCK_POOJAS[0];
+  }, [poojaId]);
+
+  // Hook for personal notes, font size scaling, favorites
+  const {
+    personalNotes,
+    addPersonalNote,
+    updatePersonalNote,
+    deletePersonalNote,
+    togglePinNote,
+    fontSizeOffset,
+    increaseFontSize,
+    decreaseFontSize,
+  } = usePoojaLibrary(pooja.id);
+
+  // Header display texts
+  const headerPoojaTitle = pooja.headerTitle || pooja.titleHindi || pooja.title;
+  const detailTitle = pooja.titleHindi || pooja.title;
+  const detailSubtitle = pooja.subtitleHindi || 'संक्षिप्त पूजा क्रम';
+  const breadcrumbs = pooja.breadcrumbs || `पूजा विधि  /  ${headerPoojaTitle}`;
+  const anchors = pooja.navAnchors || ['सामग्री', 'प्रारंभ', 'ध्यान', 'आवाहन', 'उपचार'];
+
+  // Handle open Add Note modal
+  const handleOpenAddNote = () => {
+    setEditingNote(null);
+    setModalTitle('');
+    setModalContent('');
+    setModalIsPinned(false);
+    setIsNoteModalOpen(true);
   };
 
-  const getSubCategoryLabel = (sub?: string) => {
-    if (!sub) return t('pooja_library.subcategories.pauranik', 'Pauranik');
-    switch (sub) {
-      case 'Shodashopchar Pooja': return t('pooja_library.subcategories.shodashopchar', 'Shodashopchar Pooja');
-      case 'Panchopchar Pooja': return t('pooja_library.subcategories.panchopchar', 'Panchopchar Pooja');
-      case 'Rajopchar Pooja': return t('pooja_library.subcategories.rajopchar', 'Rajopchar Pooja');
-      case 'Complete Setup': return t('pooja_library.subcategories.complete_setup', 'Complete Setup');
-      case 'Pauranik': return t('pooja_library.subcategories.pauranik', 'Pauranik');
-      default: return sub;
+  // Handle open Edit Note modal
+  const handleOpenEditNote = (note: PoojaPersonalNote) => {
+    setActiveMenuNoteId(null);
+    setEditingNote(note);
+    setModalTitle(note.title);
+    setModalContent(note.content);
+    setModalIsPinned(note.isPinned);
+    setIsNoteModalOpen(true);
+  };
+
+  // Handle save Note (both create and update)
+  const handleSaveModalNote = async () => {
+    if (!modalTitle.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'शीर्षक आवश्यक है',
+        text2: 'कृपया नोट का शीर्षक दर्ज करें।',
+      });
+      return;
     }
-  };
 
-  const { favorites, toggleFavorite, notes, saveNotes, isReady } = usePoojaLibrary(poojaId);
-  const [localNotes, setLocalNotes] = useState(notes);
-
-  React.useEffect(() => {
-    if (isReady) {
-      setLocalNotes(notes);
+    if (editingNote) {
+      await updatePersonalNote(
+        editingNote.id,
+        modalTitle,
+        modalContent,
+        modalIsPinned
+      );
+      Toast.show({
+        type: 'success',
+        text1: 'बदलाव सहेजे गए',
+        text2: 'नोट सफलतापूर्वक अपडेट हो गया है।',
+      });
+    } else {
+      await addPersonalNote(modalTitle, modalContent, modalIsPinned);
+      Toast.show({
+        type: 'success',
+        text1: 'नोट सहेजा गया',
+        text2: 'नया निजी नोट जोड़ दिया गया है।',
+      });
     }
-  }, [isReady, notes]);
 
-  const handleSaveNotes = (text: string) => {
-    setLocalNotes(text);
-    saveNotes(poojaId, text);
+    setIsNoteModalOpen(false);
+    setEditingNote(null);
+    setModalTitle('');
+    setModalContent('');
+    setModalIsPinned(false);
   };
 
-  const handleDuplicate = () => {
-    Toast.show({
-      type: 'success',
-      text1: t('pooja_detail.template_created', 'Template Created'),
-      text2: t('pooja_detail.template_created_msg', 'Pooja template has been added to your personal library.'),
-    });
+  // Handle Delete note with confirmation
+  const handleDeleteNoteConfirm = (noteId: string) => {
+    setActiveMenuNoteId(null);
+    Alert.alert(
+      'नोट हटाएँ',
+      'क्या आप इस नोट को हटाना चाहते हैं?',
+      [
+        { text: 'रद्द करें', style: 'cancel' },
+        {
+          text: 'हटाएँ',
+          style: 'destructive',
+          onPress: async () => {
+            await deletePersonalNote(noteId);
+            Toast.show({
+              type: 'info',
+              text1: 'नोट हटाया गया',
+              text2: 'नोट सफलतापूर्वक हटा दिया गया है।',
+            });
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
-  // Group sections by Heading to create "Steps" for Ceremony Mode
-  const steps = useMemo(() => {
-    if (!pooja) return [];
-    const grouped: { title: string, sections: any[] }[] = [];
-    let currentStep: { title: string, sections: any[] } = { title: pooja.title, sections: [] };
+  // Filtered and sorted personal notes
+  const filteredNotes = useMemo(() => {
+    let result = [...personalNotes];
 
-    pooja.sections.forEach(sec => {
-      if (sec.sectionType === 'Heading') {
-        if (currentStep.sections.length > 0) {
-          grouped.push(currentStep);
-        }
-        currentStep = { title: sec.content, sections: [sec] };
+    if (notesSearchQuery.trim()) {
+      const q = notesSearchQuery.toLowerCase().trim();
+      result = result.filter(
+        n =>
+          n.title.toLowerCase().includes(q) ||
+          n.content.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort: Pinned notes always on top, then by timestamp
+    result.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      if (sortOrder === 'latest') {
+        return (b.timestamp || 0) - (a.timestamp || 0);
       } else {
-        currentStep.sections.push(sec);
+        return (a.timestamp || 0) - (b.timestamp || 0);
       }
     });
-    if (currentStep.sections.length > 0) {
-      grouped.push(currentStep);
+
+    return result;
+  }, [personalNotes, notesSearchQuery, sortOrder]);
+
+  // Back button press handler
+  const handleBackPress = () => {
+    if (viewMode === 'notes') {
+      setViewMode('detail');
+    } else {
+      navigation.goBack();
     }
-    return grouped;
-  }, [pooja]);
+  };
 
-  const currentDisplayTitle = pooja ? getPoojaTitle(pooja.id, pooja.title) : '';
-
-  const renderCeremonyMode = () => {
-    if (steps.length === 0) return null;
-    const currentStep = steps[currentStepIndex];
+  // ==========================================
+  // RENDER: Top Header Bar
+  // ==========================================
+  const renderHeader = () => {
+    const isNotes = viewMode === 'notes';
 
     return (
-      <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
-        <CustomHeader 
-          title={currentDisplayTitle} 
-          showBack={true} 
-          onBackPress={() => setIsCeremonyMode(false)}
-          headerBgColor={colors.primary} 
-          headerTextColor="#FFF" 
-        />
-        <View style={[styles.mainCard, { backgroundColor: isDark ? colors.background : '#FFFDF9' }]}>
-          <ScrollView contentContainerStyle={styles.ceremonyContent} showsVerticalScrollIndicator={false}>
-          {/* Top Step Pill & Title */}
-          <View style={styles.ceremonyStepPillContainer}>
-            <View style={styles.ceremonyStepPill}>
-              <Text style={[styles.ceremonyStepPillText, { color: colors.primary }]}>
-                {currentStepIndex + 1} / {steps.length}  •  {currentStep.title}
-              </Text>
-            </View>
-          </View>
-
-          {/* Step Image (Static for now) */}
-          <Image
-            source={require('../assets/images/kalash_sthapana.jpg')}
-            style={styles.ceremonyStepImage}
-            resizeMode="cover"
-          />
-
-          {currentStep.sections.map((sec, idx) => {
-            if (sec.sectionType === 'Heading') return null;
-
-            if (sec.sectionType === 'Vidhi') {
-              // Split vidhi by sentences to make numbered list
-              const sentences = sec.content.split('. ').filter((s: string) => s.trim().length > 0);
-              return (
-                <View key={idx} style={styles.ceremonySection}>
-                  <View style={styles.sectionTitleRow}>
-                    <Icon name="book-open" size={20} color={colors.primaryDark} />
-                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>{t('pooja_detail.vidhi', 'Vidhi')}</Text>
-                  </View>
-                  <View style={[styles.vidhiCard, { backgroundColor: isDark ? colors.surface : '#FDF7F5' }]}>
-                    {sentences.map((sentence: string, sIdx: number) => (
-                      <View key={sIdx} style={styles.vidhiRow}>
-                        <View style={[styles.vidhiNumberCircle, { backgroundColor: '#FADEDD' }]}>
-                          <Text style={[styles.vidhiNumberText, { color: colors.primaryDark }]}>{sIdx + 1}</Text>
-                        </View>
-                        <Text style={[styles.vidhiRowText, { color: colors.text }]}>{sentence.trim()}{!sentence.endsWith('.') ? '.' : ''}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              );
-            }
-
-            if (sec.sectionType === 'Mantra') {
-              return (
-                <View key={idx} style={styles.ceremonySection}>
-                  <View style={styles.sectionTitleRow}>
-                    <Icon name="music" size={20} color={colors.primaryDark} />
-                    <Text style={[styles.sectionTitleText, { color: colors.primaryDark }]}>{t('pooja_detail.mantra', 'Mantra')}</Text>
-                  </View>
-                  <View style={[styles.mantraAudioCard, { backgroundColor: isDark ? colors.surface : '#F4EAE9' }]}>
-                    <TouchableOpacity style={[styles.mantraPlayButton, { backgroundColor: colors.primary }]}>
-                      <Icon name="play" size={20} color="#FFF" style={{ marginLeft: 2 }} />
-                    </TouchableOpacity>
-                    <View style={styles.mantraTextContainer}>
-                      <Text style={[styles.mantraSanskritText, { color: colors.primary }]}>{sec.content}</Text>
-                    </View>
-                  </View>
-                </View>
-              );
-            }
-            if (sec.sectionType === 'Description') {
-              return (
-                <Text key={idx} style={[styles.ceremonyDescription, { color: colors.text }]}>
-                  {sec.content}
-                </Text>
-              );
-            }
-
-            if (sec.sectionType === 'Audio') {
-              return (
-                <View key={idx} style={[styles.ceremonyAudioSection, { backgroundColor: isDark ? colors.surface : '#F4EAE9' }]}>
-                  <TouchableOpacity style={[styles.audioPlayBtn, { backgroundColor: colors.primary }]}>
-                    <Icon name="play" size={20} color="#FFF" style={{ marginLeft: 2 }} />
-                  </TouchableOpacity>
-                  <View style={styles.audioDetails}>
-                    <Text style={[styles.audioTitle, { color: colors.primaryDark }]}>{t('pooja_detail.audio_track', 'Audio Track')}</Text>
-                    <Text style={[styles.audioSubtitle, { color: colors.primary }]}>{sec.content}</Text>
-                  </View>
-                </View>
-              );
-            }
-
-            return null;
-          })}
-
-          <View style={[styles.notesContainer, { backgroundColor: isDark ? colors.surface : '#FDFCF4', marginTop: 20 }]}>
-            <View style={styles.notesHeaderRow}>
-              <Icon name="edit-3" size={18} color={colors.primary} />
-              <Text style={[styles.notesTitle, { color: colors.primaryDark, marginBottom: 0, marginLeft: 8 }]}>
-                {t('pooja_detail.personal_notes', 'Personal Notes')}
-              </Text>
-            </View>
-            <TextInput
-              style={[styles.notesInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              multiline
-              placeholder={t('pooja_detail.add_notes_step', 'Add your personal notes for this step...')}
-              placeholderTextColor={colors.textLight}
-              value={localNotes}
-              onChangeText={handleSaveNotes}
-            />
-          </View>
-        </ScrollView>
-
-        {/* Bottom Navigation */}
-        <View style={[styles.ceremonyFooter, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: Math.max(insets.top, 12),
+            backgroundColor: isDark ? colors.surface : '#FFFFFF',
+            borderBottomColor: isDark ? '#2D2D2D' : '#F1F1F1',
+          },
+        ]}
+      >
+        <View style={styles.headerInnerRow}>
+          {/* Back button */}
           <TouchableOpacity
-            style={[styles.navButton, styles.prevButton, currentStepIndex === 0 && { opacity: 0.5 }]}
-            onPress={() => currentStepIndex > 0 && setCurrentStepIndex(currentStepIndex - 1)}
-            disabled={currentStepIndex === 0}
+            onPress={handleBackPress}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
           >
-            <Icon name="chevron-left" size={20} color={colors.primary} />
-            <Text style={[styles.navButtonText, { color: colors.primary }]}>{t('pooja_detail.prev_btn', 'Previous')}</Text>
+            <Icon
+              name="chevron-left"
+              size={26}
+              color={isDark ? '#F87171' : '#991B1B'}
+            />
           </TouchableOpacity>
 
-          {currentStepIndex < steps.length - 1 ? (
-            <TouchableOpacity
-              style={[styles.nextButton, { backgroundColor: colors.primary }]}
-              onPress={() => setCurrentStepIndex(currentStepIndex + 1)}
-            >
-              <Text style={styles.nextButtonText}>{t('pooja_detail.next_btn', 'Next Step')}</Text>
-              <Icon name="arrow-right" size={18} color="#FFF" />
-            </TouchableOpacity>
+          {/* Title */}
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: isDark ? '#FCA5A5' : '#991B1B' },
+            ]}
+            numberOfLines={1}
+          >
+            {isNotes ? 'निजी नोट्स' : headerPoojaTitle}
+          </Text>
+
+          <View style={styles.headerSpacer} />
+
+          {/* Right Header Actions */}
+          {!isNotes ? (
+            <View style={styles.headerActionsGroup}>
+              {/* Decrease font size */}
+              <TouchableOpacity
+                onPress={decreaseFontSize}
+                style={styles.headerActionButton}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                activeOpacity={0.6}
+              >
+                <Text
+                  style={[
+                    styles.fontActionText,
+                    {
+                      fontSize: 14,
+                      color: isDark ? '#FCA5A5' : '#991B1B',
+                      opacity: fontSizeOffset <= -2 ? 0.4 : 1,
+                    },
+                  ]}
+                >
+                  अ-
+                </Text>
+              </TouchableOpacity>
+
+              {/* Increase font size */}
+              <TouchableOpacity
+                onPress={increaseFontSize}
+                style={styles.headerActionButton}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                activeOpacity={0.6}
+              >
+                <Text
+                  style={[
+                    styles.fontActionText,
+                    {
+                      fontSize: 16,
+                      color: isDark ? '#FCA5A5' : '#991B1B',
+                      opacity: fontSizeOffset >= 6 ? 0.4 : 1,
+                    },
+                  ]}
+                >
+                  अ+
+                </Text>
+              </TouchableOpacity>
+
+              {/* Vertical divider */}
+              <View
+                style={[
+                  styles.headerDivider,
+                  { backgroundColor: isDark ? '#555' : '#E5E7EB' },
+                ]}
+              />
+
+              {/* Add Note icon button */}
+              <TouchableOpacity
+                onPress={handleOpenAddNote}
+                style={styles.headerActionButton}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons
+                  name="file-document-edit-outline"
+                  size={22}
+                  color={isDark ? '#FCA5A5' : '#991B1B'}
+                />
+              </TouchableOpacity>
+
+              {/* Grid / Menu icon button (opens Personal Notes) */}
+              <TouchableOpacity
+                onPress={() => setViewMode('notes')}
+                style={styles.headerActionButton}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons
+                  name="view-grid-outline"
+                  size={22}
+                  color={isDark ? '#FCA5A5' : '#991B1B'}
+                />
+              </TouchableOpacity>
+            </View>
           ) : (
+            /* Notes view header right: Add Note Button */
             <TouchableOpacity
-              style={[styles.nextButton, { backgroundColor: '#10B981' }]}
-              onPress={() => {
-                Toast.show({
-                  type: 'success',
-                  text1: t('pooja_detail.pooja_completed', 'Pooja Completed'),
-                  text2: t('pooja_detail.pooja_completed_msg', 'May God bless you!'),
-                });
-                setIsCeremonyMode(false);
-              }}
+              onPress={handleOpenAddNote}
+              style={[
+                styles.addNoteHeaderBtn,
+                {
+                  borderColor: isDark ? '#F87171' : '#991B1B',
+                  backgroundColor: isDark ? 'rgba(248,113,113,0.1)' : '#FFF6F6',
+                },
+              ]}
+              activeOpacity={0.7}
             >
-              <Text style={styles.nextButtonText}>{t('pooja_detail.complete_btn', 'Complete Pooja')}</Text>
-              <Icon name="check-circle" size={18} color="#FFF" />
+              <MaterialCommunityIcons
+                name="file-document-edit-outline"
+                size={16}
+                color={isDark ? '#FCA5A5' : '#991B1B'}
+              />
+              <Text
+                style={[
+                  styles.addNoteHeaderText,
+                  { color: isDark ? '#FCA5A5' : '#991B1B' },
+                ]}
+              >
+                + नया नोट
+              </Text>
             </TouchableOpacity>
           )}
         </View>
-        </View>
       </View>
     );
   };
 
-  const renderItem = ({ item }: { item: any }) => {
-    if (item.isNotesSection) {
-      return (
-        <View style={[styles.notesContainer, { backgroundColor: isDark ? colors.surface : '#f8f9fa' }]}>
-          <Text style={[styles.notesTitle, { color: colors.primaryDark }]}>{t('pooja_detail.my_notes', 'My Notes')}</Text>
-          <TextInput
+  // ==========================================
+  // RENDER: Pooja Details View (Image 1)
+  // ==========================================
+  const renderDetailView = () => {
+    // Dynamic scalable font sizes
+    const baseScale = fontSizeOffset;
+    const breadcrumbSize = Math.max(10, 11.5 + baseScale);
+    const mainTitleSize = Math.max(18, 22 + baseScale);
+    const subtitleSize = Math.max(11, 13 + baseScale);
+    const tagSize = Math.max(10.5, 12 + baseScale);
+    const sectionHeadingSize = Math.max(13, 15 + baseScale);
+    const stepHeadingSize = Math.max(12.5, 14.5 + baseScale);
+    const bodySize = Math.max(11.5, 13.5 + baseScale);
+    const lineHeight = bodySize * 1.55;
+
+    return (
+      <ScrollView
+        ref={scrollViewRef}
+        style={[
+          styles.contentScrollView,
+          { backgroundColor: isDark ? colors.background : '#FFFFFF' },
+        ]}
+        contentContainerStyle={[
+          styles.detailContentContainer,
+          { paddingBottom: Math.max(insets.bottom + 30, 60) },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Breadcrumb */}
+        <Text
+          style={[
+            styles.breadcrumbText,
+            {
+              fontSize: breadcrumbSize,
+              color: isDark ? '#9CA3AF' : '#6B7280',
+            },
+          ]}
+        >
+          {breadcrumbs}
+        </Text>
+
+        {/* Big Pooja Title */}
+        <Text
+          style={[
+            styles.mainPoojaTitle,
+            {
+              fontSize: mainTitleSize,
+              color: isDark ? '#FCA5A5' : '#991B1B',
+            },
+          ]}
+        >
+          {detailTitle}
+        </Text>
+
+        {/* Subtitle */}
+        <Text
+          style={[
+            styles.mainSubtitle,
+            {
+              fontSize: subtitleSize,
+              color: isDark ? '#D1D5DB' : '#4B5563',
+            },
+          ]}
+        >
+          {detailSubtitle}
+        </Text>
+
+        {/* Quick Anchor Navigation Tags */}
+        <View style={styles.anchorRow}>
+          <Text
             style={[
-              styles.notesInput,
+              styles.anchorText,
               {
-                backgroundColor: colors.background,
-                color: colors.text,
-                borderColor: colors.border
-              }
+                fontSize: tagSize,
+                color: isDark ? '#9CA3AF' : '#6B7280',
+              },
             ]}
-            multiline
-            placeholder={t('pooja_detail.add_notes_pooja', 'Add your personal notes for this pooja...')}
-            placeholderTextColor={colors.textLight}
-            value={localNotes}
-            onChangeText={handleSaveNotes}
-          />
+          >
+            {anchors.join('  •  ')}
+          </Text>
         </View>
-      );
-    }
 
-    if (item.isHeader) {
-      return (
-        <View style={styles.headerContainer}>
-          <View style={styles.headerImageContainer}>
-            <Image
-              source={require('../assets/images/kalash_sthapana.jpg')}
-              style={styles.headerImage}
-              resizeMode="cover"
-            />
-            <View style={styles.headerImageOverlay}>
-              <Text style={styles.headerImageTitle}>{t('pooja_detail.header_title', 'Pooja Detail & Samagri')}</Text>
-              <View style={styles.headerPillsRow}>
-                <View style={styles.headerPill}>
-                  <Text style={styles.headerPillText}>
-                    {t('pooja_detail.steps_mins', { steps: steps.length, defaultValue: `${steps.length} Steps • 45 Mins` })}
-                  </Text>
-                </View>
-                <View style={styles.headerPill}>
-                  <Text style={styles.headerPillText}>{getSubCategoryLabel(pooja?.subCategory)}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
-              onPress={() => {
-                setCurrentStepIndex(0);
-                setIsCeremonyMode(true);
-              }}
+        {/* Section: आवश्यक सामग्री */}
+        {pooja.samagriList && pooja.samagriList.length > 0 && (
+          <View style={styles.sectionBlock}>
+            <Text
+              style={[
+                styles.sectionHeading,
+                {
+                  fontSize: sectionHeadingSize,
+                  color: isDark ? '#FCA5A5' : '#991B1B',
+                },
+              ]}
             >
-              <Text style={styles.primaryActionText}>{t('pooja_detail.start_ceremony', 'Start Pooja Mode (Focus Mode)')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.secondaryActionBtn, { backgroundColor: '#FDF7F5', borderColor: '#FDECE6' }]}
-              onPress={handleDuplicate}
-            >
-              <Icon name="copy" size={16} color={colors.primary} />
-              <Text style={[styles.secondaryActionText, { color: colors.primary }]}>
-                {t('pooja_detail.copy_paddhati', 'Copy & Customize Paddhati')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.tabsRow}>
-            <View style={[styles.tabActive, { borderColor: colors.border }]}>
-              <Icon name="list" size={16} color={colors.primaryDark} />
-              <Text style={[styles.tabActiveText, { color: colors.primaryDark }]}>{t('pooja_detail.steps_vidhi_tab', 'Steps & Vidhi')}</Text>
-            </View>
-            <View style={[styles.tabInactive, { backgroundColor: '#FDF7F5' }]}>
-              <Icon name="package" size={16} color={colors.textLight} />
-              <Text style={[styles.tabInactiveText, { color: colors.textLight }]}>{t('pooja_detail.samagri_tab', 'Samagri List')} (24/28)</Text>
-            </View>
-          </View>
-
-          <View style={styles.stepsListHeader}>
-            <Text style={styles.stepsListTitle}>{t('pooja_detail.anushthan_kram', 'Anushthan Kram')}</Text>
-            <Text style={styles.stepsListSubtitle}>{steps.length} {t('pooja_detail.total', 'Total')}</Text>
-          </View>
-        </View>
-      );
-    }
-
-    if (item.isStep) {
-      const stepIndex = item.index + 1;
-      const hasAudio = item.sections.some((s: any) => s.sectionType === 'Audio' || s.sectionType === 'Mantra');
-      const audioSection = item.sections.find((s: any) => s.sectionType === 'Audio');
-
-      return (
-        <TouchableOpacity style={styles.stepRow} onPress={() => {
-          setCurrentStepIndex(item.index);
-          setIsCeremonyMode(true);
-        }}>
-          <View style={[styles.stepCircle, { backgroundColor: '#FDF7F5' }]}>
-            <Text style={{ color: colors.primaryDark, fontWeight: 'bold' }}>{stepIndex}</Text>
-          </View>
-
-          <View style={styles.stepContent}>
-            <Text style={[styles.stepTitle, { color: colors.primaryDark }]}>
-              {stepIndex}. {item.title}
+              आवश्यक सामग्री
             </Text>
-            {item.sections.some((s: any) => s.sectionType === 'Vidhi') && (
-              <Text style={styles.stepSubtitle} numberOfLines={1}>
-                {item.sections.find((s: any) => s.sectionType === 'Vidhi')?.content}
-              </Text>
-            )}
 
-            {hasAudio && (
-              <View style={[styles.stepActiveAudio, { backgroundColor: '#FDF7F5' }]}>
-                <View style={[styles.smallPlayButton, { backgroundColor: colors.primary }]}>
-                  <Icon name="play" size={12} color="#FFF" style={{ marginLeft: 2 }} />
-                </View>
-                <Text style={styles.smallAudioText}>
-                  {audioSection ? `${t('pooja_detail.audio_track', 'Audio')}: ${audioSection.content}` : t('pooja_detail.mantra_audio_available', 'Mantra Audio Available')}
+            {pooja.samagriList.map((item, idx) => (
+              <View key={`samagri_${idx}`} style={styles.samagriBulletRow}>
+                <Text
+                  style={[
+                    styles.samagriBulletDot,
+                    {
+                      fontSize: bodySize,
+                      color: isDark ? '#E5E7EB' : '#374151',
+                    },
+                  ]}
+                >
+                  •
+                </Text>
+                <Text
+                  style={[
+                    styles.samagriItemText,
+                    {
+                      fontSize: bodySize,
+                      lineHeight: lineHeight,
+                      color: isDark ? '#E5E7EB' : '#374151',
+                    },
+                  ]}
+                >
+                  {item}
                 </Text>
               </View>
-            )}
+            ))}
           </View>
-        </TouchableOpacity>
-      );
-    }
+        )}
 
-    return (
-      <DynamicSection
-        section={item}
-        isFavorite={favorites.has(item.sectionId)}
-        onToggleFavorite={toggleFavorite}
-      />
+        {/* Section: पूजा क्रम */}
+        {pooja.stepsList && pooja.stepsList.length > 0 && (
+          <View style={styles.sectionBlock}>
+            <Text
+              style={[
+                styles.sectionHeading,
+                {
+                  fontSize: sectionHeadingSize,
+                  color: isDark ? '#FCA5A5' : '#991B1B',
+                  marginTop: 18,
+                  marginBottom: 10,
+                },
+              ]}
+            >
+              पूजा क्रम
+            </Text>
+
+            {pooja.stepsList.map(step => (
+              <View key={step.id} style={styles.stepItemContainer}>
+                {/* Step Number & Title */}
+                <Text
+                  style={[
+                    styles.stepTitleText,
+                    {
+                      fontSize: stepHeadingSize,
+                      color: isDark ? '#FCA5A5' : '#991B1B',
+                    },
+                  ]}
+                >
+                  {step.stepNumber}. {step.title}
+                </Text>
+
+                {/* Step Content / Vidhi / Mantras */}
+                <Text
+                  style={[
+                    styles.stepContentText,
+                    {
+                      fontSize: bodySize,
+                      lineHeight: lineHeight,
+                      color: isDark ? '#E5E7EB' : '#374151',
+                    },
+                  ]}
+                >
+                  {step.content}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     );
   };
 
-  if (!pooja || !isReady) {
+  // ==========================================
+  // RENDER: Personal Notes View (Image 2 Left)
+  // ==========================================
+  const renderNotesView = () => {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View
+        style={[
+          styles.notesViewContainer,
+          { backgroundColor: isDark ? colors.background : '#FAF8F5' },
+        ]}
+      >
+        <ScrollView
+          style={styles.contentScrollView}
+          contentContainerStyle={[
+            styles.notesContentContainer,
+            { paddingBottom: Math.max(insets.bottom + 30, 60) },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Breadcrumb */}
+          <Text
+            style={[
+              styles.notesBreadcrumbText,
+              { color: isDark ? '#9CA3AF' : '#6B7280' },
+            ]}
+          >
+            {breadcrumbs}
+          </Text>
+
+          {/* Privacy line */}
+          <View style={styles.privacyBannerRow}>
+            <Icon
+              name="lock"
+              size={14}
+              color={isDark ? '#9CA3AF' : '#6B7280'}
+            />
+            <Text
+              style={[
+                styles.privacyBannerText,
+                { color: isDark ? '#9CA3AF' : '#4B5563' },
+              ]}
+            >
+              ये नोट्स केवल आपको दिखाई देंगे।
+            </Text>
+          </View>
+
+          {/* Search bar */}
+          <View
+            style={[
+              styles.notesSearchContainer,
+              {
+                backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                borderColor: isDark ? '#374151' : '#E5E7EB',
+              },
+            ]}
+          >
+            <Icon
+              name="search"
+              size={16}
+              color={isDark ? '#9CA3AF' : '#9CA3AF'}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[
+                styles.notesSearchInput,
+                { color: isDark ? '#FFF' : '#1F2937' },
+              ]}
+              placeholder="इस पूजा के नोट्स खोजें"
+              placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+              value={notesSearchQuery}
+              onChangeText={setNotesSearchQuery}
+            />
+            {notesSearchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setNotesSearchQuery('')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Icon
+                  name="x"
+                  size={16}
+                  color={isDark ? '#9CA3AF' : '#9CA3AF'}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Count and Sort Bar */}
+          <View style={styles.notesSummaryRow}>
+            <Text
+              style={[
+                styles.notesCountText,
+                { color: isDark ? '#D1D5DB' : '#374151' },
+              ]}
+            >
+              {filteredNotes.length} नोट्स
+            </Text>
+
+            <TouchableOpacity
+              onPress={() =>
+                setSortOrder(prev => (prev === 'latest' ? 'oldest' : 'latest'))
+              }
+              style={styles.sortButton}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.sortButtonText,
+                  { color: isDark ? '#9CA3AF' : '#4B5563' },
+                ]}
+              >
+                {sortOrder === 'latest' ? 'नवीनतम पहले ↓' : 'पुराने पहले ↑'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* List of Notes */}
+          {filteredNotes.length === 0 ? (
+            <View style={styles.emptyNotesContainer}>
+              <Icon
+                name="file-text"
+                size={36}
+                color={isDark ? '#4B5563' : '#CBD5E1'}
+              />
+              <Text
+                style={[
+                  styles.emptyNotesTitle,
+                  { color: isDark ? '#9CA3AF' : '#64748B' },
+                ]}
+              >
+                {notesSearchQuery
+                  ? 'कोई मिलता-जुलता नोट नहीं मिला'
+                  : 'अभी कोई निजी नोट नहीं है'}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.emptyAddBtn,
+                  { backgroundColor: isDark ? '#7F1D1D' : '#991B1B' },
+                ]}
+                onPress={handleOpenAddNote}
+              >
+                <Text style={styles.emptyAddBtnText}>+ नया नोट जोड़ें</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            filteredNotes.map(item => {
+              const isMenuOpen = activeMenuNoteId === item.id;
+
+              return (
+                <View key={item.id} style={styles.cardWrapper}>
+                  <TouchableOpacity
+                    style={[
+                      styles.noteCard,
+                      {
+                        backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                        borderColor: isDark ? '#333333' : '#EAE8E4',
+                      },
+                    ]}
+                    onPress={() => handleOpenEditNote(item)}
+                    activeOpacity={0.85}
+                  >
+                    {/* Top Row: Title, Pin badge & Three dots */}
+                    <View style={styles.noteCardHeaderRow}>
+                      <View style={styles.noteTitleContainer}>
+                        <Text
+                          style={[
+                            styles.noteCardTitle,
+                            { color: isDark ? '#FCA5A5' : '#991B1B' },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.title}
+                        </Text>
+                        {item.isPinned && (
+                          <View style={styles.pinnedBadgeRow}>
+                            <MaterialCommunityIcons
+                              name="pin"
+                              size={14}
+                              color="#D97706"
+                            />
+                            <Text style={styles.pinnedBadgeText}>
+                              पिन किया
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Three-dot menu button */}
+                      <TouchableOpacity
+                        style={styles.moreOptionsButton}
+                        onPress={() =>
+                          setActiveMenuNoteId(isMenuOpen ? null : item.id)
+                        }
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <MaterialIcons
+                          name="more-vert"
+                          size={20}
+                          color={isDark ? '#9CA3AF' : '#6B7280'}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Content Preview */}
+                    <Text
+                      style={[
+                        styles.noteCardContent,
+                        { color: isDark ? '#D1D5DB' : '#4B5563' },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {item.content}
+                    </Text>
+
+                    {/* Timestamp */}
+                    <Text
+                      style={[
+                        styles.noteCardTimestamp,
+                        { color: isDark ? '#6B7280' : '#9CA3AF' },
+                      ]}
+                    >
+                      संशोधित: {item.updatedAt}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Context Popup Menu for Edit / Delete / Pin */}
+                  {isMenuOpen && (
+                    <View
+                      style={[
+                        styles.contextMenuDropdown,
+                        {
+                          backgroundColor: isDark ? '#262626' : '#FFFFFF',
+                          borderColor: isDark ? '#404040' : '#E5E7EB',
+                        },
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={styles.contextMenuItem}
+                        onPress={() => handleOpenEditNote(item)}
+                      >
+                        <Icon
+                          name="edit-2"
+                          size={15}
+                          color={isDark ? '#FCA5A5' : '#991B1B'}
+                        />
+                        <Text
+                          style={[
+                            styles.contextMenuText,
+                            { color: isDark ? '#FCA5A5' : '#374151' },
+                          ]}
+                        >
+                          संपादित करें
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View
+                        style={[
+                          styles.contextDivider,
+                          { backgroundColor: isDark ? '#333' : '#F3F4F6' },
+                        ]}
+                      />
+
+                      <TouchableOpacity
+                        style={styles.contextMenuItem}
+                        onPress={async () => {
+                          setActiveMenuNoteId(null);
+                          await togglePinNote(item.id);
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name={item.isPinned ? 'pin-off-outline' : 'pin-outline'}
+                          size={15}
+                          color={isDark ? '#D1D5DB' : '#374151'}
+                        />
+                        <Text
+                          style={[
+                            styles.contextMenuText,
+                            { color: isDark ? '#D1D5DB' : '#374151' },
+                          ]}
+                        >
+                          {item.isPinned ? 'अनपिन करें' : 'पिन करें'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View
+                        style={[
+                          styles.contextDivider,
+                          { backgroundColor: isDark ? '#333' : '#F3F4F6' },
+                        ]}
+                      />
+
+                      <TouchableOpacity
+                        style={styles.contextMenuItem}
+                        onPress={() => handleDeleteNoteConfirm(item.id)}
+                      >
+                        <Icon name="trash-2" size={15} color="#DC2626" />
+                        <Text
+                          style={[styles.contextMenuText, { color: '#DC2626' }]}
+                        >
+                          हटाएँ
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
+
+          {/* Bottom helper text */}
+          <Text
+            style={[
+              styles.bottomTapHint,
+              { color: isDark ? '#9CA3AF' : '#6B7280' },
+            ]}
+          >
+            नोट पर टैप करके खोलें और संपादित करें।
+          </Text>
+
+          {/* Return link */}
+          <TouchableOpacity
+            style={styles.returnLinkBtn}
+            onPress={() => setViewMode('detail')}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.returnLinkText,
+                { color: isDark ? '#F87171' : '#991B1B' },
+              ]}
+            >
+              ← {headerPoojaTitle} पर लौटें
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     );
-  }
+  };
 
-  if (isCeremonyMode) {
-    return renderCeremonyMode();
-  }
+  // ==========================================
+  // RENDER: Add / Edit Note Modal (Image 2 Right)
+  // ==========================================
+  const renderNoteModal = () => {
+    const isEditing = !!editingNote;
 
-  const listData = [
-    { isHeader: true, id: 'header' },
-    ...steps.map((step, idx) => ({ ...step, isStep: true, id: `step_${idx}`, index: idx })),
-    { isNotesSection: true, id: 'notes' }
-  ];
+    return (
+      <Modal
+        visible={isNoteModalOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsNoteModalOpen(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsNoteModalOpen(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => { }}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={styles.modalContainer}
+              >
+                <View
+                  style={[
+                    styles.modalCard,
+                    { backgroundColor: isDark ? colors.surface : '#FFFFFF' },
+                  ]}
+                >
+                  {/* Modal Header */}
+                  <View style={styles.modalHeaderRow}>
+                    <View style={styles.modalHeaderLeft}>
+                      <Text
+                        style={[
+                          styles.modalMainTitle,
+                          { color: isDark ? '#FFF' : '#1F2937' },
+                        ]}
+                      >
+                        {isEditing ? 'नोट संपादित करें' : 'नया नोट जोड़ें'}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.modalSubtitle,
+                          { color: isDark ? '#9CA3AF' : '#6B7280' },
+                        ]}
+                      >
+                        {headerPoojaTitle} • निजी नोट
+                      </Text>
+                    </View>
+
+                    {/* Close button */}
+                    <TouchableOpacity
+                      onPress={() => setIsNoteModalOpen(false)}
+                      style={styles.modalCloseButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Icon
+                        name="x"
+                        size={20}
+                        color={isDark ? '#9CA3AF' : '#6B7280'}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Privacy Banner */}
+                  <View style={styles.modalPrivacyRow}>
+                    <Icon
+                      name="lock"
+                      size={13}
+                      color={isDark ? '#9CA3AF' : '#4B5563'}
+                    />
+                    <Text
+                      style={[
+                        styles.modalPrivacyText,
+                        { color: isDark ? '#9CA3AF' : '#4B5563' },
+                      ]}
+                    >
+                      केवल आपको दिखाई देगा
+                    </Text>
+                  </View>
+
+                  {/* Field 1: Title */}
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      { color: isDark ? '#E5E7EB' : '#374151' },
+                    ]}
+                  >
+                    नोट का शीर्षक <Text style={styles.requiredAsterisk}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.modalTextInput,
+                      {
+                        backgroundColor: isDark ? colors.background : '#FFFFFF',
+                        borderColor: isDark ? '#404040' : '#D1D5DB',
+                        color: isDark ? '#FFF' : '#1F2937',
+                      },
+                    ]}
+                    placeholder="नोट का शीर्षक लिखें"
+                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                    value={modalTitle}
+                    onChangeText={setModalTitle}
+                  />
+
+                  {/* Field 2: Content */}
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      {
+                        color: isDark ? '#E5E7EB' : '#374151',
+                        marginTop: 12,
+                      },
+                    ]}
+                  >
+                    नोट का विवरण <Text style={styles.requiredAsterisk}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.modalTextArea,
+                      {
+                        backgroundColor: isDark ? colors.background : '#FFFFFF',
+                        borderColor: isDark ? '#404040' : '#D1D5DB',
+                        color: isDark ? '#FFF' : '#1F2937',
+                      },
+                    ]}
+                    placeholder="नोट का विवरण यहाँ लिखें..."
+                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                    multiline={true}
+                    numberOfLines={6}
+                    textAlignVertical="top"
+                    value={modalContent}
+                    onChangeText={setModalContent}
+                  />
+
+                  {/* Checkbox: Pin Note */}
+                  <TouchableOpacity
+                    style={styles.pinCheckboxRow}
+                    onPress={() => setModalIsPinned(!modalIsPinned)}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialCommunityIcons
+                      name={
+                        modalIsPinned
+                          ? 'checkbox-marked'
+                          : 'checkbox-blank-outline'
+                      }
+                      size={20}
+                      color={
+                        modalIsPinned
+                          ? isDark
+                            ? '#F87171'
+                            : '#991B1B'
+                          : isDark
+                            ? '#9CA3AF'
+                            : '#9CA3AF'
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.pinCheckboxText,
+                        { color: isDark ? '#E5E7EB' : '#1F2937' },
+                      ]}
+                    >
+                      इस नोट को ऊपर पिन करें
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Metadata Row: Last updated / required note */}
+                  <View style={styles.modalMetaRow}>
+                    <Text
+                      style={[
+                        styles.modalMetaText,
+                        { color: isDark ? '#9CA3AF' : '#9CA3AF' },
+                      ]}
+                    >
+                      {isEditing && editingNote
+                        ? `अंतिम संशोधन: ${editingNote.updatedAt.replace('•', ',')}`
+                        : ''}
+                    </Text>
+                    <Text style={styles.requiredNoticeText}>
+                      * आवश्यक जानकारी
+                    </Text>
+                  </View>
+
+                  {/* Bottom Action Buttons */}
+                  <View style={styles.modalActionsRow}>
+                    {/* Cancel Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.modalCancelBtn,
+                        { borderColor: isDark ? '#4B5563' : '#D1D5DB' },
+                      ]}
+                      onPress={() => setIsNoteModalOpen(false)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.modalCancelText,
+                          { color: isDark ? '#E5E7EB' : '#374151' },
+                        ]}
+                      >
+                        रद्द करें
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Save Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.modalSaveBtn,
+                        {
+                          backgroundColor: isDark ? '#7F1D1D' : '#991B1B',
+                        },
+                      ]}
+                      onPress={handleSaveModalNote}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.modalSaveText}>
+                        {isEditing ? 'बदलाव सहेजें' : 'नोट सहेजें'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    );
+  };
+
+  // Close context menu when tapping outside
+  const handleScreenTouch = () => {
+    if (activeMenuNoteId) {
+      setActiveMenuNoteId(null);
+    }
+  };
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
-      <CustomHeader title={currentDisplayTitle} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-        <FlatList
-          data={listData}
-          keyExtractor={(item: any) => item.sectionId || item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
+    <TouchableWithoutFeedback onPress={handleScreenTouch}>
+      <View
+        style={[
+          styles.screenContainer,
+          { backgroundColor: isDark ? colors.background : '#FFFFFF' },
+        ]}
+      >
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={isDark ? colors.surface : '#FFFFFF'}
         />
+
+        {/* Persistent top header bar */}
+        {renderHeader()}
+
+        {/* Main Body: Switch between Pooja Details & Personal Notes */}
+        {viewMode === 'detail' ? renderDetailView() : renderNotesView()}
+
+        {/* Note Add/Edit Modal */}
+        {renderNoteModal()}
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1 },
-  mainCard: {
+  screenContainer: {
     flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
   },
-  container: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
+  // ------------------------------------------
+  // Header Styles
+  // ------------------------------------------
   headerContainer: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  headerImageContainer: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 20,
-    height: 160,
-    backgroundColor: '#000',
-  },
-  headerImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.8,
-  },
-  headerImageOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'space-between',
-    padding: 16,
-    alignItems: 'center',
-  },
-  headerImageTitle: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  headerPillsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  headerPill: {
-    backgroundColor: '#FFFE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  headerPillText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#800000',
-  },
-  actionButtonsContainer: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  primaryActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 14,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    zIndex: 10,
   },
-  primaryActionText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  secondaryActionBtn: {
+  headerInnerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
+    height: 44,
   },
-  secondaryActionText: {
-    fontSize: 13,
+  backButton: {
+    marginRight: 6,
+    padding: 2,
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  tabsRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    gap: 10,
-  },
-  tabActive: {
+  headerSpacer: {
     flex: 1,
+  },
+  headerActionsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+  },
+  headerActionButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
     justifyContent: 'center',
-    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  fontActionText: {
+    fontWeight: 'bold',
+  },
+  headerDivider: {
+    width: 1,
+    height: 16,
+    marginHorizontal: 2,
+  },
+  addNoteHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 4,
+  },
+  addNoteHeaderText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  // ------------------------------------------
+  // Pooja Detail Content Styles
+  // ------------------------------------------
+  contentScrollView: {
+    flex: 1,
+  },
+  detailContentContainer: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+  },
+  breadcrumbText: {
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  mainPoojaTitle: {
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  mainSubtitle: {
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  anchorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  anchorText: {
+    fontWeight: '500',
+  },
+  sectionBlock: {
+    marginBottom: 14,
+  },
+  sectionHeading: {
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  samagriBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 3,
+  },
+  samagriBulletDot: {
+    marginRight: 8,
+    lineHeight: 22,
+  },
+  samagriItemText: {
+    flex: 1,
+    fontWeight: '400',
+  },
+  stepItemContainer: {
+    marginBottom: 12,
+  },
+  stepTitleText: {
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  stepContentText: {
+    fontWeight: '400',
+  },
+
+  // ------------------------------------------
+  // Personal Notes View Styles
+  // ------------------------------------------
+  notesViewContainer: {
+    flex: 1,
+  },
+  notesContentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 5,
+  },
+  notesBreadcrumbText: {
+    fontSize: 11.5,
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  privacyBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 5,
+  },
+  privacyBannerText: {
+    fontSize: 12,
+    fontWeight: '400',
+  },
+  notesSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: '#FFF',
-    gap: 6,
-    elevation: 1,
+    paddingHorizontal: 12,
+    height: 40,
+    marginBottom: 5,
   },
-  tabActiveText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+  searchIcon: {
+    marginRight: 8,
   },
-  tabInactive: {
+  notesSearchInput: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 6,
+    fontSize: 13,
+    paddingVertical: 0,
   },
-  tabInactiveText: {
+  notesSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  notesCountText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  stepsListHeader: {
+  sortButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  sortButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  cardWrapper: {
+    position: 'relative',
+    marginBottom: 5,
+    zIndex: 1,
+  },
+  noteCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 5,
+
+  },
+  noteCardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    alignItems: 'flex-start',
   },
-  stepsListTitle: {
-    fontSize: 16,
+  noteTitleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingRight: 6,
+  },
+  noteCardTitle: {
+    fontSize: 14.5,
     fontWeight: 'bold',
   },
-  stepsListSubtitle: {
-    fontSize: 12,
+  pinnedBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  pinnedBadgeText: {
+    fontSize: 11,
     color: '#D97706',
     fontWeight: 'bold',
   },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#FDECE6',
-    elevation: 1,
+  moreOptionsButton: {
+    padding: 2,
   },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  stepSubtitle: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  stepActiveAudio: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FDECE6',
-  },
-  smallPlayButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  smallAudioText: {
-    fontSize: 12,
-    color: '#800000',
-    fontStyle: 'italic',
-  },
-  notesContainer: {
+  noteCardContent: {
+    fontSize: 13,
+    lineHeight: 19,
     marginTop: 5,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
   },
-  notesHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+  noteCardTimestamp: {
+    fontSize: 11,
+    marginTop: 8,
   },
-  notesTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  notesInput: {
-    minHeight: 120,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    textAlignVertical: 'top',
+  bottomTapHint: {
     fontSize: 12,
+    textAlign: 'center',
+    marginTop: 14,
+    marginBottom: 8,
   },
-
-  // Ceremony Mode Styles
-  ceremonyContainer: {
-    flex: 1,
-    paddingTop: 30, // Adjust for notch if needed
-  },
-  ceremonyHeaderRow: {
-    flexDirection: 'row',
+  returnLinkBtn: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingVertical: 6,
   },
-  ceremonyHeaderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  exitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ceremonyContent: {
-    padding: 20,
-    paddingBottom: 60,
-  },
-  ceremonyStepPillContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  ceremonyStepPill: {
-    backgroundColor: '#FDECE6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  ceremonyStepPillText: {
-    fontSize: 14,
+  returnLinkText: {
+    fontSize: 13.5,
     fontWeight: 'bold',
   },
-  ceremonyStepImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  ceremonySection: {
-    marginBottom: 24,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
+  emptyNotesContainer: {
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  sectionTitleText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  vidhiCard: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  vidhiRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-start',
-  },
-  vidhiNumberCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  vidhiNumberText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  vidhiRowText: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  mantraAudioCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 16,
-  },
-  mantraPlayButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  mantraTextContainer: {
-    flex: 1,
-  },
-  mantraSanskritText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    lineHeight: 26,
-    fontStyle: 'italic',
-  },
-  ceremonyFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 5,
-    // paddingBottom: 25,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    backgroundColor: '#FFF',
-  },
-  navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 6,
-    borderRadius: 30,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  prevButton: {
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    marginRight: 10,
-  },
-  navButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    gap: 8,
-    flex: 1,
-    justifyContent: 'center',
-    marginLeft: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  nextButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  ceremonyDescription: {
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  ceremonyAudioSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 16,
-    // marginBottom: 16,
+    paddingVertical: 40,
     gap: 12,
   },
-  audioPlayBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+  emptyNotesTitle: {
+    fontSize: 14,
+    fontWeight: '500',
   },
-  audioDetails: {
-    flex: 1,
+  emptyAddBtn: {
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 4,
   },
-  audioTitle: {
+  emptyAddBtnText: {
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: 'bold',
   },
-  audioSubtitle: {
-    fontSize: 11,
-  }
+
+  // ------------------------------------------
+  // Context Menu Dropdown Styles
+  // ------------------------------------------
+  contextMenuDropdown: {
+    position: 'absolute',
+    top: 40,
+    right: 10,
+    width: 140,
+    borderRadius: 8,
+    borderWidth: 1,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    zIndex: 999,
+    paddingVertical: 4,
+  },
+  contextMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    gap: 8,
+  },
+  contextMenuText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  contextDivider: {
+    height: 1,
+    marginHorizontal: 8,
+  },
+
+  // ------------------------------------------
+  // Modal Popup Styles (Image 2 Right)
+  // ------------------------------------------
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 18,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalCard: {
+    borderRadius: 14,
+    padding: 18,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  modalHeaderLeft: {
+    flex: 1,
+  },
+  modalMainTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalPrivacyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginVertical: 10,
+  },
+  modalPrivacyText: {
+    fontSize: 12,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  requiredAsterisk: {
+    color: '#DC2626',
+  },
+  modalTextInput: {
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13.5,
+  },
+  modalTextArea: {
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13.5,
+    minHeight: 110,
+  },
+  pinCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
+  },
+  pinCheckboxText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  modalMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  modalMetaText: {
+    fontSize: 10.5,
+  },
+  requiredNoticeText: {
+    fontSize: 10.5,
+    color: '#DC2626',
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingVertical: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modalSaveBtn: {
+    flex: 1,
+    borderRadius: 6,
+    paddingVertical: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSaveText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
 });
 
 export default PoojaDetailScreen;

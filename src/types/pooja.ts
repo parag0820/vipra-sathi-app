@@ -6,6 +6,24 @@ export interface PoojaSection {
   content: string;
 }
 
+export interface PoojaStepItem {
+  id: string;
+  stepNumber: number;
+  title: string;
+  content: string;
+  subItems?: string[];
+}
+
+export interface PoojaPersonalNote {
+  id: string;
+  poojaId: string;
+  title: string;
+  content: string;
+  isPinned: boolean;
+  updatedAt: string;
+  timestamp: number;
+}
+
 export interface Pooja {
   id: string;
   title: string;
@@ -13,4 +31,11 @@ export interface Pooja {
   subCategory?: string;
   thumbnail?: string;
   sections: PoojaSection[];
+  headerTitle?: string;
+  titleHindi?: string;
+  subtitleHindi?: string;
+  breadcrumbs?: string;
+  navAnchors?: string[];
+  samagriList?: string[];
+  stepsList?: PoojaStepItem[];
 }

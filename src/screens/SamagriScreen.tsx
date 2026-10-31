@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import CustomHeader from '../components/CustomHeader';
@@ -127,6 +128,16 @@ const SamagriScreen = () => {
 
   // Default responsibility: yajman
   const [itemStates, setItemStates] = useState<Record<string, { checked: boolean; responsibility: 'pandit' | 'yajman' }>>({});
+  // Editable quantity/mattra state
+  const [customQuantities, setCustomQuantities] = useState<Record<string, string>>({});
+
+  const getItemQty = (item: SamagriItem) => {
+    return customQuantities[item.id] !== undefined ? customQuantities[item.id] : item.qty;
+  };
+
+  const handleQtyChange = (id: string, text: string) => {
+    setCustomQuantities(prev => ({ ...prev, [id]: text }));
+  };
 
   const getPoojaLabel = (pooja: string) => {
     switch (pooja) {
@@ -223,7 +234,7 @@ const SamagriScreen = () => {
             ${item.isHawan ? `<span style="font-size: 10px; color: #D35400; background: #FDEED9; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold;">${isHi ? 'हवन' : 'Hawan'}</span>` : ''}
           </td>
           <td style="text-align: center; padding: 10px 8px; border-bottom: 1px solid #EAD8C3; font-size: 13px; font-weight: bold; color: #555;">
-            ${item.qty}
+            ${getItemQty(item)}
           </td>
           <td style="text-align: center; padding: 10px 8px; border-bottom: 1px solid #EAD8C3;">
             <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; ${isYajman ? 'background-color: #FDEED9; color: #B3541E; border: 1px solid #FAD7A0;' : 'background-color: #E8F4F8; color: #1B4F72; border: 1px solid #AED6F1;'}">
@@ -680,13 +691,23 @@ const SamagriScreen = () => {
                     )}
                   </TouchableOpacity>
 
-                  {/* Col 3: Qty */}
+                  {/* Col 3: Qty (Editable) */}
                   <View style={styles.colQty}>
-                    <View style={[styles.qtyBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F2ECE2' }]}>
-                      <Text style={[styles.qtyBadgeText, { color: colors.text }]} numberOfLines={1}>
-                        {item.qty}
-                      </Text>
-                    </View>
+                    <TextInput
+                      style={[
+                        styles.qtyInput,
+                        {
+                          color: colors.text,
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F5EFE6',
+                          borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#DFD4C4',
+                        },
+                      ]}
+                      value={getItemQty(item)}
+                      onChangeText={(val) => handleQtyChange(item.id, val)}
+                      placeholder={t('samagri.qty', 'Qty')}
+                      placeholderTextColor={colors.textLight}
+                      selectTextOnFocus
+                    />
                   </View>
 
                   {/* Col 4: Yajman / Pandit Toggle */}
@@ -966,9 +987,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   colQty: {
-    width: 65,
+    width: 72,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  qtyInput: {
+    width: '100%',
+    height: 30,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    textAlign: 'center',
+    fontSize: 11,
+    fontWeight: '600',
   },
   colAssigned: {
     width: 114,

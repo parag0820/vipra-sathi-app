@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { MOCK_AARTIS } from '../data/mockLibrary';
@@ -14,72 +14,14 @@ type AartiDetailRouteProp = {
   params: { aartiId: string };
 };
 
-const MusicEqualizer = ({ color, isPlaying }: { color: string, isPlaying: boolean }) => {
-  const bars = [1, 2, 3, 4, 5, 6, 7];
-  
-  return (
-    <View style={styles.equalizerContainer}>
-      {bars.map((_, i) => {
-        const anim = useRef(new Animated.Value(20)).current;
-        
-        useEffect(() => {
-          let isMounted = true;
-          const animate = () => {
-            if (!isPlaying || !isMounted) return;
-            Animated.sequence([
-              Animated.timing(anim, {
-                toValue: Math.random() * 80 + 20,
-                duration: Math.random() * 400 + 300,
-                useNativeDriver: false,
-              }),
-              Animated.timing(anim, {
-                toValue: 20,
-                duration: Math.random() * 400 + 300,
-                useNativeDriver: false,
-              })
-            ]).start(({ finished }) => {
-              if (finished && isPlaying && isMounted) animate();
-            });
-          };
-          
-          if (isPlaying) {
-            animate();
-          } else {
-            anim.stopAnimation();
-            Animated.timing(anim, {
-              toValue: 20,
-              duration: 150, // fast collapse
-              useNativeDriver: false,
-            }).start();
-          }
-
-          return () => { isMounted = false; anim.stopAnimation(); };
-        }, [anim, isPlaying]);
-        
-        return (
-          <Animated.View 
-            key={i}
-            style={[
-              styles.bar,
-              {
-                height: anim,
-                backgroundColor: color,
-              }
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
-
 const AartiDetailScreen = () => {
   const route = useRoute<AartiDetailRouteProp>();
   const { aartiId } = route.params;
   const { colors, isDark } = useTheme();
   const { t } = useTranslation();
-  const [isPlaying, setIsPlaying] = useState(false);
-  
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [fontSizeOffset, setFontSizeOffset] = useState(0); // For A- / A+ text sizing
+
   const aarti = MOCK_AARTIS.find(a => a.id === aartiId);
 
   const getAartiTitle = (item: typeof MOCK_AARTIS[0]) => {
@@ -104,6 +46,15 @@ const AartiDetailScreen = () => {
     }
   };
 
+  // Split Aarti into individual stanzas / verses for clean scrollable reading
+  const stanzas = useMemo(() => {
+    if (!aarti?.content) return [];
+    return aarti.content
+      .split(/\n\s*\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }, [aarti?.content]);
+
   if (!aarti) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -113,38 +64,137 @@ const AartiDetailScreen = () => {
   }
 
   const displayTitle = getAartiTitle(aarti);
+  const baseFontSize = 13.5 + fontSizeOffset;
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: colors.primary }]}>
-      <CustomHeader title={displayTitle} showBack={true} headerBgColor={colors.primary} headerTextColor="#FFF" />
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-      
-      {/* Fixed top visualizer instead of scrollable */}
-      <View style={[styles.musicVisualizerContainer, { backgroundColor: colors.primary + '10' }]}>
-        <MusicEqualizer color={colors.primary} isPlaying={isPlaying} />
-        <TouchableOpacity style={[styles.favoriteButton, { backgroundColor: colors.surface }]}>
-          <Icon name="heart" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.textHeader}>
-          <Text style={[styles.category, { color: colors.secondary }]}>{getCategoryLabel(aarti.category)}</Text>
-        </View>
-        
-        <View style={[styles.contentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.hindiText, { color: colors.text }]}>
-            {aarti.content}
-          </Text>
-        </View>
-      </ScrollView>
-      
-      {/* Sticky Audio Player */}
-      <AudioPlayerUI 
-        title={displayTitle} 
-        audioUrl={aarti.audioUrl} 
-        onPlaybackStatusUpdate={setIsPlaying}
+      <CustomHeader
+        title={displayTitle}
+        showBack={true}
+        headerBgColor={colors.primary}
+        headerTextColor="#FFF"
       />
+
+      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
+        {/* Compact Header Bar with Category, Verse Count & Controls */}
+        <View
+          style={[
+            styles.compactHeader,
+            {
+              backgroundColor: isDark ? colors.surface : '#FFF9F2',
+              borderBottomColor: colors.border,
+            },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <View style={[styles.categoryBadge, { backgroundColor: colors.primary + '18' }]}>
+              <Text style={[styles.categoryBadgeText, { color: colors.primary }]}>
+                {getCategoryLabel(aarti.category)}
+              </Text>
+            </View>
+            <Text style={[styles.verseCountText, { color: colors.textLight }]}>
+              {stanzas.length} {t('aarti_detail.verses', 'Stanzas / पद')}
+            </Text>
+          </View>
+
+          <View style={styles.headerRight}>
+            {/* Text Zoom Controls */}
+            <TouchableOpacity
+              onPress={() => setFontSizeOffset(prev => Math.max(-2, prev - 1))}
+              style={[styles.textScaleBtn, { borderColor: colors.border }]}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={[styles.textScaleLabel, { color: colors.text }]}>A-</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setFontSizeOffset(prev => Math.min(4, prev + 1))}
+              style={[styles.textScaleBtn, { borderColor: colors.border }]}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={[styles.textScaleLabel, { color: colors.text, fontWeight: 'bold' }]}>A+</Text>
+            </TouchableOpacity>
+
+            {/* Favorite Button */}
+            <TouchableOpacity
+              onPress={() => setIsFavorite(prev => !prev)}
+              style={[
+                styles.favBtn,
+                {
+                  backgroundColor: isFavorite ? '#FADBD8' : isDark ? 'rgba(255,255,255,0.08)' : '#F5ECE1',
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <Icon
+                name="heart"
+                size={18}
+                color={isFavorite ? '#E74C3C' : colors.textLight}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Small Scrollable Aarti Text List to Read */}
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+        >
+          {stanzas.map((stanza, idx) => {
+            return (
+              <View
+                key={idx}
+                style={[
+                  styles.stanzaCard,
+                  {
+                    backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                    borderColor: isDark ? colors.border : '#EDE2D4',
+                  },
+                ]}
+              >
+                {/* Verse / Stanza Number Header */}
+                <View style={styles.stanzaHeader}>
+                  <View style={[styles.stanzaBadge, { backgroundColor: colors.primary + '15' }]}>
+                    <Text style={[styles.stanzaBadgeText, { color: colors.primary }]}>
+                      {`॥ पद ${idx + 1} ॥`}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Stanza Text */}
+                <Text
+                  style={[
+                    styles.stanzaText,
+                    {
+                      color: colors.text,
+                      fontSize: baseFontSize,
+                      lineHeight: baseFontSize * 1.7,
+                    },
+                  ]}
+                >
+                  {stanza}
+                </Text>
+              </View>
+            );
+          })}
+
+          {/* Traditional Closing Mangalam Text */}
+          <View style={styles.closingMangalam}>
+            <Text style={[styles.closingText, { color: colors.primary }]}>
+              ॥ इति आरती सम्पूर्णम् ॥
+            </Text>
+          </View>
+
+          <View style={{ height: 20 }} />
+        </ScrollView>
+
+        {/* Sticky Audio Player */}
+        <AudioPlayerUI
+          title={displayTitle}
+          audioUrl={aarti.audioUrl}
+        />
       </View>
     </View>
   );
@@ -159,68 +209,104 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  musicVisualizerContainer: {
-    width: '100%',
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  equalizerContainer: {
+  compactHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 100,
-    justifyContent: 'center',
-  },
-  bar: {
-    width: 12,
-    borderRadius: 6,
-    marginHorizontal: 6,
-  },
-  favoriteButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
   },
-  textHeader: {
-    padding: 20,
+  headerLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  category: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+  categoryBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  contentCard: {
-    marginHorizontal: 20,
-    padding: 24,
-    borderRadius: 16,
+  categoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  verseCountText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  textScaleBtn: {
     borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 26,
+    alignItems: 'center',
   },
-  hindiText: {
-    fontSize: 18,
-    lineHeight: 34,
+  textScaleLabel: {
+    fontSize: 11,
+  },
+  favBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 14,
+    paddingBottom: 24,
+  },
+  stanzaCard: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  stanzaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  stanzaBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 1.5,
+    borderRadius: 8,
+  },
+  stanzaBadgeText: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  stanzaText: {
     fontWeight: '500',
     textAlign: 'center',
-  }
+    letterSpacing: 0.1,
+  },
+  closingMangalam: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  closingText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
 });
 
 export default AartiDetailScreen;

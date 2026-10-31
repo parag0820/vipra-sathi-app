@@ -490,6 +490,10 @@
       "aarti_kije_hanuman": "Aarti Kije Hanuman Lala Ki"
     }
   },
+  "aarti_detail": {
+    "verses": "Verses",
+    "stanzas": "Stanzas"
+  },
   "audio": {
     "loading": "Loading...",
     "now_playing": "Now Playing",
