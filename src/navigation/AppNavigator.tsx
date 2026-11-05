@@ -59,7 +59,20 @@ export type RootStackParamList = {
   PoojaDetail: { poojaId: string };
   Kundali: undefined;
   KundaliMatchingForm: undefined;
-  KundaliMatchingResult: undefined;
+  KundaliMatchingResult?: {
+    brideDetails?: {
+      name?: string;
+      dob?: string;
+      tob?: string;
+      place?: string;
+    };
+    groomDetails?: {
+      name?: string;
+      dob?: string;
+      tob?: string;
+      place?: string;
+    };
+  } | undefined;
   KundaliGenerated: {
     name: string;
     dob: string;

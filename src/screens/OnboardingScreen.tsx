@@ -1,75 +1,147 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Dimensions,
   Image,
-  ImageBackground,
+  Modal,
+  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { welcomeApi, WelcomeScreenItem } from '../api/welcome';
 
-const { width, height } = Dimensions.get('window');
+const PRIMARY_MAROON = '#8B1D1D';
+const CACHE_KEY = '@cached_welcome_screens';
 
-const BG_COLOR = '#F8E6CE';
-const PRIMARY_COLOR = '#800000'; // Maroon matching the icon
+export interface SlideData {
+  id: string;
+  screenNumber: number;
+  subtitle: string;
+  title: string;
+  description: string;
+  image: any;
+}
+
+const DEFAULT_SLIDES: SlideData[] = [
+  {
+    id: '1',
+    screenNumber: 1,
+    subtitle: 'पूजा और पाठ',
+    title: 'पूजा का हर पाठ, एक जगह',
+    description: 'पूजा विधि, स्तोत्र, हवन और आरती।\nजो चाहिए, आसानी से खोजें और पढ़ें।',
+    image: require('../assets/images/welcome_screen1.png'),
+  },
+  {
+    id: '2',
+    screenNumber: 2,
+    subtitle: 'पंचांग और ज्योतिष',
+    title: 'तारीख से मुहूर्त तक, आसानी से',
+    description: 'पंचांग देखें, कुंडली बनाएँ और मिलान करें।\nयजमान के लिए मुहूर्त भी खोजें।',
+    image: require('../assets/images/welcome_screen2.png'),
+  },
+  {
+    id: '3',
+    screenNumber: 3,
+    subtitle: 'आपका रोज़ का काम',
+    title: 'हर दिन का काम, व्यवस्थित',
+    description: 'यजमान, बुकिंग, सामग्री और आय–व्यय।\nसब संभालें, अपने तरीके से।',
+    image: require('../assets/images/welcome_screen3.png'),
+  },
+];
+
+const FALLBACK_IMAGES = [
+  require('../assets/images/welcome_screen1.png'),
+  require('../assets/images/welcome_screen2.png'),
+  require('../assets/images/welcome_screen3.png'),
+];
 
 const OnboardingScreen = () => {
-  const { continueAsGuest, completeOnboardingFlow } = useAuth();
+  const { completeOnboardingFlow } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
   const { i18n } = useTranslation();
+  const { width, height } = useWindowDimensions();
+
+  const isTablet = width >= 600;
+  const isHi = i18n.language === 'hi';
+
+  const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+  const [slides, setSlides] = useState<SlideData[]>(DEFAULT_SLIDES);
+
+  // Helper to map dynamic API items into SlideData
+  const mapApiScreensToSlides = (apiItems: WelcomeScreenItem[]): SlideData[] => {
+    return apiItems.map((item, idx) => {
+      let imgSource: any = FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length];
+      if (item.image && typeof item.image === 'string' && item.image.trim().length > 0) {
+        imgSource = item.image.startsWith('data:') || item.image.startsWith('http')
+          ? { uri: item.image }
+          : { uri: `data:image/jpeg;base64,${item.image}` };
+      }
+
+      return {
+        id: item._id || item.id || `${idx + 1}`,
+        screenNumber: item.screenNumber || idx + 1,
+        subtitle: item.subtitle || '',
+        title: item.title || '',
+        description: item.description || '',
+        image: imgSource,
+      };
+    });
+  };
+
+  // Fetch dynamic welcome content from API /welcome/admin/get-all
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadScreens = async () => {
+      // 1. Read from cache first
+      try {
+        const cached = await AsyncStorage.getItem(CACHE_KEY);
+        if (cached && isMounted) {
+          const parsed: WelcomeScreenItem[] = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSlides(mapApiScreensToSlides(parsed));
+          }
+        }
+      } catch (e) {
+        // ignore cache read error
+      }
+
+      // 2. Fetch live dynamic data from /welcome/admin/get-all
+      try {
+        const apiData = await welcomeApi.getWelcomeScreens();
+        if (isMounted && apiData && apiData.length > 0) {
+          setSlides(mapApiScreensToSlides(apiData));
+          await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(apiData));
+        }
+      } catch (err) {
+        console.warn('Failed to load dynamic welcome screens:', err);
+      }
+    };
+
+    loadScreens();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const changeLanguage = async (lang: string) => {
     i18n.changeLanguage(lang);
     await AsyncStorage.setItem('language_preference', lang);
+    setIsLangModalOpen(false);
   };
 
-  const isHi = i18n.language === 'hi';
-
-  const SLIDES = [
-    {
-      id: '0',
-      brand: isHi ? 'विप्र सारथी' : 'Vipra Saarthi',
-      // title: isHi ? 'आपका डिजिटल साथी' : 'Aapka Digital Saathi',
-      description: isHi
-        ? 'पंडितों के लिए विशेष रूप से \nबना एक डिजिटल साथी'
-        : 'A digital companion \nspecially made for Pandits',
-      isSplash: true,
-      image: require('../../assets/icon.png'),
-    },
-    {
-      id: '1',
-      title: isHi ? 'पंचांग से कुंडली तक' : 'Panchang to Kundali',
-      description: '',
-      isSplash: false,
-      image: require('../assets/images/onboarding_1.jpeg'),
-    },
-    {
-      id: '2',
-      title: isHi ? 'संपूर्ण पूजा और वैदिक संग्रह' : 'Complete Pooja\n& Vedic Library',
-      description: '',
-      isSplash: false,
-      image: require('../assets/images/onboarding_2.jpeg'),
-    },
-    {
-      id: '3',
-      title: isHi ? 'हर कार्य, सरल और व्यवस्थित' : 'Smart Yajman\n& Ledger Manager',
-      description: '',
-      isSplash: false,
-      image: require('../assets/images/onboarding_3.jpeg'),
-    },
-  ];
-
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems[0]) {
+    if (viewableItems && viewableItems[0]) {
       setCurrentIndex(viewableItems[0].index);
     }
   }).current;
@@ -77,71 +149,110 @@ const OnboardingScreen = () => {
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const handleNext = () => {
-    if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
+    if (currentIndex < slides.length - 1) {
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
     } else {
       completeOnboardingFlow();
     }
   };
 
-  const renderSlide = ({ item }: { item: (typeof SLIDES)[0] }) => {
-    if (item.isSplash) {
-      return (
-        <ImageBackground
-          source={require('../assets/images/splash_bg.png')}
-          style={[styles.slide, { width, height: '100%', justifyContent: 'center' }]}
-          resizeMode="cover"
-        >
-          <Image
-            source={item.image}
-            style={styles.slideLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.brandName}>{item.brand}</Text>
-          <Text style={styles.splashSubtitle}>{item.title}</Text>
-
-          <Text style={styles.splashDescription}>{item.description}</Text>
-
-          <View style={styles.languageToggleContainer}>
-            <TouchableOpacity
-              style={[styles.languageButton, isHi && styles.languageButtonActive]}
-              onPress={() => changeLanguage('hi')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.languageText, isHi && styles.languageTextActive]}>हिंदी</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.languageButton, !isHi && styles.languageButtonActive]}
-              onPress={() => changeLanguage('en')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.languageText, !isHi && styles.languageTextActive]}>English</Text>
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
-      );
-    }
+  const renderSlide = ({ item }: { item: SlideData }) => {
+    const illustrationHeight = Math.min(height * 0.28, isTablet ? 320 : 250);
+    const illustrationWidth = Math.min(width * 0.86, isTablet ? 480 : 330);
 
     return (
-      <View style={[
-        styles.slide,
-        { width, justifyContent: 'center', paddingHorizontal: 0, backgroundColor: BG_COLOR }
-      ]}>
-        <Image
-          source={item.image}
-          style={{ width: width, height: '100%', }}
-          resizeMode='cover'
-        />
+      <View style={[styles.slideContainer, { width }]}>
+        <View style={[styles.contentCard, { maxWidth: isTablet ? 560 : '100%' }]}>
+          {/* Top flexible spacer to place illustration vertically in the center of the screen */}
+          <View style={styles.topSpacer} />
+
+          {/* Responsive & Vertically Centered Image Container */}
+          <View style={[styles.illustrationContainer, { width: illustrationWidth, height: illustrationHeight }]}>
+            <Image
+              source={item.image}
+              style={styles.illustrationImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Middle flexible spacer */}
+          <View style={styles.midSpacer} />
+
+          {/* Text Block shifted correctly with breathing space before the bottom button */}
+          <View style={styles.textBlock}>
+            {/* Dynamic Subtitle */}
+            {item.subtitle ? (
+              <Text style={styles.categoryText}>
+                {item.subtitle}
+              </Text>
+            ) : null}
+
+            {/* Dynamic Title */}
+            {item.title ? (
+              <Text style={styles.mainTitle}>
+                {item.title}
+              </Text>
+            ) : null}
+
+            {/* Dynamic Description */}
+            {item.description ? (
+              <Text style={styles.descriptionText}>
+                {item.description}
+              </Text>
+            ) : null}
+          </View>
+        </View>
       </View>
     );
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Slides */}
+    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 14) }]}>
+      {/* Top notch status bar matching screen background */}
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Top Header: Logo on Left, Skip & Language on Right */}
+      <View style={styles.topHeader}>
+        {/* Brand Logo Image (instead of plain text) */}
+        <Image
+          source={require('../../assets/logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
+
+        {/* Right Actions: Skip & Language Selector */}
+        <View style={styles.headerRightCol}>
+          {/* Skip Button */}
+          <TouchableOpacity
+            onPress={completeOnboardingFlow}
+            style={styles.skipButton}
+            hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>
+              Skip →
+            </Text>
+          </TouchableOpacity>
+
+          {/* Language Selector Dropdown */}
+          <TouchableOpacity
+            style={styles.langSelectorBtn}
+            onPress={() => setIsLangModalOpen(true)}
+            hitSlop={{ top: 6, bottom: 6, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.langSelectorText}>
+              {isHi ? 'हिंदी' : 'English'}
+            </Text>
+            <Icon name="chevron-down" size={13} color="#4B5563" style={{ marginLeft: 2 }} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Dynamic Slides */}
       <FlatList
         ref={flatListRef}
-        data={SLIDES}
+        data={slides}
         renderItem={renderSlide}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -154,228 +265,250 @@ const OnboardingScreen = () => {
         extraData={isHi}
       />
 
-      {/* Footer */}
+      {/* Bottom Bar: Dots on Left, Action Button on Right */}
       <View
         style={[
-          styles.footer,
+          styles.bottomBar,
           {
-            position: 'absolute',
-            bottom: insets.bottom + 5,
-            left: 0,
-            right: 0,
-            paddingHorizontal: 24,
-            justifyContent: currentIndex === 0 ? 'center' : 'space-between',
-          }
+            paddingBottom: 20,
+          },
         ]}
       >
-        {currentIndex > 0 && (
-          <>
-            <View style={{ flex: 1, alignItems: 'flex-start' }}>
-              {currentIndex > 1 ? (
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => flatListRef.current?.scrollToIndex({ index: currentIndex - 1 })}
-                >
-                  <Icon name="chevron-left" size={24} color={PRIMARY_COLOR} />
-                </TouchableOpacity>
-              ) : <View style={styles.backButtonPlaceholder} />}
-            </View>
+        {/* Pagination Dots */}
+        <View style={styles.dotsContainer}>
+          {slides.map((_, index) => (
+            <View
+              key={index.toString()}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    currentIndex === index ? PRIMARY_MAROON : '#E5E7EB',
+                },
+              ]}
+            />
+          ))}
+        </View>
 
-            <View style={[styles.pagination, { flex: 1, justifyContent: 'center' }]}>
-              {SLIDES.slice(1).map((_, index) => (
-                <View
-                  key={index.toString()}
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor:
-                        currentIndex - 1 === index ? PRIMARY_COLOR : '#E5D5C3',
-                    },
-                    currentIndex - 1 === index && styles.activeDot,
-                  ]}
-                />
-              ))}
-            </View>
-
-            <View style={{ flex: 1, alignItems: 'flex-end' }}>
-              <TouchableOpacity
-                style={styles.nextButton}
-                onPress={handleNext}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.nextText}>
-                  {currentIndex === SLIDES.length - 1
-                    ? (isHi ? 'शुरू करें ->' : 'Start ->')
-                    : (isHi ? 'आगे बढ़ें ->' : 'Next ->')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {currentIndex === 0 && (
-          <TouchableOpacity
-            style={[styles.nextButton, styles.startButton]}
-            onPress={handleNext}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.nextText}>
-              {isHi ? 'शुरू करें ->' : 'Get Started ->'}
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* Button */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={handleNext}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.actionButtonText}>
+            {currentIndex === slides.length - 1
+              ? (isHi ? 'शुरू करें →' : 'Start →')
+              : (isHi ? 'आगे →' : 'Next →')}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Language Selector Modal */}
+      <Modal
+        visible={isLangModalOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsLangModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setIsLangModalOpen(false)}
+        >
+          <View style={styles.langModalCard}>
+            <Text style={styles.langModalTitle}>भाषा चुनें / Select Language</Text>
+
+            <TouchableOpacity
+              style={[styles.langModalOption, isHi && styles.langModalOptionActive]}
+              onPress={() => changeLanguage('hi')}
+            >
+              <Text style={[styles.langOptionLabel, isHi && styles.langOptionLabelActive]}>
+                हिंदी (Hindi)
+              </Text>
+              {isHi && <Icon name="check" size={16} color={PRIMARY_MAROON} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.langModalOption, !isHi && styles.langModalOptionActive]}
+              onPress={() => changeLanguage('en')}
+            >
+              <Text style={[styles.langOptionLabel, !isHi && styles.langOptionLabelActive]}>
+                English
+              </Text>
+              {!isHi && <Icon name="check" size={16} color={PRIMARY_MAROON} />}
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: BG_COLOR,
+    backgroundColor: '#FFFFFF',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 6,
+    zIndex: 10,
+  },
+  logoImage: {
+    width: 140,
+    height: 40,
+  },
+  headerRightCol: {
+    alignItems: 'flex-end',
   },
   skipButton: {
-    position: 'absolute',
-    left: 20,
-    zIndex: 10,
-    padding: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   skipText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: PRIMARY_COLOR,
-  },
-  slide: {
-    alignItems: 'center',
-    paddingHorizontal: 30,
-  },
-  slideLogo: {
-    width: 150,
-    height: 150,
-    // marginBottom: 20,
-  },
-  slideLogoOther: {
-    width: 150,
-    height: 150,
-    marginBottom: 40,
-  },
-  brandName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: PRIMARY_COLOR,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  splashSubtitle: {
-    fontSize: 18,
-    color: '#333',
-    // marginBottom: 40,
-    textAlign: 'center',
-  },
-  splashDescription: {
-    fontSize: 16,
-    // fontWeight: '500',
-    textAlign: 'center',
-    color: '#333',
-    // lineHeight: 26,
-    marginBottom: 10,
-  },
-  slideDescription: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#6B7280',
-    lineHeight: 24,
-  },
-  slideTitle: {
-    fontSize: 24,
-    fontWeight: '500',
-    color: PRIMARY_COLOR,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  languageToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 15,
-    marginBottom: 20,
-  },
-  languageButton: {
-    paddingVertical: 11,
-    minWidth: 130,
-    alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E8DDD4',
-    backgroundColor: '#FFF',
-  },
-  languageButtonActive: {
-    backgroundColor: PRIMARY_COLOR,
-    borderColor: PRIMARY_COLOR,
-  },
-  languageText: {
     fontSize: 14,
-    color: '#333',
     fontWeight: '500',
+    color: '#374151',
   },
-  languageTextActive: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  footer: {
+  langSelectorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    marginTop: 4,
+  },
+  langSelectorText: {
+    fontSize: 12.5,
+    fontWeight: '500',
+    color: '#4B5563',
+  },
+  slideContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  contentCard: {
+    width: '100%',
+    flex: 1,
+    alignSelf: 'center',
+  },
+  topSpacer: {
+    flex: 1.1,
+    minHeight: 12,
+  },
+  illustrationContainer: {
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
+  midSpacer: {
+    flex: 0.9,
+    minHeight: 12,
+  },
+  textBlock: {
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  categoryText: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: PRIMARY_MAROON,
+    marginBottom: 6,
+    textAlign: 'left',
+  },
+  mainTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    // lineHeight: 32,
+    marginBottom: 8,
+    textAlign: 'left',
+  },
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#4B5563',
+    textAlign: 'justify',
+    marginBottom: 4,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 8,
     width: '100%',
   },
-  pagination: {
+  dotsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 7,
   },
-  activeDot: {
-    width: 24,
-    borderRadius: 4,
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  actionButton: {
+    backgroundColor: PRIMARY_MAROON,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    backgroundColor: PRIMARY_COLOR,
-    shadowColor: PRIMARY_COLOR,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  startButton: {
-    paddingHorizontal: 40,
-    paddingVertical: 14,
-  },
-  nextText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  backButton: {
-    width: 44,
-    height: 44,
+    paddingHorizontal: 26,
     borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#E5D5C3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFDF9',
+    padding: 24,
   },
-  backButtonPlaceholder: {
-    width: 44,
-    height: 44,
+  langModalCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 18,
+  },
+  langModalTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 14,
+  },
+  langModalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  langModalOptionActive: {
+    backgroundColor: '#FFF5F5',
+  },
+  langOptionLabel: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  langOptionLabelActive: {
+    color: PRIMARY_MAROON,
+    fontWeight: 'bold',
   },
 });
 

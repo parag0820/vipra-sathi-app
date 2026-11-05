@@ -131,7 +131,10 @@ const KundaliMatchingFormScreen = () => {
 
           <TouchableOpacity
             style={[styles.matchBtn, { backgroundColor: colors.primary }]}
-            onPress={() => navigation.navigate('KundaliMatchingResult')}
+            onPress={() => navigation.navigate('KundaliMatchingResult', {
+              brideDetails: brideDetails.name ? brideDetails : undefined,
+              groomDetails: groomDetails.name ? groomDetails : undefined,
+            })}
           >
             <Text style={styles.matchBtnText}>{t('kundali.match_btn', 'Match Kundali')}</Text>
             <Icon name="arrow-right" size={20} color="#FFF" style={{ marginLeft: 8 }} />
