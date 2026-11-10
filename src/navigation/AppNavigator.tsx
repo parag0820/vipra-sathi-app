@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons as Icon } from '@expo/vector-icons';
@@ -133,9 +133,11 @@ const AuthNavigator = () => (
 );
 
 const MainTabNavigator = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+
+  const PRIMARY_MAROON = '#8B1D1D';
 
   return (
     <>
@@ -153,27 +155,44 @@ const MainTabNavigator = () => {
 
             return <Icon name={iconName as any} size={20} color={color} />;
           },
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.textLight,
+          tabBarActiveTintColor: PRIMARY_MAROON,
+          tabBarInactiveTintColor: isDark ? '#9CA3AF' : '#6B7280',
           tabBarStyle: {
-            backgroundColor: '#F8E6CE',
-            borderTopColor: 'transparent',
-            borderTopWidth: 0,
-            paddingBottom: 8,
-            height: 52,
-            elevation: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            position: 'absolute',
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+            borderTopColor: isDark ? '#2D2D2D' : '#E5E7EB',
+            borderTopWidth: 1,
+            paddingTop: 4,
+            paddingBottom: insets.bottom > 0 ? 6 : 3,
+            height: insets.bottom > 0 ? 54 : 48,
+            elevation: 0,
+            shadowColor: 'transparent',
+            shadowOpacity: 0,
+            shadowRadius: 0,
           },
-          tabBarLabelStyle: {
-            fontSize: 11,
-            fontWeight: '600',
-          },
+          // eslint-disable-next-line react/no-unstable-nested-components
+          tabBarLabel: ({ focused, children }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: focused ? '700' : '500',
+                  color: focused ? PRIMARY_MAROON : isDark ? '#9CA3AF' : '#6B7280',
+                  marginTop: 1,
+                }}
+              >
+                {children}
+              </Text>
+              <View
+                style={{
+                  width: 16,
+                  height: 2,
+                  backgroundColor: focused ? PRIMARY_MAROON : 'transparent',
+                  borderRadius: 1,
+                  marginTop: 1,
+                }}
+              />
+            </View>
+          ),
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('tabs.home', 'Home') }} />

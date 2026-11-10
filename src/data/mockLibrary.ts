@@ -16,6 +16,8 @@ export const MOCK_STOTRAS: Stotram[] = [
   {
     id: 's1',
     title: 'Sankat Nashan Stotram',
+    titleHindi: 'संकटनाशन गणेश स्तोत्रम्',
+    subtitleHindi: 'नारद पुराणोक्त संकट नाशन पाठ',
     category: 'Ganesh Stotras',
     subCategory: 'Sankat Nashan',
     audioUrl: DUMMY_AUDIO_URL,
@@ -34,6 +36,8 @@ Ekadasham Ganapatim, Dwadasham tu Gajananam.`
   {
     id: 's2',
     title: 'Ganapati Atharvashirsha',
+    titleHindi: 'श्री गणपति अथर्वशीर्ष',
+    subtitleHindi: 'अथर्ववेदीय उपनिषद महापाठ',
     category: 'Ganesh Stotras',
     subCategory: 'Upanishad',
     audioUrl: DUMMY_AUDIO_URL,
@@ -49,6 +53,8 @@ Tvam sakshadatmasi nityam.`
   {
     id: 's3',
     title: 'Ganesh Pancharatnam',
+    titleHindi: 'श्री गणेश पञ्चरत्नम्',
+    subtitleHindi: 'आदि शंकराचार्य विरचित स्तोत्र',
     category: 'Ganesh Stotras',
     subCategory: 'Pancharatnam',
     audioUrl: DUMMY_AUDIO_URL,
@@ -60,7 +66,9 @@ Natasubhasu Nasakam Namami Tham Vinayakam.`
   },
   {
     id: 's4',
-    title: 'Vishnu Sahasranamam (Excerpt)',
+    title: 'Vishnu Sahasranamam',
+    titleHindi: 'श्री विष्णु सहस्रनाम स्तोत्रम्',
+    subtitleHindi: 'महाभारत अनुशासन पर्व अंतर्गत',
     category: 'Vishnu Stotras',
     subCategory: 'Sahasranama',
     audioUrl: DUMMY_AUDIO_URL,
@@ -73,6 +81,8 @@ Parasharatmajam vande shukatatam taponidhim`
   {
     id: 's5',
     title: 'Ganesh Kavach',
+    titleHindi: 'श्री गणेश कवचम्',
+    subtitleHindi: 'सर्व विघ्न एवं कष्ट निवारक कवच',
     category: 'Ganesh Stotras',
     subCategory: 'Kavach',
     audioUrl: DUMMY_AUDIO_URL,
@@ -84,6 +94,8 @@ Ganeshou me shirah paatu, bhaalam paatu Gajaananah.`
   {
     id: 's6',
     title: 'Vakratunda Mahakaya',
+    titleHindi: 'वक्रतुण्ड महाकाय श्लोक',
+    subtitleHindi: 'नित्य गणेश ध्यान एवं प्रार्थना',
     category: 'Ganesh Stotras',
     subCategory: 'Dhyan',
     audioUrl: DUMMY_AUDIO_URL,
@@ -210,6 +222,8 @@ export const MOCK_AARTIS: Aarti[] = [
   {
     id: 'a1',
     title: 'Jai Ganesh Deva',
+    titleHindi: 'जय गणेश जय गणेश देवा',
+    subtitleHindi: 'श्री गणेश जी की नित्य आरती',
     category: 'Ganesh Aarti',
     subCategory: 'Aarti',
     audioUrl: DUMMY_AUDIO_URL,
@@ -240,8 +254,32 @@ Kamana Ko Purna Karo,
 Jag Balihari.`
   },
   {
+    id: 'a1_sukhkarta',
+    title: 'Sukhkarta Dukhharta',
+    titleHindi: 'सुखकर्ता दुखहर्ता वार्ता विघ्नाची',
+    subtitleHindi: 'समर्थ रामदास कृत प्रसिद्ध गणेश आरती',
+    category: 'Ganesh Aarti',
+    subCategory: 'Aarti',
+    audioUrl: DUMMY_AUDIO_URL,
+    imageUrl: 'https://images.unsplash.com/photo-1579564639904-e5357c9ee364?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+    content: `सुखकर्ता दुखहर्ता वार्ता विघ्नाची। नुरवी पुरवी प्रेम कृपा जयाची॥\nसर्वांगी सुंदर उटी शेंदुराची। कंठी झळके माळ मुक्ताफळांची॥\nजय देव जय देव जय मंगलमूर्ती। दर्शनमात्रे मनकामना पुरती॥`
+  },
+  {
+    id: 'a1_shendur',
+    title: 'Shendur Lal Chadhayo',
+    titleHindi: 'शेंदुर लाल चढ़ायो अच्छा गजमुख को',
+    subtitleHindi: 'सिन्दूर वंदना एवं आरती',
+    category: 'Ganesh Aarti',
+    subCategory: 'Aarti',
+    audioUrl: DUMMY_AUDIO_URL,
+    imageUrl: 'https://images.unsplash.com/photo-1579564639904-e5357c9ee364?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+    content: `शेंदुर लाल चढ़ायो अच्छा गजमुख को। दोंदिल लाल बिराजे सूत गौरिहर को॥\nहाथ लिए गुडलड्डू सांई सुरवर को। महिमा कहे न जाय लागत पद को॥\nजय जय श्री गणराज विद्यासुखदाता। धन्य तुम्हारो दर्शन मेरा मन रमता॥`
+  },
+  {
     id: 'a2',
     title: 'Om Jai Jagdish Hare',
+    titleHindi: 'ॐ जय जगदीश हरे',
+    subtitleHindi: 'भगवान विष्णु एवं सत्यनारायण महाआरती',
     category: 'Vishnu Aarti',
     subCategory: 'Maha Aarti',
     audioUrl: DUMMY_AUDIO_URL,

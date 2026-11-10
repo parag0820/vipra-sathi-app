@@ -1,6 +1,8 @@
 export interface Stotram {
   id: string;
   title: string;
+  titleHindi?: string;
+  subtitleHindi?: string;
   category: string; // e.g. Ganesh Stotras, Vishnu Stotras
   subCategory?: string;
   content: string; // The sanskrit text
@@ -10,6 +12,8 @@ export interface Stotram {
 export interface Aarti {
   id: string;
   title: string;
+  titleHindi?: string;
+  subtitleHindi?: string;
   category: string;
   subCategory?: string;
   content: string;

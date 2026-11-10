@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,9 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Linking,
+  RefreshControl,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +22,9 @@ import { useTheme } from '../theme/ThemeContext';
 import { usePoojaLibrary } from '../hooks/usePoojaLibrary';
 import { MOCK_POOJAS } from '../data/mockPoojas';
 import { PoojaPersonalNote, Pooja } from '../types/pooja';
+import { poojaApi } from '../api/pooja';
+import RichHtmlContent from '../components/RichHtmlContent';
+import DynamicSection from '../components/DynamicSection';
 import {
   Feather as Icon,
   MaterialCommunityIcons,
@@ -32,12 +38,59 @@ type PoojaDetailRouteProp = {
   params: { poojaId: string };
 };
 
+const EMPTY_POOJA_FALLBACK: Pooja = {
+  id: '',
+  title: 'पूजा विवरण',
+  category: 'पूजा विधि',
+};
+
 const PoojaDetailScreen = () => {
   const route = useRoute<PoojaDetailRouteProp>();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { poojaId } = route.params || { poojaId: 'p1' };
+
+  // Determine whether ID refers to a local static mock item or a live backend item
+  const localMockPooja = useMemo(() => {
+    return MOCK_POOJAS.find((p) => p.id === poojaId) || null;
+  }, [poojaId]);
+  const isMockOnly = Boolean(localMockPooja) || !poojaId || poojaId.startsWith('p_');
+
+  const [apiPooja, setApiPooja] = useState<Pooja | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(!isMockOnly);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const loadPoojaDetail = useCallback(
+    async (refresh: boolean = false) => {
+      if (isMockOnly) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        if (refresh) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        setApiError(null);
+        const fetched = await poojaApi.getById(poojaId);
+        setApiPooja(fetched);
+      } catch (err) {
+        console.error(`Failed to load pooja detail for id ${poojaId}:`, err);
+        setApiError('पूजा विवरण लोड करने में समस्या आई।');
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [poojaId, isMockOnly]
+  );
+
+  useEffect(() => {
+    loadPoojaDetail(false);
+  }, [loadPoojaDetail]);
 
   // Screen view mode: 'detail' for Pooja Details, 'notes' for Personal Notes
   const [viewMode, setViewMode] = useState<'detail' | 'notes'>('detail');
@@ -59,13 +112,20 @@ const PoojaDetailScreen = () => {
   // Scroll ref for anchor jumps
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Find pooja from data or fallback to first
-  const pooja: Pooja = useMemo(() => {
-    return MOCK_POOJAS.find(p => p.id === poojaId) || MOCK_POOJAS[0];
-  }, [poojaId]);
+  // Resolve active pooja object
+  const resolvedPooja: Pooja | null = useMemo(() => {
+    if (isMockOnly) {
+      return localMockPooja || MOCK_POOJAS[0];
+    }
+    return apiPooja;
+  }, [isMockOnly, localMockPooja, apiPooja]);
+
+  const pooja: Pooja = resolvedPooja || { ...EMPTY_POOJA_FALLBACK, id: poojaId || 'p1' };
 
   // Hook for personal notes, font size scaling, favorites
   const {
+    favorites,
+    toggleFavorite,
     personalNotes,
     addPersonalNote,
     updatePersonalNote,
@@ -79,7 +139,7 @@ const PoojaDetailScreen = () => {
   // Header display texts
   const headerPoojaTitle = pooja.headerTitle || pooja.titleHindi || pooja.title;
   const detailTitle = pooja.titleHindi || pooja.title;
-  const detailSubtitle = pooja.subtitleHindi || 'संक्षिप्त पूजा क्रम';
+  const detailSubtitle = pooja.subtitleHindi || pooja.subCategory || 'संक्षिप्त पूजा क्रम';
   const breadcrumbs = pooja.breadcrumbs || `पूजा विधि  /  ${headerPoojaTitle}`;
   const anchors = pooja.navAnchors || ['सामग्री', 'प्रारंभ', 'ध्यान', 'आवाहन', 'उपचार'];
 
@@ -242,56 +302,58 @@ const PoojaDetailScreen = () => {
               { color: isDark ? '#FCA5A5' : '#991B1B' },
             ]}
             numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {isNotes ? 'निजी नोट्स' : headerPoojaTitle}
           </Text>
 
-          <View style={styles.headerSpacer} />
-
           {/* Right Header Actions */}
           {!isNotes ? (
             <View style={styles.headerActionsGroup}>
-              {/* Decrease font size */}
-              <TouchableOpacity
-                onPress={decreaseFontSize}
-                style={styles.headerActionButton}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                activeOpacity={0.6}
-              >
-                <Text
-                  style={[
-                    styles.fontActionText,
-                    {
-                      fontSize: 14,
-                      color: isDark ? '#FCA5A5' : '#991B1B',
-                      opacity: fontSizeOffset <= -2 ? 0.4 : 1,
-                    },
-                  ]}
+              {/* Font Zoom Out / In Group */}
+              <View style={styles.fontZoomGroup}>
+                {/* Decrease font size */}
+                <TouchableOpacity
+                  onPress={decreaseFontSize}
+                  style={styles.zoomActionButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                  activeOpacity={0.6}
                 >
-                  अ-
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.fontActionText,
+                      {
+                        fontSize: 14,
+                        color: isDark ? '#FCA5A5' : '#991B1B',
+                        opacity: fontSizeOffset <= -2 ? 0.4 : 1,
+                      },
+                    ]}
+                  >
+                    अ-
+                  </Text>
+                </TouchableOpacity>
 
-              {/* Increase font size */}
-              <TouchableOpacity
-                onPress={increaseFontSize}
-                style={styles.headerActionButton}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                activeOpacity={0.6}
-              >
-                <Text
-                  style={[
-                    styles.fontActionText,
-                    {
-                      fontSize: 16,
-                      color: isDark ? '#FCA5A5' : '#991B1B',
-                      opacity: fontSizeOffset >= 6 ? 0.4 : 1,
-                    },
-                  ]}
+                {/* Increase font size */}
+                <TouchableOpacity
+                  onPress={increaseFontSize}
+                  style={styles.zoomActionButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                  activeOpacity={0.6}
                 >
-                  अ+
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.fontActionText,
+                      {
+                        fontSize: 16,
+                        color: isDark ? '#FCA5A5' : '#991B1B',
+                        opacity: fontSizeOffset >= 6 ? 0.4 : 1,
+                      },
+                    ]}
+                  >
+                    अ+
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Vertical divider */}
               <View
@@ -362,10 +424,80 @@ const PoojaDetailScreen = () => {
     );
   };
 
+  const handleOpenPdf = async (pdfUrl: string) => {
+    try {
+      const supported = await Linking.canOpenURL(pdfUrl);
+      if (supported) {
+        await Linking.openURL(pdfUrl);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'PDF नहीं खुल सका',
+          text2: 'कृपया लिंक या डिवाइस सेटिंग जांचें।',
+        });
+      }
+    } catch (err) {
+      Toast.show({
+        type: 'error',
+        text1: 'त्रुटि',
+        text2: 'दस्तावेज़ खोलने में समस्या हुई।',
+      });
+    }
+  };
+
   // ==========================================
   // RENDER: Pooja Details View (Image 1)
   // ==========================================
   const renderDetailView = () => {
+    if (isLoading && !resolvedPooja) {
+      return (
+        <View
+          style={[
+            styles.stateContainer,
+            { backgroundColor: isDark ? colors.background : '#FFFFFF' },
+          ]}
+        >
+          <ActivityIndicator size="large" color={isDark ? '#FCA5A5' : '#991B1B'} />
+          <Text style={[styles.stateText, { color: isDark ? '#D1D5DB' : '#6B7280' }]}>
+            पूजा विवरण लोड हो रहा है...
+          </Text>
+        </View>
+      );
+    }
+
+    if (apiError && !resolvedPooja) {
+      return (
+        <View
+          style={[
+            styles.stateContainer,
+            { backgroundColor: isDark ? colors.background : '#FFFFFF' },
+          ]}
+        >
+          <View
+            style={[
+              styles.errorStateCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFF8F6',
+                borderColor: isDark ? '#5C2323' : '#FEE2E2',
+              },
+            ]}
+          >
+            <Icon name="alert-circle" size={28} color={isDark ? '#FCA5A5' : '#991B1B'} />
+            <Text style={[styles.errorStateTitle, { color: isDark ? '#F8E6CE' : '#111827' }]}>
+              {apiError}
+            </Text>
+            <TouchableOpacity
+              style={styles.retryActionBtn}
+              onPress={() => loadPoojaDetail(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.retryActionBtnText}>पुनः प्रयास करें</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
     // Dynamic scalable font sizes
     const baseScale = fontSizeOffset;
     const breadcrumbSize = Math.max(10, 11.5 + baseScale);
@@ -377,6 +509,18 @@ const PoojaDetailScreen = () => {
     const bodySize = Math.max(11.5, 13.5 + baseScale);
     const lineHeight = bodySize * 1.55;
 
+    const contentLabel =
+      pooja.sectionType === 'Mantra'
+        ? 'मुख्य मंत्र'
+        : pooja.sectionType === 'Dhyan'
+          ? 'ध्यान मंत्र'
+          : pooja.sectionType === 'Vidhi'
+            ? 'मुख्य विधि'
+            : 'संक्षिप्त विवरण';
+
+    const hasCompleteContent =
+      Boolean(pooja.completeContent) && pooja.completeContent !== pooja.textEditor;
+
     return (
       <ScrollView
         ref={scrollViewRef}
@@ -386,9 +530,19 @@ const PoojaDetailScreen = () => {
         ]}
         contentContainerStyle={[
           styles.detailContentContainer,
-          { paddingBottom: Math.max(insets.bottom + 30, 60) },
+          { paddingBottom: 28 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          !isMockOnly ? (
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => loadPoojaDetail(true)}
+              colors={['#991B1B']}
+              tintColor={isDark ? '#FCA5A5' : '#991B1B'}
+            />
+          ) : undefined
+        }
       >
         {/* Breadcrumb */}
         <Text
@@ -429,7 +583,7 @@ const PoojaDetailScreen = () => {
           {detailSubtitle}
         </Text>
 
-        {/* Quick Anchor Navigation Tags */}
+        {/* Quick Anchor Navigation Tags / Badges */}
         <View style={styles.anchorRow}>
           <Text
             style={[
@@ -442,7 +596,113 @@ const PoojaDetailScreen = () => {
           >
             {anchors.join('  •  ')}
           </Text>
+          {pooja.isAvailableOffline && (
+            <View
+              style={[
+                styles.offlineBadge,
+                {
+                  backgroundColor: isDark ? '#1B3325' : '#ECFDF5',
+                  borderColor: isDark ? '#27593D' : '#D1FAE5',
+                },
+              ]}
+            >
+              <Text style={[styles.offlineBadgeText, { color: isDark ? '#6EE7B7' : '#047857' }]}>
+                ऑफ़लाइन उपलब्ध
+              </Text>
+            </View>
+          )}
         </View>
+
+        {/* API Short Content / Mantra Card */}
+        {pooja.content ? (
+          <View
+            style={[
+              styles.contentHighlightCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFF8F6',
+                borderColor: isDark ? '#382222' : '#FEE2E2',
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.contentHighlightLabel,
+                {
+                  fontSize: Math.max(10.5, tagSize - 0.5),
+                  color: isDark ? '#FCA5A5' : '#991B1B',
+                },
+              ]}
+            >
+              {contentLabel}
+            </Text>
+            <Text
+              style={[
+                styles.contentHighlightBody,
+                {
+                  fontSize: bodySize + 0.5,
+                  lineHeight: (bodySize + 0.5) * 1.55,
+                  color: isDark ? '#F8E6CE' : '#1F2937',
+                },
+              ]}
+            >
+              {pooja.content}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* API Rich Text Editor Content (HTML) */}
+        {pooja.textEditor ? (
+          <View style={styles.sectionBlock}>
+            <RichHtmlContent
+              html={pooja.textEditor}
+              baseFontSize={bodySize}
+              isDark={isDark}
+            />
+          </View>
+        ) : null}
+
+        {/* API Complete Content (if present) */}
+        {hasCompleteContent && pooja.completeContent ? (
+          <View style={styles.sectionBlock}>
+            <RichHtmlContent
+              html={pooja.completeContent}
+              baseFontSize={bodySize}
+              isDark={isDark}
+            />
+          </View>
+        ) : null}
+
+        {/* API PDF Resource Card */}
+        {pooja.pdf ? (
+          <TouchableOpacity
+            style={[
+              styles.pdfCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFF5F3',
+                borderColor: isDark ? '#3D2626' : '#FEE2E2',
+              },
+            ]}
+            onPress={() => handleOpenPdf(pooja.pdf!)}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.pdfIconCircle, { backgroundColor: isDark ? '#2B1B1B' : '#FFFFFF' }]}>
+              <MaterialCommunityIcons
+                name="file-pdf-box"
+                size={22}
+                color={isDark ? '#FCA5A5' : '#991B1B'}
+              />
+            </View>
+            <View style={styles.pdfTextCol}>
+              <Text style={[styles.pdfTitle, { color: isDark ? '#F8E6CE' : '#111827' }]}>
+                PDF दस्तावेज़ देखें
+              </Text>
+              <Text style={styles.pdfSubtitle} numberOfLines={1}>
+                {pooja.pdf}
+              </Text>
+            </View>
+            <Icon name="external-link" size={16} color={isDark ? '#FCA5A5' : '#991B1B'} />
+          </TouchableOpacity>
+        ) : null}
 
         {/* Section: आवश्यक सामग्री */}
         {pooja.samagriList && pooja.samagriList.length > 0 && (
@@ -538,6 +798,23 @@ const PoojaDetailScreen = () => {
             ))}
           </View>
         )}
+
+        {/* Structured Sections fallback */}
+        {pooja.sections &&
+          pooja.sections.length > 0 &&
+          !pooja.stepsList?.length &&
+          !pooja.textEditor && (
+            <View style={styles.sectionBlock}>
+              {pooja.sections.map((sec) => (
+                <DynamicSection
+                  key={sec.sectionId}
+                  section={sec}
+                  isFavorite={favorites.has(sec.sectionId)}
+                  onToggleFavorite={toggleFavorite}
+                />
+              ))}
+            </View>
+          )}
       </ScrollView>
     );
   };
@@ -1171,16 +1448,28 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  headerSpacer: {
-    flex: 1,
+    marginRight: 16,
   },
   headerActionsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 0,
+  },
+  fontZoomGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+    gap: 14,
+  },
+  zoomActionButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerActionButton: {
     paddingHorizontal: 4,
@@ -1194,7 +1483,7 @@ const styles = StyleSheet.create({
   headerDivider: {
     width: 1,
     height: 16,
-    marginHorizontal: 2,
+    marginHorizontal: 4,
   },
   addNoteHeaderBtn: {
     flexDirection: 'row',
@@ -1235,10 +1524,104 @@ const styles = StyleSheet.create({
   anchorRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 16,
   },
   anchorText: {
     fontWeight: '500',
+  },
+  offlineBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  offlineBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  stateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  stateText: {
+    fontSize: 13,
+    marginTop: 10,
+    fontWeight: '500',
+  },
+  errorStateCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 20,
+    alignItems: 'center',
+    gap: 10,
+  },
+  errorStateTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  retryActionBtn: {
+    marginTop: 4,
+    backgroundColor: '#8B1D1D',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  contentHighlightCard: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderLeftWidth: 3.5,
+    borderLeftColor: '#8B1D1D',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginBottom: 16,
+  },
+  contentHighlightLabel: {
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  contentHighlightBody: {
+    fontWeight: '500',
+  },
+  pdfCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 10,
+  },
+  pdfIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pdfTextCol: {
+    flex: 1,
+  },
+  pdfTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  pdfSubtitle: {
+    fontSize: 10.5,
+    color: '#6B7280',
+    marginTop: 1,
   },
   sectionBlock: {
     marginBottom: 14,

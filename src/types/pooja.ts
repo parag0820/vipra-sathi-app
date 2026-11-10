@@ -24,13 +24,58 @@ export interface PoojaPersonalNote {
   timestamp: number;
 }
 
+export interface PoojaCategoryRef {
+  _id: string;
+  categoryName: string;
+  isActive?: boolean;
+}
+
+export interface PoojaSubCategoryRef {
+  _id: string;
+  subCategoryName: string;
+  description?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export interface PoojaApiItem {
+  _id?: string;
+  id?: string;
+  categoryId?: PoojaCategoryRef | string | null;
+  subCategoryId?: PoojaSubCategoryRef | string | null;
+  sectionType?: string;
+  title?: string;
+  content?: string;
+  textEditor?: string;
+  completeContent?: string;
+  isFavorite?: boolean;
+  isAvailableOffline?: boolean;
+  pdf?: string;
+  samagriList?: string[];
+  stepsList?: PoojaStepItem[];
+  sections?: PoojaSection[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Pooja {
   id: string;
   title: string;
   category: string;
+  categoryId?: string;
   subCategory?: string;
+  subCategoryDescription?: string;
+  sectionType?: string;
+  content?: string;
+  textEditor?: string;
+  completeContent?: string;
+  pdf?: string;
+  isFavorite?: boolean;
+  isAvailableOffline?: boolean;
+  isApiItem?: boolean;
   thumbnail?: string;
-  sections: PoojaSection[];
+  sections?: PoojaSection[];
   headerTitle?: string;
   titleHindi?: string;
   subtitleHindi?: string;
@@ -38,4 +83,6 @@ export interface Pooja {
   navAnchors?: string[];
   samagriList?: string[];
   stepsList?: PoojaStepItem[];
+  createdAt?: string;
+  updatedAt?: string;
 }

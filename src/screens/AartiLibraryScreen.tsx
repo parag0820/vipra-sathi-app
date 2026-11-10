@@ -1,545 +1,578 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Dimensions,
+  StatusBar,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../theme/ThemeContext';
 import { MOCK_AARTIS } from '../data/mockLibrary';
-import { GOD_CATEGORIES, GodCategory } from '../data/godCategories';
-import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
-import CustomHeader from '../components/CustomHeader';
-import { useTranslation } from 'react-i18next';
+import { GOD_CATEGORIES, GodCategory, OTHER_SAMSKAR_CATEGORY } from '../data/godCategories';
+
+const { width } = Dimensions.get('window');
+
+const PRIMARY_MAROON = '#8B1D1D';
+const BORDER_COLOR = '#E5E7EB';
+const CARD_BORDER = '#FEE2E2';
+const MUTED_TEXT = '#6B7280';
+const DARK_TEXT = '#111827';
+const SOFT_PINK_BG = '#FFF0ED';
+
+const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const AartiLibraryScreen = () => {
-  const { colors, isDark } = useTheme();
+const AartiLibraryScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { t, i18n } = useTranslation();
+  const { isDark } = useTheme();
 
   const [selectedGod, setSelectedGod] = useState<GodCategory | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const isHindi = i18n.language === 'hi';
+  const cardWidth = (width - 32 - 16) / 3;
 
-  const getAartiTitle = (item: typeof MOCK_AARTIS[0]) => {
-    switch (item.id) {
-      case 'a1': return t('aarti_library.aartis.jai_ganesh', item.title);
-      case 'a2': return t('aarti_library.aartis.om_jai_jagdish', item.title);
-      case 'a3': return t('aarti_library.aartis.aarti_kije_hanuman', item.title);
-      default: return item.title;
-    }
-  };
-
-  // Count items per god category
-  const godCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    GOD_CATEGORIES.forEach(god => {
-      counts[god.id] = MOCK_AARTIS.filter(a => a.category === god.aartiCategory).length;
-    });
-    return counts;
-  }, []);
-
-  // Subcategories available for selected deity
-  const availableSubCategories = useMemo(() => {
-    if (!selectedGod) return [];
-    const subs = new Set<string>();
-    MOCK_AARTIS.filter(a => a.category === selectedGod.aartiCategory).forEach(a => {
-      if (a.subCategory) subs.add(a.subCategory);
-    });
-    return ['All', ...Array.from(subs)];
-  }, [selectedGod]);
-
-  // Filtered list
-  const filteredAartis = useMemo(() => {
+  const displayedAartis = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
+    if (selectedGod) {
+      let list = MOCK_AARTIS.filter(
+        (a) => a.category === selectedGod.aartiCategory
+      );
+
+      // Fallback aartis if none exist directly
+      if (list.length === 0) {
+        list = [
+          {
+            id: `art_${selectedGod.id}_1`,
+            title: `${selectedGod.name_hi} जी की आरती`,
+            titleHindi: `${selectedGod.name_hi} जी की आरती`,
+            subtitleHindi: 'नित्य मंगल आरती पाठ',
+            category: selectedGod.aartiCategory,
+            subCategory: 'Aarti',
+            imageUrl: 'https://images.unsplash.com/photo-1579564639904-e5357c9ee364?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+            content: `जय जय जय ${selectedGod.name_hi} देवा। भक्त जनों की रक्षा कीजै, सफल कीजै सेवा॥`
+          },
+          {
+            id: `art_${selectedGod.id}_2`,
+            title: `${selectedGod.name_hi} महाआरती`,
+            titleHindi: `${selectedGod.name_hi} महाआरती`,
+            subtitleHindi: 'कर्पूर आरती एवं पुष्पांजलि',
+            category: selectedGod.aartiCategory,
+            subCategory: 'Maha Aarti',
+            imageUrl: 'https://images.unsplash.com/photo-1579564639904-e5357c9ee364?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
+            content: `कर्पूरगौरं करुणावतारं संसारसारं भुजगेन्द्रहारम्। सदा वसन्तं हृदयारविन्दे भवं भवानीसहितं नमामि॥`
+          }
+        ];
+      }
+
+      if (q.length > 0) {
+        return list.filter((a) => {
+          const title = (a.titleHindi || a.title).toLowerCase();
+          const sub = (a.subtitleHindi || a.subCategory || '').toLowerCase();
+          return title.includes(q) || sub.includes(q);
+        });
+      }
+
+      return list;
+    }
+
     if (q.length > 0) {
-      return MOCK_AARTIS.filter(a => {
-        const title = getAartiTitle(a).toLowerCase();
+      return MOCK_AARTIS.filter((a) => {
+        const title = (a.titleHindi || a.title).toLowerCase();
         const cat = a.category.toLowerCase();
-        const sub = (a.subCategory || '').toLowerCase();
+        const sub = (a.subtitleHindi || a.subCategory || '').toLowerCase();
         return title.includes(q) || cat.includes(q) || sub.includes(q);
       });
     }
 
-    if (selectedGod) {
-      return MOCK_AARTIS.filter(a => {
-        const matchesCategory = a.category === selectedGod.aartiCategory;
-        const matchesSub = selectedSubCategory === 'All' || a.subCategory === selectedSubCategory;
-        return matchesCategory && matchesSub;
-      });
-    }
-
     return [];
-  }, [searchQuery, selectedGod, selectedSubCategory]);
+  }, [selectedGod, searchQuery]);
 
   const handleSelectGod = (god: GodCategory) => {
     setSelectedGod(god);
-    setSelectedSubCategory('All');
-  };
-
-  const handleClearSelection = () => {
-    setSelectedGod(null);
-    setSelectedSubCategory('All');
     setSearchQuery('');
   };
 
-  const renderAartiCard = ({ item }: { item: typeof MOCK_AARTIS[0] }) => (
-    <TouchableOpacity
-      style={[styles.aartiCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      onPress={() => navigation.navigate('AartiDetail', { aartiId: item.id })}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardBody}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '12' }]}>
-          <Icon name="book-open" size={18} color={colors.primary} />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {getAartiTitle(item)}
-          </Text>
-          <View style={styles.tagsRow}>
-            <View style={[styles.categoryTag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F2ECE2' }]}>
-              <Text style={[styles.categoryTagText, { color: colors.primary }]}>{item.category}</Text>
-            </View>
-            {item.subCategory && (
-              <View style={[styles.subCategoryTag, { backgroundColor: colors.primary + '12' }]}>
-                <Text style={[styles.subCategoryTagText, { color: colors.text }]}>{item.subCategory}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        <View style={[styles.playBadge, { backgroundColor: colors.primary + '12' }]}>
-          <Icon name="play" size={14} color={colors.primary} />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const handleBack = () => {
+    if (selectedGod) {
+      setSelectedGod(null);
+      setSearchQuery('');
+    } else {
+      navigation.goBack();
+    }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <CustomHeader
-        title={t('aarti_library.title', 'Aarti Library')}
-        showBack={true}
-        headerBgColor={colors.primary}
-        headerTextColor="#FFF"
+    <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={isDark ? '#121212' : '#FFFFFF'}
       />
 
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-        {/* Top Search Bar Only (Category dropdown removed) */}
-        <View style={[styles.searchBarSection, { backgroundColor: isDark ? colors.surface : '#FFF', borderBottomColor: colors.border }]}>
-          <View style={[styles.searchContainer, { backgroundColor: isDark ? colors.background : '#F5ECE1', borderColor: colors.border }]}>
-            <Icon name="search" size={18} color={colors.textLight} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
-              placeholder={t('aarti_library.search_placeholder', 'Search Aarti, Deity...')}
-              placeholderTextColor={colors.textLight}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Icon name="x" size={18} color={colors.textLight} />
-              </TouchableOpacity>
-            )}
+      {/* Top Header Bar */}
+      <View style={[styles.headerContainer, { paddingTop: Math.max(insets.top, 8) }]}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Icon name="chevron-left" size={26} color={PRIMARY_MAROON} />
+          </TouchableOpacity>
+          <View style={styles.headerTextGroup}>
+            <Text style={styles.headerTitle}>
+              {selectedGod ? selectedGod.name_hi : 'आरती'}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {selectedGod ? 'आरती का प्रकार चुनें' : 'देवता चुनें, फिर आरती का पाठ'}
+            </Text>
           </View>
         </View>
+      </View>
 
-        {/* View Mode 1: Search Active */}
-        {searchQuery.trim().length > 0 ? (
-          <View style={styles.activeContentContainer}>
-            <View style={styles.searchHeaderRow}>
-              <Text style={[styles.sectionSubtitle, { color: colors.textLight }]}>
-                {filteredAartis.length} {isHindi ? 'आरती मिलीं' : 'aartis found'}
+      {/* Breadcrumb line (Only in Screen 2) */}
+      {selectedGod && (
+        <View style={[styles.breadcrumbRow, { backgroundColor: isDark ? '#1E1E1E' : '#FAFAFA' }]}>
+          <Text style={styles.breadcrumbText}>
+            आरती  /  <Text style={styles.breadcrumbActive}>{selectedGod.name_hi}</Text>
+          </Text>
+        </View>
+      )}
+
+      {/* Search Bar */}
+      <View style={styles.searchBarContainer}>
+        <View style={[styles.searchBox, { backgroundColor: isDark ? '#262626' : '#FFFFFF', borderColor: BORDER_COLOR }]}>
+          <Icon name="search" size={16} color={MUTED_TEXT} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}
+            placeholder={
+              selectedGod
+                ? `${selectedGod.name_hi} आरती खोजें`
+                : 'देवता या आरती का नाम खोजें'
+            }
+            placeholderTextColor={MUTED_TEXT}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Icon name="x" size={16} color={MUTED_TEXT} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ============================================================
+            SCREEN 1: DEITY GRID VIEW
+           ============================================================ */}
+        {!selectedGod && searchQuery.trim().length === 0 && (
+          <View>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}>
+              देवता के अनुसार आरती
+            </Text>
+
+            {/* 3-Column Grid */}
+            <View style={styles.gridContainer}>
+              {chunkArray(GOD_CATEGORIES, 3).map((row, rowIndex) => (
+                <View key={`grid-row-${rowIndex}`} style={styles.gridRow}>
+                  {row.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        styles.gridCard,
+                        { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' },
+                      ]}
+                      onPress={() => handleSelectGod(item)}
+                      activeOpacity={0.75}
+                    >
+                      <View style={[styles.iconCircle, { backgroundColor: SOFT_PINK_BG }]}>
+                        {item.symbolText ? (
+                          <Text style={styles.symbolText}>{item.symbolText}</Text>
+                        ) : (
+                          <MaterialCommunityIcons
+                            name={item.iconName as any}
+                            size={22}
+                            color={PRIMARY_MAROON}
+                          />
+                        )}
+                      </View>
+
+                      <Text
+                        style={[styles.deityName, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}
+                        numberOfLines={1}
+                      >
+                        {item.name_hi}
+                      </Text>
+
+                      <Text style={styles.viewLinkText}>आरती देखें &gt;</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {Array.from({ length: 3 - row.length }).map((_, i) => (
+                    <View key={`spacer-${i}`} style={styles.gridCardSpacer} />
+                  ))}
+                </View>
+              ))}
+            </View>
+
+            {/* Bottom Wide Banner */}
+            <TouchableOpacity
+              style={[styles.bannerCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}
+              onPress={() => handleSelectGod(OTHER_SAMSKAR_CATEGORY as any)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.bannerIconCircle, { backgroundColor: SOFT_PINK_BG }]}>
+                <MaterialCommunityIcons
+                  name="lamp"
+                  size={20}
+                  color={PRIMARY_MAROON}
+                />
+              </View>
+
+              <View style={styles.bannerTextCol}>
+                <Text style={[styles.bannerTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}>
+                  नित्य संध्या एवं मंगल आरती
+                </Text>
+                <Text style={styles.bannerSubtitle}>दैनिक आरती, कर्पूर आरती व भोग आरती</Text>
+              </View>
+
+              <Icon name="chevron-right" size={18} color={MUTED_TEXT} />
+            </TouchableOpacity>
+
+            <Text style={styles.footerCaption}>देवता चुनकर उपलब्ध आरतियाँ देखें।</Text>
+          </View>
+        )}
+
+        {/* ============================================================
+            SCREEN 2: INNER AARTI LIST VIEW
+           ============================================================ */}
+        {(selectedGod || searchQuery.trim().length > 0) && (
+          <View>
+            <View style={styles.listHeaderRow}>
+              <Text style={[styles.listHeaderTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}>
+                {selectedGod ? 'उपलब्ध आरतियाँ' : 'खोज परिणाम'}
+              </Text>
+              <Text style={styles.listHeaderCount}>
+                {displayedAartis.length} आरतियाँ
               </Text>
             </View>
-            <FlatList
-              data={filteredAartis}
-              keyExtractor={(item) => item.id}
-              renderItem={renderAartiCard}
-              contentContainerStyle={styles.listContainer}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Icon name="search" size={40} color={colors.border} />
-                  <Text style={[styles.emptyText, { color: colors.textLight }]}>
-                    {t('aarti_library.empty', 'No aartis found matching your search.')}
-                  </Text>
-                </View>
-              }
-            />
-          </View>
-        ) : selectedGod ? (
-          /* View Mode 2: God Selected -> Shows Subcategories and Related Aartis */
-          <View style={styles.activeContentContainer}>
-            {/* Deity Header Bar */}
-            <View style={[styles.deityHeaderBar, { backgroundColor: isDark ? colors.surface : '#FFF9F2', borderBottomColor: colors.border }]}>
-              <TouchableOpacity
-                onPress={handleClearSelection}
-                style={[styles.backToGridBtn, { borderColor: colors.border }]}
-                activeOpacity={0.7}
-              >
-                <Icon name="arrow-left" size={15} color={colors.primary} />
-                <Text style={[styles.backToGridText, { color: colors.primary }]}>
-                  {isHindi ? 'सभी देव' : 'All Deities'}
-                </Text>
-              </TouchableOpacity>
 
-              <View style={styles.deityHeaderTitleWrap}>
-                <View style={[styles.deitySmallIcon, { backgroundColor: selectedGod.bgColor }]}>
-                  <MaterialCommunityIcons name="om" size={16} color={selectedGod.color} />
-                </View>
-                <Text style={[styles.deityHeaderTitle, { color: colors.text }]}>
-                  {isHindi ? selectedGod.name_hi : selectedGod.name_en}
-                </Text>
-              </View>
-            </View>
+            {displayedAartis.map((aarti, index) => {
+              const formattedNumber = String(index + 1).padStart(2, '0');
+              const title = aarti.titleHindi || aarti.title;
+              const subtitle = aarti.subtitleHindi || aarti.subCategory || 'पावन आरती पाठ';
 
-            {/* Subcategory Pills */}
-            {availableSubCategories.length > 1 && (
-              <View style={styles.subCategoryPillsContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subCategoryPillsContent}>
-                  {availableSubCategories.map(sub => {
-                    const isSelected = selectedSubCategory === sub;
-                    return (
-                      <TouchableOpacity
-                        key={sub}
-                        onPress={() => setSelectedSubCategory(sub)}
-                        style={[
-                          styles.subPill,
-                          {
-                            backgroundColor: isSelected ? colors.primary : isDark ? colors.surface : '#F2ECE2',
-                            borderColor: isSelected ? colors.primary : colors.border,
-                          },
-                        ]}
-                        activeOpacity={0.7}
-                      >
-                        <Text
-                          style={[
-                            styles.subPillText,
-                            { color: isSelected ? '#FFF' : colors.text, fontWeight: isSelected ? 'bold' : '500' },
-                          ]}
-                        >
-                          {sub === 'All' ? (isHindi ? 'सभी आरती' : 'All Aartis') : sub}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+              return (
+                <TouchableOpacity
+                  key={aarti.id}
+                  style={[styles.itemCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}
+                  onPress={() => navigation.navigate('AartiDetail', { aartiId: aarti.id })}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.numberPill, { backgroundColor: SOFT_PINK_BG }]}>
+                    <Text style={styles.numberPillText}>{formattedNumber}</Text>
+                  </View>
+
+                  <View style={styles.itemTextCol}>
+                    <Text
+                      style={[styles.itemTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}
+                      numberOfLines={1}
+                    >
+                      {title}
+                    </Text>
+                    <Text style={styles.itemSubtitle} numberOfLines={1}>
+                      {subtitle}
+                    </Text>
+                  </View>
+
+                  <Icon name="chevron-right" size={16} color={MUTED_TEXT} />
+                </TouchableOpacity>
+              );
+            })}
+
+            {displayedAartis.length === 0 && (
+              <View style={styles.emptyStateBox}>
+                <Text style={styles.emptyStateText}>कोई आरती नहीं मिली।</Text>
               </View>
             )}
 
-            {/* Aartis List for Selected Deity */}
-            <FlatList
-              data={filteredAartis}
-              keyExtractor={(item) => item.id}
-              renderItem={renderAartiCard}
-              contentContainerStyle={styles.listContainer}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Icon name="book-open" size={40} color={colors.border} />
-                  <Text style={[styles.emptyText, { color: colors.textLight }]}>
-                    {t('aarti_library.empty', 'No aartis found in this subcategory.')}
-                  </Text>
-                </View>
-              }
-            />
+            <Text style={styles.bottomListNote}>
+              आरती चुनने पर उसका संपूर्ण पाठ व धुन खुलेगी।
+            </Text>
+
+            {selectedGod && (
+              <TouchableOpacity
+                style={styles.backToGridBtn}
+                onPress={() => setSelectedGod(null)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.backToGridBtnText}>← सभी देवता</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        ) : (
-          /* View Mode 3: Initial Screen -> Category Grid with Common God Icons */
-          <ScrollView
-            contentContainerStyle={styles.categoryGridScroll}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.gridSectionHeader}>
-              <Text style={[styles.gridTitle, { color: colors.text }]}>
-                {isHindi ? 'देवता चुनें' : 'Select Deity'}
-              </Text>
-              <Text style={[styles.gridSubtitle, { color: colors.textLight }]}>
-                {isHindi
-                  ? 'पूजा उपरांत मंगल आरती हेतु अभीष्ट देव श्रेणी चुनें'
-                  : 'Select deity to read sacred aarti lyrics and listen to devotional hymns'}
-              </Text>
-            </View>
-
-            <View style={styles.godGrid}>
-              {GOD_CATEGORIES.map((god) => {
-                const count = godCounts[god.id] || 0;
-                return (
-                  <TouchableOpacity
-                    key={god.id}
-                    onPress={() => handleSelectGod(god)}
-                    style={[
-                      styles.godGridCard,
-                      {
-                        backgroundColor: isDark ? colors.surface : '#FFFFFF',
-                        borderColor: isDark ? colors.border : '#EDE4D8',
-                      },
-                    ]}
-                    activeOpacity={0.8}
-                  >
-                    {/* Common God Icon in Badge (OM icon for all gods, small size) */}
-                    <View style={[styles.godIconCircle, { backgroundColor: god.bgColor }]}>
-                      <MaterialCommunityIcons name="om" size={18} color={god.color} />
-                    </View>
-
-                    <Text style={[styles.godName, { color: colors.text }]} numberOfLines={1}>
-                      {isHindi ? god.name_hi : god.name_en}
-                    </Text>
-
-                    <View style={[styles.itemCountBadge, { backgroundColor: colors.primary + '12' }]}>
-                      <Text style={[styles.itemCountText, { color: colors.primary }]}>
-                        {count} {isHindi ? 'आरती' : 'Aartis'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </ScrollView>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  mainCard: {
+  container: {
     flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
   },
-  searchBarSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  searchContainer: {
+  headerContainer: {
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    marginRight: 8,
+    padding: 2,
+  },
+  headerTextGroup: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: PRIMARY_MAROON,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: MUTED_TEXT,
+    marginTop: 1,
+  },
+  breadcrumbRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  breadcrumbText: {
+    fontSize: 10.5,
+    color: MUTED_TEXT,
+  },
+  breadcrumbActive: {
+    color: PRIMARY_MAROON,
+    fontWeight: '600',
+  },
+  searchBarContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
     borderWidth: 1,
-    height: 44,
+    paddingHorizontal: 10,
+    height: 38,
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 12,
+    paddingVertical: 0,
     height: '100%',
   },
-  activeContentContainer: {
-    flex: 1,
-  },
-  searchHeaderRow: {
+  scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 4,
   },
-  sectionSubtitle: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  deityHeaderBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    gap: 12,
-  },
-  backToGridBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  backToGridText: {
-    fontSize: 12,
+  sectionTitle: {
+    fontSize: 13.5,
     fontWeight: '700',
+    marginBottom: 10,
   },
-  deityHeaderTitleWrap: {
+  gridContainer: {
+    marginBottom: 10,
+  },
+  gridRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
+    marginBottom: 8,
+  },
+  gridCard: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridCardSpacer: {
     flex: 1,
   },
-  deitySmallIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
   },
-  deityHeaderTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  symbolText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: PRIMARY_MAROON,
   },
-  subCategoryPillsContainer: {
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.06)',
+  deityName: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 2,
   },
-  subCategoryPillsContent: {
-    paddingHorizontal: 14,
-    gap: 8,
+  viewLinkText: {
+    fontSize: 9.5,
+    color: PRIMARY_MAROON,
   },
-  subPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  subPillText: {
-    fontSize: 12,
-  },
-  listContainer: {
-    padding: 14,
-    paddingBottom: 30,
-  },
-  aartiCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 10,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-  },
-  cardBody: {
+  bannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    padding: 12,
+    marginBottom: 10,
   },
-  iconContainer: {
+  bannerIconCircle: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
+    marginRight: 10,
   },
-  textContainer: {
+  bannerTextCol: {
     flex: 1,
   },
-  title: {
-    fontSize: 14,
+  bannerTitle: {
+    fontSize: 12.5,
     fontWeight: '700',
-    marginBottom: 4,
   },
-  tagsRow: {
+  bannerSubtitle: {
+    fontSize: 10.5,
+    color: MUTED_TEXT,
+    marginTop: 2,
+  },
+  footerCaption: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  listHeaderRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  categoryTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  categoryTagText: {
-    fontSize: 10.5,
-    fontWeight: '600',
-  },
-  subCategoryTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  subCategoryTagText: {
-    fontSize: 10.5,
-    fontWeight: '500',
-  },
-  playBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  categoryGridScroll: {
-    padding: 14,
-    paddingBottom: 30,
-  },
-  gridSectionHeader: {
     marginBottom: 10,
-    paddingHorizontal: 4,
+    marginTop: 2,
   },
-  gridTitle: {
+  listHeaderTitle: {
     fontSize: 13.5,
     fontWeight: '700',
-    marginBottom: 2,
   },
-  gridSubtitle: {
+  listHeaderCount: {
     fontSize: 11,
+    color: MUTED_TEXT,
   },
-  godGrid: {
+  itemCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  godGridCard: {
-    width: '31.4%',
-    borderRadius: 12,
+    alignItems: 'center',
+    borderRadius: 10,
     borderWidth: 1,
+    borderColor: '#F3F4F6',
     paddingVertical: 10,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    marginBottom: 4,
+    paddingHorizontal: 12,
+    marginBottom: 8,
   },
-  godIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  godName: {
-    fontSize: 11.5,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  godSubtitle: {
-    display: 'none',
-  },
-  itemCountBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  numberPill: {
+    width: 28,
+    height: 26,
     borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  itemCountText: {
-    fontSize: 9.5,
+  numberPillText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: PRIMARY_MAROON,
+  },
+  itemTextCol: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  itemTitle: {
+    fontSize: 13,
     fontWeight: '700',
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 10,
+  itemSubtitle: {
+    fontSize: 10.5,
+    color: MUTED_TEXT,
+    marginTop: 2,
   },
-  emptyText: {
-    fontSize: 13,
+  emptyStateBox: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 12,
+    color: MUTED_TEXT,
+  },
+  bottomListNote: {
+    fontSize: 11,
+    color: '#9CA3AF',
     textAlign: 'center',
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  backToGridBtn: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  backToGridBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: PRIMARY_MAROON,
   },
 });
 

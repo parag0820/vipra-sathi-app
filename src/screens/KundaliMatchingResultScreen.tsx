@@ -22,6 +22,7 @@ import * as Sharing from 'expo-sharing';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../theme/ThemeContext';
 import VedicChart from '../components/VedicChart';
+import Svg, { Path } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
@@ -212,7 +213,7 @@ const KundaliMatchingResultScreen: React.FC = () => {
             </thead>
             <tbody>
               ${KOOTA_DATA.map(
-                (row) => `
+        (row) => `
                 <tr>
                   <td>${row.id}</td>
                   <td class="left">${row.name}</td>
@@ -220,7 +221,7 @@ const KundaliMatchingResultScreen: React.FC = () => {
                   <td>${row.obtained}</td>
                   <td style="color: ${row.statusColor}; font-weight: bold;">${row.status}</td>
                 </tr>`
-              ).join('')}
+      ).join('')}
               <tr class="total-row">
                 <td colspan="2" class="left" style="padding-left: 14px;">कुल गुण</td>
                 <td>36</td>
@@ -391,15 +392,103 @@ const KundaliMatchingResultScreen: React.FC = () => {
         {/* TAB 1: गुण मिलान */}
         {activeTab === 'guna' && (
           <View>
-            {/* Score Box (कुल गुण) */}
-            <View style={[styles.scoreCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
-              <View style={styles.scoreRow}>
+            {/* Speed Chart / Speedometer Gauge (कुल गुण) */}
+            <View style={[styles.speedChartCard, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' }]}>
+              {/* Card Header */}
+              <View style={styles.speedChartHeader}>
                 <View>
-                  <Text style={[styles.scoreTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}>कुल गुण</Text>
-                  <Text style={styles.scoreSubtitle}>अष्टकूट गुण योग</Text>
+                  <Text style={[styles.scoreTitle, { color: isDark ? '#F8E6CE' : DARK_TEXT }]}>कुल गुण (अष्टकूट योग)</Text>
+                  <Text style={styles.scoreSubtitle}>36 में से प्राप्त गुण स्कोर</Text>
                 </View>
-                <Text style={styles.scoreValue}>28 / 36</Text>
+                <View style={styles.matchBadge}>
+                  <Icon name="heart" size={12} color="#16A34A" style={{ marginRight: 4 }} />
+                  <Text style={styles.matchBadgeText}>उत्तम मिलान</Text>
+                </View>
               </View>
+
+              {/* Speedometer Gauge SVG */}
+              <View style={styles.gaugeContainer}>
+                <Svg width={220} height={120} viewBox="0 0 220 120">
+                  {/* Background Track */}
+                  <Path
+                    d="M 30 100 A 80 80 0 0 1 190 100"
+                    fill="none"
+                    stroke={isDark ? '#333333' : '#E5E7EB'}
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Red Segment (0 - 18: अशुभ) */}
+                  <Path
+                    d="M 30 100 A 80 80 0 0 1 110 20"
+                    fill="none"
+                    stroke="#EF4444"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Amber/Orange Segment (18 - 27: मध्यम) */}
+                  <Path
+                    d="M 110 20 A 80 80 0 0 1 166.6 43.4"
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="12"
+                  />
+
+                  {/* Green Segment (27 - 36: उत्तम) */}
+                  <Path
+                    d="M 166.6 43.4 A 80 80 0 0 1 190 100"
+                    fill="none"
+                    stroke="#10B981"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Small Arrow Pointer (shape: ^) close to meter arc */}
+                  <Path
+                    d="M 152.5 58 L 163.6 55 L 160.5 66"
+                    fill="none"
+                    stroke={PRIMARY_MAROON}
+                    strokeWidth="3.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+
+                {/* Score Number in Gauge Center */}
+                <View style={styles.gaugeScoreCenter}>
+                  <View style={styles.gaugeScoreRow}>
+                    <Text style={styles.gaugeScoreNumber}>28</Text>
+                    <Text style={[styles.gaugeScoreMax, { color: isDark ? '#A1A1AA' : '#4B5563' }]}> / 36</Text>
+                  </View>
+                  <Text style={styles.gaugeScorePercent}>77.8% अनुकूल</Text>
+                </View>
+              </View>
+
+              {/* Gauge Range Scale Indicators */}
+              <View style={styles.gaugeScaleRow}>
+                <Text style={styles.scaleText}>0 (अशुभ)</Text>
+                <Text style={styles.scaleText}>18 (स्वीकार्य)</Text>
+                <Text style={styles.scaleText}>36 (सर्वोत्तम)</Text>
+              </View>
+
+              {/* Color Legend Row */}
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+                  <Text style={styles.legendText}>&lt; 18 अशुभ</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+                  <Text style={styles.legendText}>18-27 मध्यम</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+                  <Text style={styles.legendText}>28-36 उत्तम</Text>
+                </View>
+              </View>
+
+              {/* Disclaimer */}
               <View style={styles.scoreDisclaimerWrap}>
                 <Text style={styles.scoreDisclaimerText}>
                   यह केवल पारंपरिक अष्टकूट मिलान पर आधारित गणना है। यह किसी भी प्रकार का वैवाहिक निर्णय या सफलता का दावा नहीं है।
@@ -961,6 +1050,99 @@ const styles = StyleSheet.create({
   segmentBtnTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  speedChartCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    padding: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  speedChartHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  matchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  matchBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
+  },
+  gaugeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  gaugeScoreCenter: {
+    position: 'absolute',
+    bottom: 8,
+    alignItems: 'center',
+  },
+  gaugeScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  gaugeScoreNumber: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: PRIMARY_MAROON,
+  },
+  gaugeScoreMax: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  gaugeScorePercent: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#16A34A',
+    marginTop: -2,
+  },
+  gaugeScaleRow: {
+    width: 220,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+    paddingHorizontal: 8,
+  },
+  scaleText: {
+    fontSize: 9.5,
+    color: MUTED_TEXT,
+    fontWeight: '500',
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 4,
+  },
+  legendText: {
+    fontSize: 10,
+    color: MUTED_TEXT,
+    fontWeight: '500',
   },
   scoreCard: {
     borderRadius: 10,

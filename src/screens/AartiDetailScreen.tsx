@@ -218,9 +218,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
+    marginRight: 14,
   },
   categoryBadge: {
     paddingHorizontal: 10,
@@ -238,7 +241,9 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginLeft: 8,
+    gap: 10,
+    flexShrink: 0,
   },
   textScaleBtn: {
     borderWidth: 1,

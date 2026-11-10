@@ -126,6 +126,271 @@ export const MOCK_POOJAS: Pooja[] = [
     ]
   },
   {
+    id: 'p1_shodash',
+    title: 'Shri Ganesh Shodashopchar Pooja',
+    headerTitle: 'गणेश षोडशोपचार',
+    titleHindi: 'श्री गणेश षोडशोपचार पूजा',
+    subtitleHindi: 'सोलह उपचारों सहित पूजन',
+    breadcrumbs: 'पूजा विधि  /  गणेश षोडशोपचार',
+    navAnchors: ['सामग्री', 'ध्यान', 'आवाहन', 'षोडशोपचार', 'आरती'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Shodashopchar Pooja',
+    samagriList: [
+      'गणेश प्रतिमा, आसन, पाद्य, अर्घ्य, आचमनीय पात्र, पंचामृत',
+      'यज्ञोपवीत, रोली, चंदन, अक्षत, दूर्वा, मोदक, फल, दक्षिणा'
+    ],
+    stepsList: [
+      { id: 'gs1', stepNumber: 1, title: 'ध्यान एवं आवाहन', content: 'ॐ गणानां त्वा गणपतिं हवामहे... भगवान गणेश का आवाहन करें।' },
+      { id: 'gs2', stepNumber: 2, title: 'आसन, पाद्य व अर्घ्य', content: 'रत्नसिंहासन, चरण प्रक्षालन हेतु पाद्य एवं हस्त प्रक्षालन हेतु अर्घ्य दें।' },
+      { id: 'gs3', stepNumber: 3, title: 'स्नान एवं पंचामृत', content: 'शुद्धोदक एवं पंचामृत से स्नान कराकर पुनः शुद्ध जल अर्पित करें।' },
+      { id: 'gs4', stepNumber: 4, title: 'वस्त्र एवं यज्ञोपवीत', content: 'पीत वस्त्र एवं यज्ञोपवीत (जनेऊ) मंत्रोच्चार सहित अर्पित करें।' },
+      { id: 'gs5', stepNumber: 5, title: 'गंध, अक्षत व पुष्प', content: 'रक्त चंदन, कुमकुम, अक्षत एवं लाल पुष्प/गुड़हल अर्पित करें।' },
+      { id: 'gs6', stepNumber: 6, title: 'दूर्वा एवं मोदक नैवेद्य', content: '२१ दूर्वा दल अर्पित कर मोदक एवं लड्डुओं का भोग लगाएं।' }
+    ]
+  },
+  {
+    id: 'p1_panchopchar',
+    title: 'Shri Ganesh Panchopchar Pooja',
+    headerTitle: 'गणेश पंचोपचार',
+    titleHindi: 'श्री गणेश पंचोपचार पूजा',
+    subtitleHindi: 'पाँच उपचारों सहित पूजन',
+    breadcrumbs: 'पूजा विधि  /  गणेश पंचोपचार',
+    navAnchors: ['सामग्री', 'गंध', 'पुष्प', 'धूप', 'दीप', 'नैवेद्य'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: [
+      'चंदन, अक्षत, पुष्प, धूप, दीप एवं नैवेद्य (फल/मिष्ठान्न)'
+    ],
+    stepsList: [
+      { id: 'gp1', stepNumber: 1, title: 'गंध (चंदन अर्पण)', content: 'ॐ गं गणपतये नमः। चंदनं समर्पयामि।' },
+      { id: 'gp2', stepNumber: 2, title: 'पुष्प एवं अक्षत', content: 'ॐ गं गणपतये नमः। पुष्पाणि अक्षतान् समर्पयामि।' },
+      { id: 'gp3', stepNumber: 3, title: 'धूप अर्पण', content: 'ॐ गं गणपतये नमः। धूपमाघ्रापयामि।' },
+      { id: 'gp4', stepNumber: 4, title: 'दीप दर्शन', content: 'ॐ गं गणपतये नमः। दीपं दर्शयामि।' },
+      { id: 'gp5', stepNumber: 5, title: 'नैवेद्य समर्पण', content: 'ॐ गं गणपतये नमः। नैवेद्यं निवेदयामि।' }
+    ]
+  },
+  {
+    id: 'p1_chaturthi',
+    title: 'Ganesh Chaturthi Vrat Pooja',
+    headerTitle: 'गणेश चतुर्थी पूजा',
+    titleHindi: 'गणेश चतुर्थी पूजा',
+    subtitleHindi: 'गणेश चतुर्थी के लिए पूजन',
+    breadcrumbs: 'पूजा विधि  /  गणेश चतुर्थी',
+    navAnchors: ['सामग्री', 'संकल्प', 'प्रतिष्ठा', 'कथा', 'आरती'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Shodashopchar Pooja',
+    samagriList: [
+      'मिट्टी की गणेश प्रतिमा, चौकी, लाल वस्त्र, मोदक, दूर्वा, शमी पत्र'
+    ],
+    stepsList: [
+      { id: 'gc1', stepNumber: 1, title: 'प्राण प्रतिष्ठा', content: 'प्रतिमा में देवत्व का आह्वान कर प्राण-प्रतिष्ठा करें।' },
+      { id: 'gc2', stepNumber: 2, title: 'व्रत कथा श्रवण', content: 'चतुर्थी व्रत की पावन कथा का वाचन व श्रवण करें।' },
+      { id: 'gc3', stepNumber: 3, title: 'मोदक भोग व आरती', content: '२१ मोदक का भोग लगाकर महाआरती संपन्न करें।' }
+    ]
+  },
+  {
+    id: 'p1_sankashti',
+    title: 'Sankashti Chaturthi Pooja',
+    headerTitle: 'संकष्टी चतुर्थी',
+    titleHindi: 'संकष्टी चतुर्थी पूजा',
+    subtitleHindi: 'संकष्टी व्रत का पूजन क्रम',
+    breadcrumbs: 'पूजा विधि  /  संकष्टी चतुर्थी',
+    navAnchors: ['सामग्री', 'गणेश पूजन', 'चंद्र अर्घ्य', 'आरती'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: [
+      'कच्चा दूध, जल, अक्षत, दूर्वा, तिल के लड्डू, गुड़'
+    ],
+    stepsList: [
+      { id: 'sk1', stepNumber: 1, title: 'गणेश पूजन', content: 'दिनभर व्रत रहकर सायंकाल गणेश जी का विधिवत पूजन करें।' },
+      { id: 'sk2', stepNumber: 2, title: 'चंद्र दर्शन एवं अर्घ्य', content: 'चंद्रोदय के समय जल, दूध व अक्षत मिलाकर चंद्रमा को अर्घ्य दें।' }
+    ]
+  },
+  {
+    id: 'p1_siddhivinayak',
+    title: 'Siddhivinayak Pooja',
+    headerTitle: 'सिद्धिविनायक पूजा',
+    titleHindi: 'सिद्धिविनायक पूजा',
+    subtitleHindi: 'श्री सिद्धिविनायक पूजन',
+    breadcrumbs: 'पूजा विधि  /  सिद्धिविनायक',
+    navAnchors: ['सामग्री', 'ध्यान', 'अर्चन', 'फल'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Rajopchar Pooja',
+    samagriList: ['पीला वस्त्र, सिंदूर, मोदक, दूर्वा, नारियल'],
+    stepsList: [
+      { id: 'sv1', stepNumber: 1, title: 'संकल्प एवं ध्यान', content: 'मनोकामना पूर्ति हेतु सिद्धिविनायक का ध्यान करें।' }
+    ]
+  },
+  {
+    id: 'p1_sthapana',
+    title: 'Shri Ganesh Sthapana Pooja',
+    headerTitle: 'गणेश स्थापना',
+    titleHindi: 'श्री गणेश स्थापना पूजा',
+    subtitleHindi: 'प्रतिमा स्थापना का पूजन क्रम',
+    breadcrumbs: 'पूजा विधि  /  गणेश स्थापना',
+    navAnchors: ['सामग्री', 'चौकी', 'कलश', 'स्थापना'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Complete Setup',
+    samagriList: ['चौकी, लाल वस्त्र, अक्षत अष्टदल, कलश, प्रतिमा'],
+    stepsList: [
+      { id: 'st1', stepNumber: 1, title: 'चौकी व कलश सज्जा', content: 'ईशान कोण में चौकी पर लाल वस्त्र बिछाकर अष्टदल बनाएं।' }
+    ]
+  },
+  {
+    id: 'p1_visarjan',
+    title: 'Shri Ganesh Visarjan Pooja',
+    headerTitle: 'गणेश विसर्जन',
+    titleHindi: 'श्री गणेश विसर्जन पूजा',
+    subtitleHindi: 'उत्तर पूजन एवं विसर्जन क्रम',
+    breadcrumbs: 'पूजा विधि  /  गणेश विसर्जन',
+    navAnchors: ['उत्तर पूजन', 'प्रार्थना', 'विसर्जन'],
+    category: 'Ganesh Pooja',
+    subCategory: 'Complete Setup',
+    samagriList: ['अक्षत, पुष्प, दूर्वा, मोदक, कपूर'],
+    stepsList: [
+      { id: 'vs1', stepNumber: 1, title: 'उत्तर पूजन', content: 'विसर्जन पूर्व अंतिम आरती व क्षमा याचना करें।' },
+      { id: 'vs2', stepNumber: 2, title: 'विसर्जन मंत्र', content: 'यान्तु देवगणाः सर्वे पूजामादाय मामकीम्। इष्टकामसमृद्ध्यर्थं पुनर्पुनरागमनाय च॥' }
+    ]
+  },
+  {
+    id: 'p8_ram',
+    title: 'Shri Ram Janmotsav Pooja',
+    headerTitle: 'श्री राम पूजा',
+    titleHindi: 'श्री राम दरबार पूजन',
+    subtitleHindi: 'रामनवमी एवं नित्य पूजन क्रम',
+    breadcrumbs: 'पूजा विधि  /  श्री राम पूजा',
+    navAnchors: ['सामग्री', 'ध्यान', 'अर्चन', 'आरती'],
+    category: 'Ram Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: ['राम दरबार चित्र, पीला पुष्प, तुलसी दल, पंचामृत, धूप, दीप'],
+    stepsList: [
+      { id: 'r1', stepNumber: 1, title: 'श्री राम ध्यान', content: 'ध्यायेदाजानुबाहुं धृतशरधनुषं बद्धपद्मासनस्थं... पीताम्बरं रामचन्द्रं नमामि॥' },
+      { id: 'r2', stepNumber: 2, title: 'तुलसी अर्पण', content: 'श्री रामचंद्राय नमः। तुलसीपत्रं समर्पयामि।' }
+    ]
+  },
+  {
+    id: 'p9_krishna',
+    title: 'Shri Krishna Janmashtami Pooja',
+    headerTitle: 'श्री कृष्ण पूजा',
+    titleHindi: 'श्री कृष्ण जन्माष्टमी पूजन',
+    subtitleHindi: 'बाल गोपाल पंचामृत स्नान व सेवा',
+    breadcrumbs: 'पूजा विधि  /  श्री कृष्ण पूजा',
+    navAnchors: ['सामग्री', 'अभिषेक', 'श्रृंगार', 'भोग', 'आरती'],
+    category: 'Krishna Pooja',
+    subCategory: 'Rajopchar Pooja',
+    samagriList: ['लड्डू गोपाल विग्रह, पंचामृत, माखन-मिश्री, तुलसी दल, मोरपंख'],
+    stepsList: [
+      { id: 'k1', stepNumber: 1, title: 'पंचामृत अभिषेक', content: 'शंख से दूध, दही, घी, शहद व शर्करा से बाल गोपाल का अभिषेक करें।' },
+      { id: 'k2', stepNumber: 2, title: 'माखन-मिश्री भोग', content: 'तुलसी दल युक्त माखन-मिश्री का भोग लगाएं।' }
+    ]
+  },
+  {
+    id: 'p10_saraswati',
+    title: 'Vasant Panchami Saraswati Pooja',
+    headerTitle: 'सरस्वती पूजा',
+    titleHindi: 'श्री सरस्वती पूजन विधि',
+    subtitleHindi: 'विद्यारंभ एवं वसंत पंचमी पूजन',
+    breadcrumbs: 'पूजा विधि  /  सरस्वती पूजा',
+    navAnchors: ['सामग्री', 'ध्यान', 'पुस्तक पूजन', 'आरती'],
+    category: 'Saraswati Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: ['सरस्वती चित्र, श्वेत/पीला वस्त्र, पीला पुष्प, पुस्तक, लेखनी, मिष्ठान्न'],
+    stepsList: [
+      { id: 'sr1', stepNumber: 1, title: 'सरस्वती वंदना', content: 'या कुन्देन्दुतुषारहारधवला या शुभ्रवस्त्रावृता... सा मां पातु सरस्वती भगवती निःशेषजाड्यापहा॥' }
+    ]
+  },
+  {
+    id: 'p11_surya',
+    title: 'Surya Dev Pooja & Arghya',
+    headerTitle: 'सूर्य पूजा',
+    titleHindi: 'श्री सूर्य देव पूजन एवं अर्घ्य',
+    subtitleHindi: 'दैनिक अर्घ्य एवं आदित्य हृदय स्तोत्र',
+    breadcrumbs: 'पूजा विधि  /  सूर्य पूजा',
+    navAnchors: ['सामग्री', 'अर्घ्य', 'मंत्र', 'प्रार्थना'],
+    category: 'Surya Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: ['तांबे का लोटा, शुद्ध जल, रोली, लाल पुष्प, अक्षत'],
+    stepsList: [
+      { id: 'sy1', stepNumber: 1, title: 'सूर्य अर्घ्य मंत्र', content: 'ॐ एहि सूर्य सहस्त्रांशो तेजोराशे जगत्पते। अनुकम्पय मां भक्त्या गृहाणार्घ्यं दिवाकर॥' }
+    ]
+  },
+  {
+    id: 'p12_navagraha',
+    title: 'Navagraha Shanti Pooja',
+    headerTitle: 'नवग्रह पूजा',
+    titleHindi: 'नवग्रह शांति एवं होम विधि',
+    subtitleHindi: 'समस्त ग्रह दोष शांति पूजन',
+    breadcrumbs: 'पूजा विधि  /  नवग्रह पूजा',
+    navAnchors: ['सामग्री', 'मंडल', 'मंत्र', 'आरती'],
+    category: 'Navagraha Pooja',
+    subCategory: 'Shodashopchar Pooja',
+    samagriList: ['नवग्रह समिधा, नवग्रह धान्य, अक्षत, नव रंग के वस्त्र, तिल'],
+    stepsList: [
+      { id: 'ng1', stepNumber: 1, title: 'नवग्रह स्मरण', content: 'ब्रह्मा मुरारिस्त्रिपुरान्तकारी भानुः शशी भूमिसुतो बुधश्च। गुरुश्च शुक्रः शनिराहुकेतवः कुर्वन्तु सर्वे मम सुप्रभातम्॥' }
+    ]
+  },
+  {
+    id: 'p13_kali',
+    title: 'Maa Kali Pooja',
+    headerTitle: 'काली पूजा',
+    titleHindi: 'माँ दक्षिण काली पूजन',
+    subtitleHindi: 'शत्रु एवं भय निवारक पूजन',
+    breadcrumbs: 'पूजा विधि  /  काली पूजा',
+    navAnchors: ['सामग्री', 'ध्यान', 'मंत्र', 'आरती'],
+    category: 'Kali Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: ['लाल चुनरी, गुड़हल के फूल, कपूर, लौंग, नींबू माला'],
+    stepsList: [
+      { id: 'kl1', stepNumber: 1, title: 'काली ध्यान', content: 'खड्गं चक्रगदेषुचापपरिघांछूलं भुशुण्डीं शिरः... नमामि कालीं वरदां नमामि॥' }
+    ]
+  },
+  {
+    id: 'p14_bhairav',
+    title: 'Bhagwan Bhairav Pooja',
+    headerTitle: 'भैरव पूजा',
+    titleHindi: 'काल भैरव एवं बटुक भैरव पूजन',
+    subtitleHindi: 'आरोग्य एवं संकट निवारण क्रम',
+    breadcrumbs: 'पूजा विधि  /  भैरव पूजा',
+    navAnchors: ['सामग्री', 'दीपदान', 'मंत्र'],
+    category: 'Bhairav Pooja',
+    subCategory: 'Panchopchar Pooja',
+    samagriList: ['सरसों का तेल, चौमुखा दीपक, काले तिल, इमरती/मिठाई, सिंदूर'],
+    stepsList: [
+      { id: 'bh1', stepNumber: 1, title: 'भैरव मंत्र', content: 'ॐ ह्रीं बटुकाय आपदुद्धारणाय कुरु कुरु बटुकाय ह्रीं ॐ नमः शिवाय॥' }
+    ]
+  },
+  {
+    id: 'p15_kuldevta',
+    title: 'Kuldevta Pooja',
+    headerTitle: 'कुलदेवता पूजा',
+    titleHindi: 'कुलदेवी एवं कुलदेवता वार्षिक पूजन',
+    subtitleHindi: 'पारंपरिक कुल प्रतिष्ठा विधान',
+    breadcrumbs: 'पूजा विधि  /  कुलदेवता पूजा',
+    navAnchors: ['सामग्री', 'आवाहन', 'भोग', 'प्रार्थना'],
+    category: 'Kuldevta Pooja',
+    subCategory: 'Complete Setup',
+    samagriList: ['नारियल, चुनरी, रोली, अक्षत, कुल भोग, घी का दीपक'],
+    stepsList: [
+      { id: 'kd1', stepNumber: 1, title: 'कुलदेवता ध्यान', content: 'सर्व मंगल मांगल्ये शिवे सर्वार्थ साधिके... कुलदेवी कुलदेवताभ्यो नमः।' }
+    ]
+  },
+  {
+    id: 'p16_griha_pravesh',
+    title: 'Griha Pravesh & Vastu Shanti',
+    headerTitle: 'गृह प्रवेश',
+    titleHindi: 'गृह प्रवेश एवं वास्तु शांति पूजा',
+    subtitleHindi: 'नवीन गृह मंगल प्रवेश अनुष्ठान',
+    breadcrumbs: 'पूजा विधि  /  गृह प्रवेश',
+    navAnchors: ['सामग्री', 'द्वार पूजा', 'वास्तु शांति', 'हवन'],
+    category: 'Samskar Pooja',
+    subCategory: 'Complete Setup',
+    samagriList: ['कलश, नारियल, आम के पत्ते, तोरण, दूध, गुड़, नवधान्य, हवन सामग्री'],
+    stepsList: [
+      { id: 'gpv1', stepNumber: 1, title: 'द्वार पूजन एवं कलश प्रवेश', content: 'शुभ मुहूर्त में तोरण बांधकर सधवा स्त्री कलश लेकर प्रथम गृह प्रवेश करें।' },
+      { id: 'gpv2', stepNumber: 2, title: 'वास्तु पुरुष प्रतिष्ठा', content: 'वास्तु दोष शांति हेतु वास्तु मंडल का पूजन एवं आहुति संपन्न करें।' }
+    ]
+  },
+  {
     id: 'p2',
     title: 'Satyanarayan Vrat Katha',
     headerTitle: 'सत्यनारायण कथा',
