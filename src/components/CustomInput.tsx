@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    fontSize: 12.5,
+    fontSize: 12,
     minHeight: 40,
   },
   inputWithLeftPadding: {

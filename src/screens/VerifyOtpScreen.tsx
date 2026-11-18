@@ -96,13 +96,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
   },
@@ -116,11 +116,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 12.5,
   },
   footerLink: {
     color: '#C75B12',
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
 });

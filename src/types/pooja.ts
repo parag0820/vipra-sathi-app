@@ -17,11 +17,36 @@ export interface PoojaStepItem {
 export interface PoojaPersonalNote {
   id: string;
   poojaId: string;
+  userId?: string;
   title: string;
   content: string;
   isPinned: boolean;
   updatedAt: string;
   timestamp: number;
+  createdAt?: string;
+  isApiNote?: boolean;
+}
+
+export interface PoojaNoteApiItem {
+  _id?: string;
+  id?: string;
+  poojaId: string;
+  userId?: string;
+  title: string;
+  description: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreatePoojaNotePayload {
+  poojaId: string;
+  title: string;
+  description: string;
+}
+
+export interface UpdatePoojaNotePayload {
+  title: string;
+  description: string;
 }
 
 export interface PoojaCategoryRef {

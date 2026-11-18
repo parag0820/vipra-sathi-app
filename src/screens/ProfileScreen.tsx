@@ -841,29 +841,39 @@ const ProfileScreen = () => {
           activeOpacity={1}
           onPress={() => setDropdownType(null)}
         >
-          <View
+          <TouchableOpacity
+            activeOpacity={1}
             style={[
               styles.dropdownModalCard,
               {
-                backgroundColor: isDark ? colors.surface : '#FFFFFF',
-                maxWidth: isTablet ? 480 : '90%',
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#EFECE8',
+                maxWidth: isTablet ? 480 : '92%',
               },
             ]}
           >
-            <Text
-              style={[
-                styles.dropdownModalTitle,
-                { color: isDark ? '#FFF' : '#1F2937' },
-              ]}
-            >
-              {dropdownType === 'gender'
-                ? 'लिंग चुनें'
-                : dropdownType === 'specialization'
-                ? 'अपनी विशेषज्ञता चुनें'
-                : dropdownType === 'state'
-                ? 'अपना राज्य चुनें'
-                : 'जन्मतिथि'}
-            </Text>
+            <View style={[styles.changeMobileHeaderRow, { borderBottomWidth: 1, borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA', paddingBottom: 12 }]}>
+              <Text
+                style={[
+                  styles.dropdownModalTitle,
+                  { color: isDark ? '#FCA5A5' : maroonColor, marginBottom: 0 },
+                ]}
+              >
+                {dropdownType === 'gender'
+                  ? 'लिंग चुनें'
+                  : dropdownType === 'specialization'
+                  ? 'अपनी विशेषज्ञता चुनें'
+                  : dropdownType === 'state'
+                  ? 'अपना राज्य चुनें'
+                  : 'जन्मतिथि'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setDropdownType(null)}
+                style={[styles.modalCloseIconBtn, { backgroundColor: isDark ? '#252525' : '#FAF7F3', borderColor: isDark ? '#333333' : '#EFECE8' }]}
+              >
+                <Icon name="x" size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              </TouchableOpacity>
+            </View>
 
             {dropdownType === 'dob' ? (
               <View style={styles.dobModalContent}>
@@ -954,7 +964,7 @@ const ProfileScreen = () => {
                 })}
               </ScrollView>
             )}
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 
@@ -962,7 +972,7 @@ const ProfileScreen = () => {
       <Modal
         visible={isChangeMobileModalOpen}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setIsChangeMobileModalOpen(false)}
       >
         <View style={styles.modalOverlay}>
@@ -970,27 +980,29 @@ const ProfileScreen = () => {
             style={[
               styles.changeMobileCard,
               {
-                backgroundColor: isDark ? colors.surface : '#FFFFFF',
-                maxWidth: isTablet ? 460 : '90%',
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#EFECE8',
+                maxWidth: isTablet ? 460 : '92%',
               },
             ]}
           >
-            <View style={styles.changeMobileHeaderRow}>
+            <View style={[styles.changeMobileHeaderRow, { borderBottomWidth: 1, borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA', paddingBottom: 12 }]}>
               <Text
                 style={[
                   styles.changeMobileTitle,
-                  { color: isDark ? '#FFF' : '#1F2937' },
+                  { color: isDark ? '#FCA5A5' : maroonColor },
                 ]}
               >
                 लॉगिन मोबाइल नंबर बदलें
               </Text>
               <TouchableOpacity
+                style={[styles.modalCloseIconBtn, { backgroundColor: isDark ? '#252525' : '#FAF7F3', borderColor: isDark ? '#333333' : '#EFECE8' }]}
                 onPress={() => {
                   setIsChangeMobileModalOpen(false);
                   setOtpStep(false);
                 }}
               >
-                <Icon name="x" size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                <Icon name="x" size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
               </TouchableOpacity>
             </View>
 
@@ -1099,11 +1111,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 16.5,
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: 12.5,
+    fontSize: 10.5,
     marginTop: 2,
   },
   contentScrollView: {
@@ -1169,11 +1181,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileHeaderName: {
-    fontSize: 18,
+    fontSize: 13.5,
     fontWeight: 'bold',
   },
   profileHeaderRole: {
-    fontSize: 13,
+    fontSize: 12.5,
     marginTop: 3,
   },
   changePhotoBtn: {
@@ -1190,7 +1202,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginBottom: 8,
   },
@@ -1210,7 +1222,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    fontSize: 13.5,
+    fontSize: 12,
   },
   twoColumnRow: {
     flexDirection: 'row',
@@ -1229,7 +1241,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   dropdownSelectedText: {
-    fontSize: 13.5,
+    fontSize: 11.5,
   },
   mobileLoginRow: {
     flexDirection: 'row',
@@ -1245,7 +1257,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   mobileLoginNumber: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginTop: 3,
   },
@@ -1258,7 +1270,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   changeMobileBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   helperUnderInput: {
@@ -1283,11 +1295,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   brandingBannerTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   brandingBannerSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 2,
   },
   bottomFooterRow: {
@@ -1298,7 +1310,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   requiredHelpText: {
-    fontSize: 12,
+    fontSize: 11.5,
   },
   footerButtonsGroup: {
     flexDirection: 'row',
@@ -1313,7 +1325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelFooterBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   saveFooterBtn: {
@@ -1325,28 +1337,36 @@ const styles = StyleSheet.create({
   },
   saveFooterBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
 
   // Dropdown Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 18,
   },
   dropdownModalCard: {
     width: '100%',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
   },
   dropdownModalTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
     marginBottom: 12,
+  },
+  modalCloseIconBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dropdownModalScroll: {
     maxHeight: 320,
@@ -1355,25 +1375,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   dropdownItemText: {
-    fontSize: 14,
+    fontSize: 12,
   },
   dobModalContent: {
     paddingVertical: 6,
   },
   dobPromptText: {
-    fontSize: 13,
+    fontSize: 11.5,
   },
   changeMobileCard: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 16,
+    borderWidth: 1,
     padding: 18,
-    elevation: 8,
   },
   changeMobileHeaderRow: {
     flexDirection: 'row',
@@ -1382,14 +1402,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   changeMobileTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
   },
   changeMobileBody: {
     paddingTop: 4,
   },
   changeMobilePrompt: {
-    fontSize: 13,
+    fontSize: 11.5,
   },
 });
 

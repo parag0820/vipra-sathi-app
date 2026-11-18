@@ -96,24 +96,35 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
 
   const progressPercent = duration > 0 ? elapsed / duration : 0;
 
-  return (
-    <View style={[styles.container, { backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}>
+  const accentColor = isDark ? '#FCA5A5' : '#8B1D1D';
+  const accentBg = isDark ? '#2B1B1B' : '#FFF0ED';
+  const borderDynamic = isDark ? '#2D2D2D' : '#EFECE8';
 
-      {/* Gradient-like top accent */}
-      <View style={[styles.topAccent, { backgroundColor: colors.primary }]} />
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+          borderColor: borderDynamic,
+        },
+      ]}
+    >
+      {/* Top Maroon Accent */}
+      <View style={[styles.topAccent, { backgroundColor: accentColor }]} />
 
       <View style={styles.mainContent}>
         {/* Album Art with pulse */}
         <Animated.View style={[
           styles.albumArt,
           {
-            backgroundColor: colors.primary + '15',
-            borderColor: colors.primary + '30',
+            backgroundColor: accentBg,
+            borderColor: borderDynamic,
             transform: [{ scale: pulseAnim }],
           },
         ]}>
-          <View style={[styles.albumArtInner, { backgroundColor: colors.primary + '25' }]}>
-            <Icon name={isPlaying ? 'headphones' : 'music'} size={26} color={colors.primary} />
+          <View style={[styles.albumArtInner, { backgroundColor: accentBg }]}>
+            <Icon name={isPlaying ? 'headphones' : 'music'} size={22} color={accentColor} />
           </View>
           {isPlaying && (
             <View style={[styles.playingDot, { backgroundColor: colors.accent || '#16A34A' }]} />
@@ -132,12 +143,12 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
       </View>
 
       {/* Progress bar */}
-      <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+      <View style={[styles.progressTrack, { backgroundColor: borderDynamic }]}>
         <Animated.View
           style={[
             styles.progressFill,
             {
-              backgroundColor: colors.primary,
+              backgroundColor: accentColor,
               width: progressAnim.interpolate({
                 inputRange: [0, 100],
                 outputRange: ['0%', '100%'],
@@ -151,12 +162,12 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
       <View style={styles.controlsRow}>
         {/* Slow mode */}
         <TouchableOpacity
-          style={[styles.controlBtn, isSlowMode && { backgroundColor: colors.primary + '15' }]}
+          style={[styles.controlBtn, isSlowMode && { backgroundColor: accentBg }]}
           onPress={() => setIsSlowMode(!isSlowMode)}
           disabled={isLoading}
         >
           <Text style={[styles.slowText, {
-            color: isSlowMode ? colors.primary : colors.textLight,
+            color: isSlowMode ? accentColor : colors.textLight,
             fontWeight: isSlowMode ? '800' : '500',
           }]}>
             0.75x
@@ -175,13 +186,12 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
           <Icon name="rotate-ccw" size={18} color={colors.textLight} />
         </TouchableOpacity>
 
-        {/* Play / Pause - big circle */}
+        {/* Play / Pause - flat circle */}
         <TouchableOpacity
           style={[
             styles.playBtn,
             {
-              backgroundColor: isLoading ? colors.border : colors.primary,
-              shadowColor: colors.primary,
+              backgroundColor: isLoading ? borderDynamic : '#8B1D1D',
             },
           ]}
           onPress={togglePlay}
@@ -190,7 +200,7 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
         >
           <Icon
             name={isPlaying ? 'pause' : 'play'}
-            size={26}
+            size={24}
             color="#FFF"
             style={!isPlaying && !isLoading ? { marginLeft: 3 } : {}}
           />
@@ -210,14 +220,14 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
 
         {/* Repeat */}
         <TouchableOpacity
-          style={[styles.controlBtn, isRepeat && { backgroundColor: colors.primary + '15' }]}
+          style={[styles.controlBtn, isRepeat && { backgroundColor: accentBg }]}
           onPress={() => setIsRepeat(!isRepeat)}
           disabled={isLoading}
         >
           <Icon
             name="repeat"
             size={18}
-            color={isRepeat ? colors.primary : colors.textLight}
+            color={isRepeat ? accentColor : colors.textLight}
           />
         </TouchableOpacity>
       </View>
@@ -227,24 +237,21 @@ const AudioPlayerUI: React.FC<AudioPlayerUIProps> = ({ title, audioUrl, onPlayba
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    marginHorizontal: 0,
+    marginBottom: 0,
+    borderRadius: 0,
+    borderTopWidth: 1,
     overflow: 'hidden',
   },
   topAccent: {
-    height: 3,
+    height: 2,
     width: '100%',
   },
   mainContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 14,
+    paddingTop: 8,
     paddingBottom: 4,
   },
   albumArt: {
@@ -277,24 +284,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nowPlaying: {
-    fontSize: 11,
+    fontSize: 9.5,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontWeight: '700',
-    marginBottom: 3,
-  },
-  title: {
-    fontSize: 15,
+    letterSpacing: 0.8,
     fontWeight: '700',
     marginBottom: 2,
   },
+  title: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    marginBottom: 1,
+  },
   timeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   progressTrack: {
     height: 3,
-    marginHorizontal: 16,
+    marginHorizontal: 14,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -306,7 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     gap: 4,
   },
@@ -321,16 +328,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   playBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 8,
-    elevation: 6,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
   },
 });
 

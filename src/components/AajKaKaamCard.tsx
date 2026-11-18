@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   timeText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: 'bold',
     marginLeft: 4,
   },
@@ -170,15 +170,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   poojaName: {
-    fontSize: 20,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   separator: {
     marginHorizontal: 8,
-    fontSize: 20,
+    fontSize: 15,
   },
   yajmanName: {
-    fontSize: 18,
+    fontSize: 13.5,
     fontWeight: '600',
   },
   metaData: {
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: 11.5,
     marginLeft: 8,
     flex: 1,
     lineHeight: 18,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12,
     marginLeft: 6,
   },
 });

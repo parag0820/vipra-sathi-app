@@ -56,9 +56,9 @@ const CATEGORIES: SpiritualCategoryItem[] = [
     defaultDesc: 'सर्व बाधा निवारक पावन स्तोत्र, कवच, अष्टक एवं वैदिक पाठ।',
     badgeText: 'कवच व अष्टक',
     route: 'StotramLibrary',
-    themeColor: '#B45309', // Vedic Amber
-    tintBg: '#FFFBEB',
-    borderColor: '#FEF3C7',
+    themeColor: '#8B1D1D',
+    tintBg: '#FFF0ED',
+    borderColor: '#FEE2E2',
     imageSource: require('../assets/images/stotram.png'),
   },
   {
@@ -69,9 +69,9 @@ const CATEGORIES: SpiritualCategoryItem[] = [
     defaultDesc: 'समस्त देवी-देवताओं की नित्य मंगल आरती, स्तुति व पुष्पांजलि।',
     badgeText: 'दैनिक आरती',
     route: 'AartiLibrary',
-    themeColor: '#C2410C', // Sacred Vermilion
-    tintBg: '#FFF7ED',
-    borderColor: '#FFEDD5',
+    themeColor: '#8B1D1D',
+    tintBg: '#FFF0ED',
+    borderColor: '#FEE2E2',
     imageSource: require('../assets/images/icn_12.png'),
   },
   {
@@ -82,9 +82,9 @@ const CATEGORIES: SpiritualCategoryItem[] = [
     defaultDesc: 'प्रत्येक पूजा एवं हवन के लिए आवश्यक वस्तुओं की संपूर्ण चेकलिस्ट।',
     badgeText: 'सामग्री चेकलिस्ट',
     route: 'Samagri',
-    themeColor: '#047857', // Sacred Basil Green
-    tintBg: '#ECFDF5',
-    borderColor: '#D1FAE5',
+    themeColor: '#8B1D1D',
+    tintBg: '#FFF0ED',
+    borderColor: '#FEE2E2',
     iconName: 'basket-outline',
     vectorFamily: 'material',
   },
@@ -96,8 +96,8 @@ const CATEGORIES: SpiritualCategoryItem[] = [
     defaultDesc: 'यज्ञ विधि, समिधा, आहुति मंत्र एवं पूर्णाहूति के विस्तृत निर्देश।',
     badgeText: 'यज्ञ विधान',
     route: 'Hawan',
-    themeColor: '#DC2626', // Agni Fire Red
-    tintBg: '#FEF2F2',
+    themeColor: '#8B1D1D',
+    tintBg: '#FFF0ED',
     borderColor: '#FEE2E2',
     imageSource: require('../assets/images/hawan.png'),
   },
@@ -326,12 +326,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 17.5,
+    fontSize: 16.5,
     fontWeight: '700',
     color: '#8B1D1D',
   },
   headerSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#6B7280',
     marginTop: 2,
   },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: '700',
     flex: 1,
     marginRight: 6,

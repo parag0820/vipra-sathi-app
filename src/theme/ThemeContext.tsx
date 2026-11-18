@@ -21,7 +21,9 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeType>('light');
-  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>('light');
+  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(
+    Appearance.getColorScheme() || 'light',
+  );
 
   useEffect(() => {
     // Default theme is light unless explicitly saved otherwise

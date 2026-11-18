@@ -794,7 +794,7 @@ const PersonalBrandingScreen = () => {
       <Modal
         visible={isPreviewModalVisible}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setIsPreviewModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
@@ -802,16 +802,17 @@ const PersonalBrandingScreen = () => {
             style={[
               styles.modalCard,
               {
-                backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#EFECE8',
                 maxWidth: isTablet ? 600 : '94%',
               },
             ]}
           >
-            <View style={styles.modalHeaderRow}>
+            <View style={[styles.modalHeaderRow, { borderBottomWidth: 1, borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA', paddingBottom: 12 }]}>
               <Text
                 style={[
                   styles.modalHeaderTitle,
-                  { color: isDark ? '#FFF' : '#1F2937' },
+                  { color: isDark ? '#FCA5A5' : maroonColor },
                 ]}
               >
                 ब्रांडेड PDF पूर्वावलोकन
@@ -819,8 +820,18 @@ const PersonalBrandingScreen = () => {
               <TouchableOpacity
                 onPress={() => setIsPreviewModalVisible(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  backgroundColor: isDark ? '#252525' : '#FAF7F3',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#333333' : '#EFECE8',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
               >
-                <Icon name="x" size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                <Icon name="x" size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
               </TouchableOpacity>
             </View>
 
@@ -983,11 +994,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 16.5,
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: 12.5,
+    fontSize: 10.5,
     marginTop: 2,
   },
   resetButton: {
@@ -995,7 +1006,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   resetButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
   contentScrollView: {
@@ -1029,11 +1040,11 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   cardMainTitle: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: 'bold',
   },
   cardSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 3,
     lineHeight: 17,
   },
@@ -1083,7 +1094,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   uploadLogoBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   uploadFormatText: {
@@ -1095,7 +1106,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   removeLogoText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   inputGroup: {
@@ -1106,7 +1117,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    fontSize: 13.5,
+    fontSize: 12,
   },
   twoColumnRow: {
     flexDirection: 'row',
@@ -1123,7 +1134,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   sameWhatsappText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   previewHeaderRow: {
@@ -1137,7 +1148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   pdfLinkText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: 'bold',
   },
   previewDocBox: {
@@ -1170,14 +1181,14 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   previewDocLogoText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   previewDocTitles: {
     flex: 1,
   },
   previewDocName: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   previewDocSub: {
@@ -1235,7 +1246,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   previewOutlineBtnText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   saveFilledBtn: {
@@ -1247,7 +1258,7 @@ const styles = StyleSheet.create({
   },
   saveFilledBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   footerNoteText: {
@@ -1259,7 +1270,7 @@ const styles = StyleSheet.create({
   // Modal Sheet Styles
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.48)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -1267,13 +1278,9 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxHeight: '85%',
-    borderRadius: 14,
-    padding: 16,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -1282,8 +1289,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalHeaderTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
   },
   modalDocScroll: {
     maxHeight: 460,
@@ -1318,11 +1325,11 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   sheetLogoText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   sheetName: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   sheetTitle: {
@@ -1340,7 +1347,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   sheetCategory: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginBottom: 2,
   },
@@ -1393,7 +1400,7 @@ const styles = StyleSheet.create({
   },
   modalCloseBtnText: {
     color: '#FFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
 });

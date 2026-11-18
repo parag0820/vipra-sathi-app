@@ -91,7 +91,7 @@ const getMuhuratData = (isHi: boolean) => ({
 });
 
 const PanchangScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
@@ -628,35 +628,119 @@ const PanchangScreen = () => {
         </ScrollView>
       </View>
 
-      {/* Location Picker Modal */}
-      <Modal visible={showLocationPicker} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: cardBg }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: borderColor }]}>
-              <Text style={[styles.modalTitle, { color: textColor }]}>{t('panchang_screen.change_location')}</Text>
-              <TouchableOpacity onPress={() => setShowLocationPicker(false)}>
-                <Icon name="x" size={24} color={textColor} />
+      {/* Location Picker Modal (Flat Maroon/White UI) */}
+      <Modal
+        visible={showLocationPicker}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowLocationPicker(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLocationPicker(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#EFECE8',
+              },
+            ]}
+            onPress={() => { }}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                { borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA' },
+              ]}
+            >
+              <View style={styles.modalHeaderLeft}>
+                <View
+                  style={[
+                    styles.modalIconBox,
+                    { backgroundColor: isDark ? '#2B1B1B' : '#FFF0ED' },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="map-marker"
+                    size={16}
+                    color={isDark ? '#FCA5A5' : '#8B1D1D'}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.modalTitle,
+                    { color: isDark ? '#FCA5A5' : '#8B1D1D' },
+                  ]}
+                >
+                  {t('panchang_screen.change_location')}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowLocationPicker(false)}
+                style={[
+                  styles.modalCloseBtn,
+                  { backgroundColor: isDark ? '#2A2A2A' : '#F3F4F6' },
+                ]}
+              >
+                <Icon name="x" size={16} color={colors.textLight} />
               </TouchableOpacity>
             </View>
             <FlatList
               data={availableLocations}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.locationOption, { borderBottomColor: borderColor }]}
-                  onPress={() => {
-                    setLocation(item);
-                    setShowLocationPicker(false);
-                  }}
-                >
-                  <Text style={[styles.locationOptionText, { color: item.id === location.id ? colors.primary : textColor, fontWeight: item.id === location.id ? 'bold' : 'normal' }]}>
-                    {isHi ? item.name.hi : item.name.en}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              keyExtractor={item => item.id}
+              renderItem={({ item, index }) => {
+                const isSelected = item.id === location.id;
+                const isLast = index === availableLocations.length - 1;
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.locationOption,
+                      !isLast && {
+                        borderBottomWidth: 1,
+                        borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA',
+                      },
+                      isSelected && {
+                        backgroundColor: isDark ? '#2B1B1B' : '#FFF0ED',
+                      },
+                    ]}
+                    onPress={() => {
+                      setLocation(item);
+                      setShowLocationPicker(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.locationOptionText,
+                        {
+                          color: isSelected
+                            ? isDark
+                              ? '#FCA5A5'
+                              : '#8B1D1D'
+                            : textColor,
+                          fontWeight: isSelected ? '700' : '500',
+                        },
+                      ]}
+                    >
+                      {isHi ? item.name.hi : item.name.en}
+                    </Text>
+                    {isSelected && (
+                      <Icon
+                        name="check"
+                        size={16}
+                        color={isDark ? '#FCA5A5' : '#8B1D1D'}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -678,7 +762,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16.5,
     fontWeight: 'bold',
   },
   mainCard: {
@@ -695,7 +779,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   dateText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
   },
   locationSelector: {
@@ -710,7 +794,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
   },
   tabBar: {
@@ -773,7 +857,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   heroSummary: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   festivalBanner: {
@@ -786,7 +870,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   festivalBannerText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   sectionHeaderRow: {
@@ -797,7 +881,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   cardBox: {
@@ -874,7 +958,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   padaNakshatra: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   padaTime: {
@@ -888,7 +972,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   festivalsTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginBottom: 8,
   },
@@ -898,7 +982,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   festivalText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   muhuratTabContainer: {
@@ -921,7 +1005,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   itemType: {
@@ -935,32 +1019,60 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 30,
-    maxHeight: '50%',
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    maxHeight: '65%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
+  },
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  modalIconBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   locationOption: {
-    padding: 16,
-    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   locationOptionText: {
-    fontSize: 16,
+    fontSize: 11.5,
   },
 });
 

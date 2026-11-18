@@ -27,7 +27,7 @@ export const useYajmans = () => {
     address: item.address,
     category: Array.isArray(item.categoryId)
       ? item.categoryId.map((c: any) => c?.categoryName || c?.name || '').filter(Boolean).join(', ')
-      : (item.categoryId?.categoryName || item.categoryId?.name || item.category || 'Karmkand'),
+      : (item.categoryId?.categoryName || item.categoryId?.name || item.category || 'व्यक्तिगत'),
     categoryId: Array.isArray(item.categoryId)
       ? item.categoryId.map((c: any) => c?._id || c)
       : (item.categoryId?._id ? [item.categoryId._id] : (item.categoryId ? [item.categoryId] : [])),

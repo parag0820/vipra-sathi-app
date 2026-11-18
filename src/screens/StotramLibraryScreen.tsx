@@ -372,12 +372,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
   headerSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: MUTED_TEXT,
     marginTop: 1,
   },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   sectionTitle: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
     marginBottom: 10,
   },
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   listHeaderTitle: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   listHeaderCount: {
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   numberPillText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   itemTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   itemSubtitle: {
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyStateText: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: MUTED_TEXT,
   },
   bottomListNote: {

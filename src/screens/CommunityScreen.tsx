@@ -615,35 +615,43 @@ const CommunityScreen = () => {
       </Modal>
 
       {/* 8. Attachment Modal (📎) */}
-      <Modal visible={isAttachModalOpen} transparent animationType="slide" onRequestClose={() => setIsAttachModalOpen(false)}>
+      <Modal visible={isAttachModalOpen} transparent animationType="fade" onRequestClose={() => setIsAttachModalOpen(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setIsAttachModalOpen(false)}>
-          <View style={styles.attachModalCard}>
-            <Text style={styles.attachModalTitle}>सामग्री संलग्न करें</Text>
+          <TouchableOpacity activeOpacity={1} style={styles.attachModalCard}>
+            <View style={styles.attachModalHeader}>
+              <Text style={styles.attachModalTitle}>सामग्री संलग्न करें</Text>
+              <TouchableOpacity style={styles.modalCloseIconBtn} onPress={() => setIsAttachModalOpen(false)}>
+                <Icon name="x" size={16} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity style={styles.attachOptionRow} onPress={() => handleAttachOption('पीडीएफ दस्तावेज')}>
-              <View style={[styles.attachOptionIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Icon name="file-text" size={18} color="#DC2626" />
+              <View style={[styles.attachOptionIcon, { backgroundColor: '#FFF0ED' }]}>
+                <Icon name="file-text" size={17} color={PRIMARY_MAROON} />
               </View>
               <Text style={styles.attachOptionText}>पूजा विधि / सामग्री सूची (PDF)</Text>
+              <Icon name="chevron-right" size={16} color="#9CA3AF" />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.attachOptionRow} onPress={() => handleAttachOption('चित्र / फ़ोटो')}>
-              <View style={[styles.attachOptionIcon, { backgroundColor: '#DBEAFE' }]}>
-                <Icon name="image" size={18} color="#2563EB" />
+              <View style={[styles.attachOptionIcon, { backgroundColor: '#FFF0ED' }]}>
+                <Icon name="image" size={17} color={PRIMARY_MAROON} />
               </View>
               <Text style={styles.attachOptionText}>चित्र या दस्तावेज की फोटो</Text>
+              <Icon name="chevron-right" size={16} color="#9CA3AF" />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.attachOptionRow, { borderBottomWidth: 0 }]}
               onPress={() => handleAttachOption('ऑडियो रिकॉर्डिंग')}
             >
-              <View style={[styles.attachOptionIcon, { backgroundColor: '#FEF3C7' }]}>
-                <Icon name="mic" size={18} color="#D97706" />
+              <View style={[styles.attachOptionIcon, { backgroundColor: '#FFF0ED' }]}>
+                <Icon name="mic" size={17} color={PRIMARY_MAROON} />
               </View>
               <Text style={styles.attachOptionText}>मंत्र या पाठ ऑडियो</Text>
+              <Icon name="chevron-right" size={16} color="#9CA3AF" />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </View>
@@ -675,13 +683,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 16.5,
     fontWeight: '800',
     color: PRIMARY_MAROON,
     letterSpacing: -0.2,
   },
   headerSubtitle: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     color: '#6B7280',
     marginTop: 1,
   },
@@ -707,12 +715,12 @@ const styles = StyleSheet.create({
   },
   searchBarInput: {
     flex: 1,
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#1F2937',
     paddingVertical: 0,
   },
   searchCloseText: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: PRIMARY_MAROON,
     fontWeight: '600',
     marginLeft: 6,
@@ -732,7 +740,7 @@ const styles = StyleSheet.create({
   },
   tabBtnActive: {},
   tabBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     color: '#6B7280',
   },
@@ -873,7 +881,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   incomingMessageText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     lineHeight: 18,
     color: '#1F2937',
   },
@@ -973,7 +981,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   outgoingMessageText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     lineHeight: 18,
     color: '#1F2937',
   },
@@ -1048,7 +1056,7 @@ const styles = StyleSheet.create({
   },
   messageTextInput: {
     flex: 1,
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#1F2937',
     paddingVertical: 4,
     paddingHorizontal: 6,
@@ -1090,7 +1098,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   privateChatName: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#1F2937',
   },
@@ -1139,66 +1147,85 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   menuPopupCard: {
-    width: 200,
+    width: 220,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     paddingVertical: 6,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F3EFEA',
   },
   menuItemText: {
-    fontSize: 12,
-    color: '#374151',
+    fontSize: 11.5,
+    color: '#1F2937',
+    fontWeight: '500',
   },
   attachModalCard: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     padding: 18,
+  },
+  attachModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3EFEA',
   },
   attachModalTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 14,
+    fontWeight: '800',
+    color: PRIMARY_MAROON,
+  },
+  modalCloseIconBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#FAF7F3',
+    borderWidth: 1,
+    borderColor: '#EFECE8',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   attachOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F3EFEA',
   },
   attachOptionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   attachOptionText: {
-    fontSize: 12.5,
-    color: '#374151',
-    fontWeight: '500',
+    flex: 1,
+    fontSize: 11.5,
+    color: '#1F2937',
+    fontWeight: '600',
   },
 });
 

@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather as Icon } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../theme/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { Feather as Icon } from '@expo/vector-icons';
 import CustomDropdown from '../components/CustomDropdown';
 
 type EarningEntryRouteProp = RouteProp<RootStackParamList, 'EarningEntry'>;
+
+const PRIMARY_MAROON = '#8B1D1D';
 
 const EARNING_CATEGORIES = [
   'Dakshina',
@@ -24,11 +36,12 @@ const EARNING_CATEGORIES = [
 ];
 
 const EarningEntryScreen = () => {
-  const { colors } = useTheme();
+  const { isDark } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<EarningEntryRouteProp>();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isHi = i18n.language === 'hi' || i18n.language?.startsWith('hi');
 
   const defaultCategory = route.params?.defaultCategory || 'Dakshina';
 
@@ -42,10 +55,30 @@ const EarningEntryScreen = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Flat Maroon/White theme tokens
+  const screenBg = isDark ? '#121212' : '#FDFBF8';
+  const headerBg = isDark ? '#161616' : '#FFFFFF';
+  const cardBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const inputBg = isDark ? '#252525' : '#FAF7F3';
+  const roseBg = isDark ? '#2B1B1B' : '#FFF0ED';
+  const roseBorder = isDark ? '#5C2424' : '#F2D8D5';
+  const greenBg = isDark ? '#122920' : '#ECFDF5';
+  const greenText = isDark ? '#34D399' : '#166534';
+  const accentColor = isDark ? '#FCA5A5' : PRIMARY_MAROON;
+  const borderCol = isDark ? '#2D2D2D' : '#EFECE8';
+  const dividerCol = isDark ? '#262626' : '#F3EFEA';
+  const textPrimary = isDark ? '#F8E6CE' : '#1F2937';
+  const textMuted = isDark ? '#9CA3AF' : '#6B7280';
+  const errorColor = isDark ? '#F87171' : '#DC2626';
+
   const handleSave = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.source.trim()) newErrors.source = t('validation.required', 'This field is required');
-    if (!formData.amount.trim() || isNaN(Number(formData.amount))) newErrors.amount = t('validation.validAmount', 'Enter a valid amount');
+    if (!formData.source.trim()) {
+      newErrors.source = t('validation.required', isHi ? 'यह फ़ील्ड आवश्यक है' : 'This field is required');
+    }
+    if (!formData.amount.trim() || isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
+      newErrors.amount = t('validation.validAmount', isHi ? 'मान्य राशि दर्ज करें' : 'Enter a valid amount');
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -56,90 +89,217 @@ const EarningEntryScreen = () => {
     setTimeout(() => {
       setIsSubmitting(false);
       navigation.goBack();
-    }, 500);
+    }, 350);
   };
-
-  const renderInput = (
-    field: keyof typeof formData,
-    label: string,
-    placeholder: string,
-    options?: { keyboardType?: 'numeric' | 'default', multiline?: boolean, prefix?: string }
-  ) => (
-    <View style={styles.inputGroup}>
-      <Text style={[styles.label, { color: colors.text }]}>{label} {errors[field] && <Text style={styles.errorText}>*</Text>}</Text>
-      <View style={[
-        styles.inputWrapper,
-        { backgroundColor: colors.surface, borderColor: errors[field] ? '#ef4444' : colors.border },
-        options?.multiline && styles.textAreaWrapper
-      ]}>
-        {options?.prefix && <Text style={[styles.prefix, { color: colors.textLight }]}>{options.prefix}</Text>}
-        <TextInput
-          style={[
-            styles.input,
-            { color: colors.text },
-            options?.multiline && styles.textArea,
-            options?.prefix && { paddingLeft: 4 }
-          ]}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textLight}
-          value={formData[field]}
-          onChangeText={(text) => {
-            setFormData({ ...formData, [field]: text });
-            if (errors[field]) setErrors({ ...errors, [field]: '' });
-          }}
-          keyboardType={options?.keyboardType || 'default'}
-          multiline={options?.multiline}
-          textAlignVertical={options?.multiline ? 'top' : 'center'}
-        />
-      </View>
-      {errors[field] && <Text style={styles.errorMsg}>{errors[field]}</Text>}
-    </View>
-  );
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      style={[styles.container, { backgroundColor: screenBg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={colors.earning} translucent={true} />
-      
-      <View style={[styles.header, { backgroundColor: colors.earning, paddingTop: Math.max(insets.top, 14) }]}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Icon name="x" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: '#FFF' }]}>
-          {t('accountManager.addEarning', 'Add Earning')}
-        </Text>
-        <View style={styles.headerBtnPlaceholder} />
-      </View>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={headerBg}
+      />
 
-      <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContainer}>
-        
-        <View style={styles.section}>
-          {renderInput('amount', t('accountManager.amount', 'Amount'), '0.00', { keyboardType: 'numeric', prefix: '₹' })}
-          {renderInput('source', t('accountManager.sourceOfReceiving', 'Source of Receiving'), 'e.g. Yajman Name or Event')}
-          
-          <CustomDropdown
-            label={t('accountManager.category', 'Category')}
-            value={formData.category}
-            options={EARNING_CATEGORIES}
-            onSelect={(val) => setFormData({ ...formData, category: val })}
-          />
-
-          {renderInput('remark', t('accountManager.remark', 'Remark'), 'Add any notes (optional)', { multiline: true })}
+      {/* Flat Maroon/White Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: headerBg,
+            paddingTop: Math.max(insets.top, 12) + 4,
+            borderBottomColor: dividerCol,
+          },
+        ]}
+      >
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Icon name="chevron-left" size={22} color={accentColor} />
+          </TouchableOpacity>
+          <View>
+            <Text style={[styles.headerTitle, { color: accentColor }]}>
+              {isHi ? 'आय जोड़ें' : t('accountManager.addEarning', 'Add Earning')}
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: textMuted }]}>
+              {isHi ? 'दक्षिणा या अन्य आय दर्ज करें' : 'Record dakshina or other income'}
+            </Text>
+          </View>
         </View>
 
+        <View
+          style={[
+            styles.typeBadge,
+            { backgroundColor: greenBg, borderColor: isDark ? '#1F4A38' : '#A7F3D0' },
+          ]}
+        >
+          <Icon name="arrow-down" size={11} color={greenText} />
+          <Text style={[styles.typeBadgeText, { color: greenText }]}>
+            {isHi ? 'आय' : 'Income'}
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Amount & Source Card */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: cardBg, borderColor: borderCol },
+          ]}
+        >
+          {/* Amount */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: textPrimary }]}>
+              {isHi ? 'राशि *' : `${t('accountManager.amount', 'Amount')} *`}
+            </Text>
+            <View
+              style={[
+                styles.inputWrap,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: errors.amount ? errorColor : borderCol,
+                },
+              ]}
+            >
+              <Text style={[styles.prefix, { color: greenText }]}>₹</Text>
+              <TextInput
+                style={[styles.amountInput, { color: textPrimary }]}
+                placeholder="0"
+                placeholderTextColor={textMuted}
+                value={formData.amount}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, amount: text });
+                  if (errors.amount) setErrors({ ...errors, amount: '' });
+                }}
+                keyboardType="numeric"
+              />
+            </View>
+            {errors.amount ? (
+              <Text style={[styles.errorMsg, { color: errorColor }]}>
+                {errors.amount}
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Category Dropdown */}
+          <View style={styles.inputGroup}>
+            <CustomDropdown
+              label={isHi ? 'श्रेणी चुनें *' : `${t('accountManager.category', 'Select Category')} *`}
+              value={formData.category}
+              options={EARNING_CATEGORIES}
+              onSelect={(val) => setFormData({ ...formData, category: val })}
+            />
+          </View>
+
+          {/* Source of Receiving */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: textPrimary }]}>
+              {isHi
+                ? 'स्रोत / यजमान का नाम *'
+                : `${t('accountManager.sourceOfReceiving', 'Source of Receiving')} *`}
+            </Text>
+            <View
+              style={[
+                styles.inputWrap,
+                {
+                  backgroundColor: inputBg,
+                  borderColor: errors.source ? errorColor : borderCol,
+                },
+              ]}
+            >
+              <TextInput
+                style={[styles.input, { color: textPrimary }]}
+                placeholder={
+                  isHi ? 'उदा. शर्मा परिवार या गृह प्रवेश पूजा' : 'e.g. Yajman Name or Event'
+                }
+                placeholderTextColor={textMuted}
+                value={formData.source}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, source: text });
+                  if (errors.source) setErrors({ ...errors, source: '' });
+                }}
+              />
+            </View>
+            {errors.source ? (
+              <Text style={[styles.errorMsg, { color: errorColor }]}>
+                {errors.source}
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Remark */}
+          <View style={[styles.inputGroup, { marginBottom: 0 }]}>
+            <Text style={[styles.label, { color: textPrimary }]}>
+              {isHi ? 'टिप्पणी (वैकल्पिक)' : `${t('accountManager.remark', 'Remark')} (Optional)`}
+            </Text>
+            <View
+              style={[
+                styles.inputWrap,
+                styles.textAreaWrap,
+                { backgroundColor: inputBg, borderColor: borderCol },
+              ]}
+            >
+              <TextInput
+                style={[styles.input, styles.textArea, { color: textPrimary }]}
+                placeholder={isHi ? 'कोई अतिरिक्त विवरण लिखें...' : 'Add any notes (optional)'}
+                placeholderTextColor={textMuted}
+                value={formData.remark}
+                onChangeText={(text) => setFormData({ ...formData, remark: text })}
+                multiline
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+        </View>
       </ScrollView>
 
-      <View style={[styles.bottomActions, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
+      {/* Flat Footer Actions (Flush Bottom) */}
+      <View
+        style={[
+          styles.bottomActions,
+          {
+            backgroundColor: headerBg,
+            borderTopColor: borderCol,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: colors.earning }]}
+          activeOpacity={0.78}
+          style={[
+            styles.cancelBtn,
+            { backgroundColor: inputBg, borderColor: borderCol },
+          ]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.cancelBtnText, { color: textPrimary }]}>
+            {isHi ? 'रद्द करें' : 'Cancel'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.82}
+          style={[styles.saveBtn, { opacity: isSubmitting ? 0.65 : 1 }]}
           onPress={handleSave}
           disabled={isSubmitting}
         >
           <Text style={styles.saveBtnText}>
-            {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save Entry')}
+            {isSubmitting
+              ? isHi
+                ? 'सहेजा जा रहा है...'
+                : t('common.saving', 'Saving...')
+              : isHi
+              ? 'आय सहेजें'
+              : t('common.save', 'Save Entry')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -153,96 +313,134 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    paddingBottom: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
   },
-  headerBtn: {
-    padding: 4,
-  },
-  headerBtnPlaceholder: {
-    width: 32,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  scrollContent: {
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  scrollContainer: {
-    padding: 16,
-    paddingTop: 24,
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
   },
-  section: {
-    marginBottom: 24,
+  headerTitle: {
+    fontSize: 16.5,
+    fontWeight: '800',
+  },
+  headerSubtitle: {
+    fontSize: 10.5,
+    marginTop: 1,
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 99,
+    borderWidth: 1,
+  },
+  typeBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 14,
+    paddingBottom: 28,
+  },
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    marginLeft: 4,
+    fontSize: 11.5,
+    fontWeight: '700',
+    marginBottom: 6,
   },
-  inputWrapper: {
+  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 54,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    height: 42,
   },
-  textAreaWrapper: {
-    height: 100,
+  textAreaWrap: {
+    height: 88,
     alignItems: 'flex-start',
-    paddingTop: 12,
+    paddingTop: 10,
   },
   prefix: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 4,
+    fontSize: 15,
+    fontWeight: '800',
+    marginRight: 6,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    paddingVertical: 0,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    height: '100%',
+    fontSize: 12,
+    paddingVertical: 0,
   },
   textArea: {
     height: '100%',
   },
-  errorText: {
-    color: '#ef4444',
-  },
   errorMsg: {
-    color: '#ef4444',
-    fontSize: 12,
+    fontSize: 10.5,
     marginTop: 4,
-    marginLeft: 4,
   },
   bottomActions: {
-    padding: 16,
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderTopWidth: 1,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    gap: 8,
+  },
+  cancelBtn: {
+    flex: 1,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
   },
   saveBtn: {
-    height: 54,
-    borderRadius: 27,
+    flex: 1.4,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: PRIMARY_MAROON,
     justifyContent: 'center',
     alignItems: 'center',
   },
   saveBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFF',
-  }
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });
 
 export default EarningEntryScreen;

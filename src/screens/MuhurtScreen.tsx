@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   tabContainer: {
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   formLabel: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '500',
     flex: 1,
   },
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   formInputText: {
-    fontSize: 14,
+    fontSize: 12,
   },
   findButton: {
     borderRadius: 8,
@@ -751,14 +751,14 @@ const styles = StyleSheet.create({
   },
   findButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   searchResultsContainer: {
     marginTop: 20,
   },
   searchResultsTitle: {
-    fontSize: 16,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginBottom: 12,
   },
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   searchResultDate: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: 'bold',
   },
 });

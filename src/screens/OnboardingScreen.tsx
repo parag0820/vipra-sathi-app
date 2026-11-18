@@ -78,6 +78,12 @@ const OnboardingScreen = () => {
 
   // Helper to map dynamic API items into SlideData
   const mapApiScreensToSlides = (apiItems: WelcomeScreenItem[]): SlideData[] => {
+    const defaultDescriptions = [
+      'पूजा विधि, स्तोत्र, हवन और आरती।\nजो चाहिए, आसानी से खोजें और पढ़ें।',
+      'पंचांग देखें, कुंडली बनाएँ और मिलान करें।\nयजमान के लिए मुहूर्त भी खोजें।',
+      'यजमान, बुकिंग, सामग्री और आय–व्यय।\nसब संभालें, अपने तरीके से।',
+    ];
+
     return apiItems.map((item, idx) => {
       let imgSource: any = FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length];
       if (item.image && typeof item.image === 'string' && item.image.trim().length > 0) {
@@ -86,12 +92,30 @@ const OnboardingScreen = () => {
           : { uri: `data:image/jpeg;base64,${item.image}` };
       }
 
+      // Ensure shorter name is category badge and longer sentence is main headline
+      const rawTitle = item.title?.trim() || '';
+      const rawSubtitle = item.subtitle?.trim() || '';
+      let category = rawSubtitle;
+      let heading = rawTitle;
+
+      if (rawTitle && rawSubtitle) {
+        if (rawTitle.length <= rawSubtitle.length) {
+          category = rawTitle;
+          heading = rawSubtitle;
+        } else {
+          category = rawSubtitle;
+          heading = rawTitle;
+        }
+      }
+
+      const description = item.description?.trim() || defaultDescriptions[idx % defaultDescriptions.length];
+
       return {
         id: item._id || item.id || `${idx + 1}`,
         screenNumber: item.screenNumber || idx + 1,
-        subtitle: item.subtitle || '',
-        title: item.title || '',
-        description: item.description || '',
+        subtitle: category,
+        title: heading,
+        description,
         image: imgSource,
       };
     });
@@ -371,7 +395,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   skipText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     color: '#374151',
   },
@@ -383,7 +407,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   langSelectorText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '500',
     color: '#4B5563',
   },
@@ -418,14 +442,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   categoryText: {
-    fontSize: 13.5,
+    fontSize: 11.5,
     fontWeight: '600',
     color: PRIMARY_MAROON,
     marginBottom: 6,
     textAlign: 'left',
   },
   mainTitle: {
-    fontSize: 18,
+    fontSize: 13.5,
     fontWeight: 'bold',
     color: '#1F2937',
     // lineHeight: 32,
@@ -433,8 +457,8 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   descriptionText: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 12,
+    lineHeight: 18,
     color: '#4B5563',
     textAlign: 'justify',
     marginBottom: 4,
@@ -467,28 +491,33 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   langModalCard: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     padding: 18,
   },
   langModalTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 14,
+    fontSize: 14,
+    fontWeight: '800',
+    color: PRIMARY_MAROON,
+    paddingBottom: 12,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3EFEA',
   },
   langModalOption: {
     flexDirection: 'row',
@@ -496,19 +525,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
     marginBottom: 6,
   },
   langModalOptionActive: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: '#FFF0ED',
+    borderColor: '#F6D8D5',
   },
   langOptionLabel: {
-    fontSize: 14,
+    fontSize: 12.5,
     color: '#374151',
+    fontWeight: '500',
   },
   langOptionLabelActive: {
     color: PRIMARY_MAROON,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
 

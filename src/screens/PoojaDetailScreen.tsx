@@ -23,6 +23,7 @@ import { usePoojaLibrary } from '../hooks/usePoojaLibrary';
 import { MOCK_POOJAS } from '../data/mockPoojas';
 import { PoojaPersonalNote, Pooja } from '../types/pooja';
 import { poojaApi } from '../api/pooja';
+import { isValidMongoId } from '../utils/objectId';
 import RichHtmlContent from '../components/RichHtmlContent';
 import DynamicSection from '../components/DynamicSection';
 import {
@@ -105,6 +106,9 @@ const PoojaDetailScreen = () => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalContent, setModalContent] = useState('');
   const [modalIsPinned, setModalIsPinned] = useState(false);
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [isLoadingNoteDetail, setIsLoadingNoteDetail] = useState(false);
+  const hasEditedModalFieldsRef = useRef(false);
 
   // Card Context Menu state
   const [activeMenuNoteId, setActiveMenuNoteId] = useState<string | null>(null);
@@ -127,6 +131,12 @@ const PoojaDetailScreen = () => {
     favorites,
     toggleFavorite,
     personalNotes,
+    notesLoading,
+    notesRefreshing,
+    notesError,
+    isCloudNotesActive,
+    refreshPersonalNotes,
+    fetchSingleNoteDetail,
     addPersonalNote,
     updatePersonalNote,
     deletePersonalNote,
@@ -145,25 +155,47 @@ const PoojaDetailScreen = () => {
 
   // Handle open Add Note modal
   const handleOpenAddNote = () => {
+    hasEditedModalFieldsRef.current = false;
     setEditingNote(null);
     setModalTitle('');
     setModalContent('');
     setModalIsPinned(false);
+    setIsLoadingNoteDetail(false);
     setIsNoteModalOpen(true);
   };
 
-  // Handle open Edit Note modal
-  const handleOpenEditNote = (note: PoojaPersonalNote) => {
+  // Handle open Edit Note modal (also fetches latest single note detail via GET /pooja/notes/detail/:noteId)
+  const handleOpenEditNote = async (note: PoojaPersonalNote) => {
     setActiveMenuNoteId(null);
+    hasEditedModalFieldsRef.current = false;
     setEditingNote(note);
     setModalTitle(note.title);
     setModalContent(note.content);
     setModalIsPinned(note.isPinned);
     setIsNoteModalOpen(true);
+
+    if (note.isApiNote && isCloudNotesActive) {
+      try {
+        setIsLoadingNoteDetail(true);
+        const latest = await fetchSingleNoteDetail(note.id);
+        if (latest && !hasEditedModalFieldsRef.current) {
+          setEditingNote(latest);
+          setModalTitle(latest.title);
+          setModalContent(latest.content);
+          setModalIsPinned(latest.isPinned);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch single note detail:', err);
+      } finally {
+        setIsLoadingNoteDetail(false);
+      }
+    }
   };
 
   // Handle save Note (both create and update)
   const handleSaveModalNote = async () => {
+    if (isSavingNote) return;
+
     if (!modalTitle.trim()) {
       Toast.show({
         type: 'error',
@@ -173,32 +205,48 @@ const PoojaDetailScreen = () => {
       return;
     }
 
-    if (editingNote) {
-      await updatePersonalNote(
-        editingNote.id,
-        modalTitle,
-        modalContent,
-        modalIsPinned
-      );
+    if (!modalContent.trim()) {
       Toast.show({
-        type: 'success',
-        text1: 'बदलाव सहेजे गए',
-        text2: 'नोट सफलतापूर्वक अपडेट हो गया है।',
+        type: 'error',
+        text1: 'विवरण आवश्यक है',
+        text2: 'कृपया नोट का विवरण दर्ज करें।',
       });
-    } else {
-      await addPersonalNote(modalTitle, modalContent, modalIsPinned);
-      Toast.show({
-        type: 'success',
-        text1: 'नोट सहेजा गया',
-        text2: 'नया निजी नोट जोड़ दिया गया है।',
-      });
+      return;
     }
 
-    setIsNoteModalOpen(false);
-    setEditingNote(null);
-    setModalTitle('');
-    setModalContent('');
-    setModalIsPinned(false);
+    try {
+      setIsSavingNote(true);
+      if (editingNote) {
+        await updatePersonalNote(
+          editingNote.id,
+          modalTitle,
+          modalContent,
+          modalIsPinned
+        );
+        Toast.show({
+          type: 'success',
+          text1: 'बदलाव सहेजे गए',
+          text2: 'नोट सफलतापूर्वक अपडेट हो गया है।',
+        });
+      } else {
+        await addPersonalNote(modalTitle, modalContent, modalIsPinned);
+        Toast.show({
+          type: 'success',
+          text1: 'नोट सहेजा गया',
+          text2: 'नया निजी नोट जोड़ दिया गया है।',
+        });
+      }
+
+      setIsNoteModalOpen(false);
+      setEditingNote(null);
+      setModalTitle('');
+      setModalContent('');
+      setModalIsPinned(false);
+    } catch (err) {
+      console.error('Failed to save pooja note:', err);
+    } finally {
+      setIsSavingNote(false);
+    }
   };
 
   // Handle Delete note with confirmation
@@ -213,12 +261,16 @@ const PoojaDetailScreen = () => {
           text: 'हटाएँ',
           style: 'destructive',
           onPress: async () => {
-            await deletePersonalNote(noteId);
-            Toast.show({
-              type: 'info',
-              text1: 'नोट हटाया गया',
-              text2: 'नोट सफलतापूर्वक हटा दिया गया है।',
-            });
+            try {
+              await deletePersonalNote(noteId);
+              Toast.show({
+                type: 'info',
+                text1: 'नोट हटाया गया',
+                text2: 'नोट सफलतापूर्वक हटा दिया गया है।',
+              });
+            } catch (err) {
+              console.error('Failed to delete pooja note:', err);
+            }
           },
         },
       ],
@@ -379,7 +431,12 @@ const PoojaDetailScreen = () => {
 
               {/* Grid / Menu icon button (opens Personal Notes) */}
               <TouchableOpacity
-                onPress={() => setViewMode('notes')}
+                onPress={() => {
+                  setViewMode('notes');
+                  if (isCloudNotesActive) {
+                    refreshPersonalNotes(false);
+                  }
+                }}
                 style={styles.headerActionButton}
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                 activeOpacity={0.7}
@@ -834,10 +891,18 @@ const PoojaDetailScreen = () => {
           style={styles.contentScrollView}
           contentContainerStyle={[
             styles.notesContentContainer,
-            { paddingBottom: Math.max(insets.bottom + 30, 60) },
+            { paddingBottom: 28 },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={notesRefreshing}
+              onRefresh={() => refreshPersonalNotes(true)}
+              colors={['#991B1B']}
+              tintColor={isDark ? '#FCA5A5' : '#991B1B'}
+            />
+          }
         >
           {/* Breadcrumb */}
           <Text
@@ -862,9 +927,30 @@ const PoojaDetailScreen = () => {
                 { color: isDark ? '#9CA3AF' : '#4B5563' },
               ]}
             >
-              ये नोट्स केवल आपको दिखाई देंगे।
+              {isCloudNotesActive || !isValidMongoId(pooja.id)
+                ? 'ये नोट्स केवल आपको दिखाई देंगे।'
+                : 'अतिथि / ऑफ़लाइन मोड — क्लाउड सिंक के लिए लॉगिन करें।'}
             </Text>
           </View>
+
+          {notesError && (
+            <View
+              style={[
+                styles.notesErrorBanner,
+                {
+                  backgroundColor: isDark ? '#2A1B1B' : '#FEF2F2',
+                  borderColor: isDark ? '#5C2323' : '#FEE2E2',
+                },
+              ]}
+            >
+              <Text style={[styles.notesErrorText, { color: isDark ? '#FCA5A5' : '#991B1B' }]}>
+                {notesError}
+              </Text>
+              <TouchableOpacity onPress={() => refreshPersonalNotes(false)}>
+                <Text style={styles.notesRetryText}>पुनः प्रयास करें</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Search bar */}
           <View
@@ -936,7 +1022,19 @@ const PoojaDetailScreen = () => {
           </View>
 
           {/* List of Notes */}
-          {filteredNotes.length === 0 ? (
+          {notesLoading && filteredNotes.length === 0 ? (
+            <View style={styles.notesLoadingBox}>
+              <ActivityIndicator size="small" color="#991B1B" />
+              <Text
+                style={[
+                  styles.notesLoadingText,
+                  { color: isDark ? '#9CA3AF' : '#6B7280' },
+                ]}
+              >
+                पूजा के नोट्स लोड हो रहे हैं...
+              </Text>
+            </View>
+          ) : filteredNotes.length === 0 ? (
             <View style={styles.emptyNotesContainer}>
               <Icon
                 name="file-text"
@@ -968,7 +1066,13 @@ const PoojaDetailScreen = () => {
               const isMenuOpen = activeMenuNoteId === item.id;
 
               return (
-                <View key={item.id} style={styles.cardWrapper}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.cardWrapper,
+                    isMenuOpen && styles.cardWrapperActive,
+                  ]}
+                >
                   <TouchableOpacity
                     style={[
                       styles.noteCard,
@@ -1169,9 +1273,19 @@ const PoojaDetailScreen = () => {
         visible={isNoteModalOpen}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setIsNoteModalOpen(false)}
+        onRequestClose={() => {
+          if (!isSavingNote) {
+            setIsNoteModalOpen(false);
+          }
+        }}
       >
-        <TouchableWithoutFeedback onPress={() => setIsNoteModalOpen(false)}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            if (!isSavingNote) {
+              setIsNoteModalOpen(false);
+            }
+          }}
+        >
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={() => { }}>
               <KeyboardAvoidingView
@@ -1207,8 +1321,12 @@ const PoojaDetailScreen = () => {
 
                     {/* Close button */}
                     <TouchableOpacity
+                      disabled={isSavingNote}
                       onPress={() => setIsNoteModalOpen(false)}
-                      style={styles.modalCloseButton}
+                      style={[
+                        styles.modalCloseButton,
+                        isSavingNote && styles.modalActionDisabled,
+                      ]}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                       <Icon
@@ -1234,6 +1352,19 @@ const PoojaDetailScreen = () => {
                     >
                       केवल आपको दिखाई देगा
                     </Text>
+                    {isLoadingNoteDetail && (
+                      <View style={styles.modalDetailLoadingRow}>
+                        <ActivityIndicator size="small" color="#991B1B" />
+                        <Text
+                          style={[
+                            styles.modalDetailLoadingText,
+                            { color: isDark ? '#FCA5A5' : '#991B1B' },
+                          ]}
+                        >
+                          नोट लोड हो रहा है...
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
                   {/* Field 1: Title */}
@@ -1256,8 +1387,12 @@ const PoojaDetailScreen = () => {
                     ]}
                     placeholder="नोट का शीर्षक लिखें"
                     placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                    editable={!isSavingNote}
                     value={modalTitle}
-                    onChangeText={setModalTitle}
+                    onChangeText={text => {
+                      hasEditedModalFieldsRef.current = true;
+                      setModalTitle(text);
+                    }}
                   />
 
                   {/* Field 2: Content */}
@@ -1286,13 +1421,21 @@ const PoojaDetailScreen = () => {
                     multiline={true}
                     numberOfLines={6}
                     textAlignVertical="top"
+                    editable={!isSavingNote}
                     value={modalContent}
-                    onChangeText={setModalContent}
+                    onChangeText={text => {
+                      hasEditedModalFieldsRef.current = true;
+                      setModalContent(text);
+                    }}
                   />
 
                   {/* Checkbox: Pin Note */}
                   <TouchableOpacity
-                    style={styles.pinCheckboxRow}
+                    disabled={isSavingNote}
+                    style={[
+                      styles.pinCheckboxRow,
+                      isSavingNote && styles.modalActionDisabled,
+                    ]}
                     onPress={() => setModalIsPinned(!modalIsPinned)}
                     activeOpacity={0.7}
                   >
@@ -1344,9 +1487,11 @@ const PoojaDetailScreen = () => {
                   <View style={styles.modalActionsRow}>
                     {/* Cancel Button */}
                     <TouchableOpacity
+                      disabled={isSavingNote}
                       style={[
                         styles.modalCancelBtn,
                         { borderColor: isDark ? '#4B5563' : '#D1D5DB' },
+                        isSavingNote && styles.modalActionDisabled,
                       ]}
                       onPress={() => setIsNoteModalOpen(false)}
                       activeOpacity={0.7}
@@ -1363,18 +1508,24 @@ const PoojaDetailScreen = () => {
 
                     {/* Save Button */}
                     <TouchableOpacity
+                      disabled={isSavingNote}
                       style={[
                         styles.modalSaveBtn,
                         {
                           backgroundColor: isDark ? '#7F1D1D' : '#991B1B',
                         },
+                        isSavingNote && styles.modalActionDisabled,
                       ]}
                       onPress={handleSaveModalNote}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.modalSaveText}>
-                        {isEditing ? 'बदलाव सहेजें' : 'नोट सहेजें'}
-                      </Text>
+                      {isSavingNote ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.modalSaveText}>
+                          {isEditing ? 'बदलाव सहेजें' : 'नोट सहेजें'}
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1449,24 +1600,24 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16.5,
     fontWeight: 'bold',
-    marginRight: 16,
+    marginRight: 10,
   },
   headerActionsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     flexShrink: 0,
   },
   fontZoomGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 8,
-    gap: 14,
+    marginLeft: 4,
+    gap: 10,
   },
   zoomActionButton: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1548,7 +1699,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   stateText: {
-    fontSize: 13,
+    fontSize: 11.5,
     marginTop: 10,
     fontWeight: '500',
   },
@@ -1562,7 +1713,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   errorStateTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -1575,7 +1726,7 @@ const styles = StyleSheet.create({
   },
   retryActionBtnText: {
     color: '#FFFFFF',
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
   },
   contentHighlightCard: {
@@ -1615,7 +1766,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pdfTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   pdfSubtitle: {
@@ -1637,7 +1788,7 @@ const styles = StyleSheet.create({
   },
   samagriBulletDot: {
     marginRight: 8,
-    lineHeight: 22,
+    lineHeight: 18,
   },
   samagriItemText: {
     flex: 1,
@@ -1662,22 +1813,53 @@ const styles = StyleSheet.create({
   },
   notesContentContainer: {
     paddingHorizontal: 16,
-    paddingTop: 5,
+    paddingTop: 12,
   },
   notesBreadcrumbText: {
     fontSize: 11.5,
-    marginBottom: 6,
+    marginBottom: 8,
     fontWeight: '500',
   },
   privacyBannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 5,
+    marginBottom: 12,
   },
   privacyBannerText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '400',
+  },
+  notesErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  notesErrorText: {
+    flex: 1,
+    fontSize: 11.5,
+    fontWeight: '500',
+  },
+  notesRetryText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#991B1B',
+  },
+  notesLoadingBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    gap: 10,
+  },
+  notesLoadingText: {
+    fontSize: 11.5,
+    fontWeight: '500',
   },
   notesSearchContainer: {
     flexDirection: 'row',
@@ -1686,14 +1868,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 40,
-    marginBottom: 5,
+    marginBottom: 12,
   },
   searchIcon: {
     marginRight: 8,
   },
   notesSearchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     paddingVertical: 0,
   },
   notesSummaryRow: {
@@ -1703,7 +1885,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   notesCountText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   sortButton: {
@@ -1716,14 +1898,18 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     position: 'relative',
-    marginBottom: 5,
+    marginBottom: 10,
     zIndex: 1,
   },
+  cardWrapperActive: {
+    zIndex: 999,
+    elevation: 12,
+  },
   noteCard: {
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    padding: 5,
-
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   noteCardHeaderRow: {
     flexDirection: 'row',
@@ -1739,7 +1925,7 @@ const styles = StyleSheet.create({
     paddingRight: 6,
   },
   noteCardTitle: {
-    fontSize: 14.5,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   pinnedBadgeRow: {
@@ -1760,7 +1946,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   noteCardContent: {
-    fontSize: 13,
+    fontSize: 11.5,
     lineHeight: 19,
     marginTop: 5,
   },
@@ -1779,7 +1965,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   returnLinkText: {
-    fontSize: 13.5,
+    fontSize: 11.5,
     fontWeight: 'bold',
   },
   emptyNotesContainer: {
@@ -1789,7 +1975,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyNotesTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '500',
   },
   emptyAddBtn: {
@@ -1800,7 +1986,7 @@ const styles = StyleSheet.create({
   },
   emptyAddBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
 
@@ -1830,7 +2016,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contextMenuText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   contextDivider: {
@@ -1854,12 +2040,9 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     padding: 18,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -1870,7 +2053,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalMainTitle: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   modalSubtitle: {
@@ -1887,7 +2070,20 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   modalPrivacyText: {
-    fontSize: 12,
+    fontSize: 11.5,
+  },
+  modalDetailLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 'auto',
+  },
+  modalDetailLoadingText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  modalActionDisabled: {
+    opacity: 0.6,
   },
   inputLabel: {
     fontSize: 12,
@@ -1902,14 +2098,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    fontSize: 13.5,
+    fontSize: 12,
   },
   modalTextArea: {
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    fontSize: 13.5,
+    fontSize: 12,
     minHeight: 110,
   },
   pinCheckboxRow: {
@@ -1919,7 +2115,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pinCheckboxText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   modalMetaRow: {
@@ -1949,7 +2145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalCancelText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   modalSaveBtn: {
@@ -1961,7 +2157,7 @@ const styles = StyleSheet.create({
   },
   modalSaveText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: 'bold',
   },
 });

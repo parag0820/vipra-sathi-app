@@ -474,13 +474,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 16.5,
     fontWeight: '800',
     color: PRIMARY_MAROON,
     letterSpacing: -0.2,
   },
   headerSubtitle: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     color: '#6B7280',
     marginTop: 1,
   },
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   cardHeaderTitle: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: 40,
     paddingHorizontal: 10,
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#1F2937',
   },
   textArea: {
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     borderColor: '#FCA5A5',
   },
   categoryPillText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '500',
     color: '#4B5563',
   },
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   datePickerText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     color: '#1F2937',
   },
   placeholderText: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtnText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
     color: '#4B5563',
   },
@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
   },

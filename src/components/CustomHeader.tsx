@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   titleText: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
     flexShrink: 1,
   },

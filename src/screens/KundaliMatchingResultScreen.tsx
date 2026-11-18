@@ -356,37 +356,47 @@ const KundaliMatchingResultScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 3 Segmented Tabs */}
-        <View style={[styles.segmentedTabsWrap, { backgroundColor: isDark ? '#262626' : '#F9FAFB' }]}>
-          <TouchableOpacity
-            style={[styles.segmentBtn, activeTab === 'guna' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('guna')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.segmentBtnText, activeTab === 'guna' && styles.segmentBtnTextActive]}>
-              गुण मिलान
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.segmentBtn, activeTab === 'chart' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('chart')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.segmentBtnText, activeTab === 'chart' && styles.segmentBtnTextActive]}>
-              ग्रह एवं कुंडली
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.segmentBtn, activeTab === 'analysis' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('analysis')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.segmentBtnText, activeTab === 'analysis' && styles.segmentBtnTextActive]}>
-              विस्तृत विश्लेषण
-            </Text>
-          </TouchableOpacity>
+        {/* 3 Underline Tabs (Panchang-style Tab Bar) */}
+        <View style={[styles.tabBar, { borderBottomColor: isDark ? '#2D2D2D' : BORDER_COLOR }]}>
+          <View style={styles.tabContainer}>
+            {[
+              { id: 'guna' as const, label: 'गुण मिलान' },
+              { id: 'chart' as const, label: 'ग्रह एवं कुंडली' },
+              { id: 'analysis' as const, label: 'विस्तृत विश्लेषण' },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <TouchableOpacity
+                  key={tab.id}
+                  style={[
+                    styles.tabBtn,
+                    isActive && { borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON },
+                  ]}
+                  onPress={() => setActiveTab(tab.id)}
+                  activeOpacity={0.75}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      isActive && styles.tabTextActive,
+                      {
+                        color: isActive
+                          ? isDark
+                            ? '#FCA5A5'
+                            : PRIMARY_MAROON
+                          : isDark
+                            ? '#9CA3AF'
+                            : MUTED_TEXT,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {/* TAB 1: गुण मिलान */}
@@ -719,24 +729,64 @@ const KundaliMatchingResultScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Chart Type Toggle */}
-            <View style={styles.chartTypeToggle}>
-              <TouchableOpacity
-                style={[styles.chartTypeBtn, chartType === 'lagna' && styles.chartTypeBtnActive]}
-                onPress={() => setChartType('lagna')}
-              >
-                <Text style={[styles.chartTypeText, chartType === 'lagna' && styles.chartTypeTextActive]}>
-                  लग्न कुंडली
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.chartTypeBtn, chartType === 'navamsha' && styles.chartTypeBtnActive]}
-                onPress={() => setChartType('navamsha')}
-              >
-                <Text style={[styles.chartTypeText, chartType === 'navamsha' && styles.chartTypeTextActive]}>
-                  नवांश कुंडली (D9)
-                </Text>
-              </TouchableOpacity>
+            {/* Chart Type Tabs (Panchang-style Underline) */}
+            <View style={[styles.chartTypeTabBar, { borderBottomColor: isDark ? '#2D2D2D' : BORDER_COLOR }]}>
+              <View style={styles.chartTypeToggle}>
+                <TouchableOpacity
+                  style={[
+                    styles.chartTypeBtn,
+                    chartType === 'lagna' && { borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON },
+                  ]}
+                  onPress={() => setChartType('lagna')}
+                  activeOpacity={0.75}
+                >
+                  <Text
+                    style={[
+                      styles.chartTypeText,
+                      chartType === 'lagna' && styles.chartTypeTextActive,
+                      {
+                        color:
+                          chartType === 'lagna'
+                            ? isDark
+                              ? '#FCA5A5'
+                              : PRIMARY_MAROON
+                            : isDark
+                              ? '#9CA3AF'
+                              : MUTED_TEXT,
+                      },
+                    ]}
+                  >
+                    लग्न कुंडली
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.chartTypeBtn,
+                    chartType === 'navamsha' && { borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON },
+                  ]}
+                  onPress={() => setChartType('navamsha')}
+                  activeOpacity={0.75}
+                >
+                  <Text
+                    style={[
+                      styles.chartTypeText,
+                      chartType === 'navamsha' && styles.chartTypeTextActive,
+                      {
+                        color:
+                          chartType === 'navamsha'
+                            ? isDark
+                              ? '#FCA5A5'
+                              : PRIMARY_MAROON
+                            : isDark
+                              ? '#9CA3AF'
+                              : MUTED_TEXT,
+                      },
+                    ]}
+                  >
+                    नवांश कुंडली (D9)
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Vedic Chart Canvas */}
@@ -886,12 +936,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
   headerSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: MUTED_TEXT,
     marginTop: 1,
   },
@@ -907,7 +957,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   changeDetailsText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '600',
     color: PRIMARY_MAROON,
   },
@@ -1024,31 +1074,33 @@ const styles = StyleSheet.create({
     backgroundColor: BORDER_COLOR,
     marginHorizontal: 8,
   },
-  segmentedTabsWrap: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    padding: 3,
+  tabBar: {
+    borderBottomWidth: 1,
     marginBottom: 12,
   },
-  segmentBtn: {
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  tabBtn: {
     flex: 1,
-    paddingVertical: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
+    paddingVertical: 9,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginHorizontal: 2,
   },
-  segmentBtnActive: {
-    backgroundColor: PRIMARY_MAROON,
-  },
-  segmentBtnText: {
+  tabText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#4B5563',
+    color: '#6B7280',
   },
-  segmentBtnTextActive: {
-    color: '#FFFFFF',
+  tabTextActive: {
+    color: PRIMARY_MAROON,
     fontWeight: '700',
   },
   speedChartCard: {
@@ -1161,7 +1213,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scoreSubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     color: MUTED_TEXT,
     marginTop: 2,
   },
@@ -1182,7 +1234,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   sectionHeading: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
     marginBottom: 8,
     marginTop: 4,
@@ -1273,7 +1325,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   detailBullet: {
-    fontSize: 14,
+    fontSize: 12.5,
     color: PRIMARY_MAROON,
     marginRight: 6,
   },
@@ -1375,28 +1427,32 @@ const styles = StyleSheet.create({
     color: PRIMARY_MAROON,
     fontWeight: '700',
   },
+  chartTypeTabBar: {
+    borderBottomWidth: 1,
+    marginBottom: 12,
+  },
   chartTypeToggle: {
     flexDirection: 'row',
-    marginBottom: 10,
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
   chartTypeBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: 6,
-    backgroundColor: '#F3F4F6',
-  },
-  chartTypeBtnActive: {
-    backgroundColor: PRIMARY_MAROON,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginHorizontal: 2,
   },
   chartTypeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#4B5563',
+    fontSize: 11.5,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   chartTypeTextActive: {
-    color: '#FFFFFF',
+    color: PRIMARY_MAROON,
     fontWeight: '700',
   },
   chartContainerCard: {
@@ -1416,7 +1472,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   analysisCardTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
     marginBottom: 8,

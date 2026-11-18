@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     color: '#6B7280',
     marginBottom: 20,
     textAlign: 'center',
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   loginButtonIcon: {
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   orText: {
     paddingHorizontal: 16,
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 12.5,
   },
   googleButton: {
     width: '100%',
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   guestButtonText: {
     color: '#800000',
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   guestButtonIcon: {
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: '#1E293B',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
   footerContainer: {

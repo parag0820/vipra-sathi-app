@@ -1,32 +1,78 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { Feather as Icon } from '@expo/vector-icons';
 import { CalendarEvent, EventStatus } from '../types/calendar';
 import { generateMockCalendarEvents } from '../data/mockCalendar';
 import EventModal from '../components/EventModal';
-import CustomHeader from '../components/CustomHeader';
+
+const PRIMARY_MAROON = '#8B1D1D';
+const SOFT_ROSE_BG = '#FFF0ED';
+const CARD_BORDER = '#EFECE8';
+const ROW_DIVIDER = '#F3EFEA';
+const WARM_BG = '#FDFBF8';
+const SUBTLE_CREAM = '#FAF7F3';
+const DARK_TEXT = '#1F2937';
+const MUTED_TEXT = '#6B7280';
 
 const STATUS_COLORS: Record<EventStatus, string> = {
-  upcoming: '#16A34A',
+  upcoming: '#8B1D1D',
   done: '#2563EB',
   cancelled: '#DC2626',
-  festival: '#F59E0B',
+  festival: '#D97706',
+};
+
+const STATUS_BG_LIGHT: Record<EventStatus, string> = {
+  upcoming: '#FFF0ED',
+  done: '#EFF6FF',
+  cancelled: '#FEF2F2',
+  festival: '#FEF3C7',
+};
+
+const STATUS_LABELS_HI: Record<EventStatus, string> = {
+  upcoming: 'आगामी',
+  done: 'पूर्ण',
+  cancelled: 'रद्द',
+  festival: 'पर्व',
 };
 
 const CalendarScreen = () => {
-  const { colors, isDark } = useTheme();
-  const { t } = useTranslation();
+  const { isDark, setTheme } = useTheme();
+  const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const isHi = i18n.language === 'hi';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const [events, setEvents] = useState<CalendarEvent[]>(generateMockCalendarEvents());
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [currentMonth, setCurrentMonth] = useState<string>(new Date().toISOString().split('T')[0].substring(0, 7));
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [currentMonth, setCurrentMonth] = useState<string>(todayStr.substring(0, 7));
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
   const selectedEvents = events.filter(e => e.date === selectedDate);
+
+  const bgScreen = isDark ? '#121212' : WARM_BG;
+  const surfaceBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const subtleBg = isDark ? '#252525' : SUBTLE_CREAM;
+  const borderDynamic = isDark ? '#2D2D2D' : CARD_BORDER;
+  const dividerDynamic = isDark ? '#2A2A2A' : ROW_DIVIDER;
+  const accentColor = isDark ? '#FCA5A5' : PRIMARY_MAROON;
+  const textPrimary = isDark ? '#F8E6CE' : DARK_TEXT;
+  const textSecondary = isDark ? '#9CA3AF' : MUTED_TEXT;
 
   const markedDates = useMemo(() => {
     const marked: Record<string, any> = {};
@@ -42,19 +88,32 @@ const CalendarScreen = () => {
     });
 
     if (marked[selectedDate]) {
-      marked[selectedDate] = { ...marked[selectedDate], selected: true, selectedColor: colors.primary + '30' };
+      marked[selectedDate] = {
+        ...marked[selectedDate],
+        selected: true,
+        selectedColor: PRIMARY_MAROON,
+        selectedTextColor: '#FFFFFF',
+      };
     } else {
-      marked[selectedDate] = { selected: true, selectedColor: colors.primary + '30' };
+      marked[selectedDate] = {
+        selected: true,
+        selectedColor: PRIMARY_MAROON,
+        selectedTextColor: '#FFFFFF',
+      };
     }
 
     return marked;
-  }, [events, selectedDate, colors]);
+  }, [events, selectedDate]);
 
   const monthlyStats = useMemo(() => {
     const monthEvents = events.filter(e => e.date.startsWith(currentMonth));
     const totalBookings = monthEvents.length;
     const busyDays = new Set(monthEvents.map(e => e.date)).size;
-    const daysInMonth = new Date(parseInt(currentMonth.split('-')[0]), parseInt(currentMonth.split('-')[1]), 0).getDate();
+    const daysInMonth = new Date(
+      parseInt(currentMonth.split('-')[0], 10),
+      parseInt(currentMonth.split('-')[1], 10),
+      0
+    ).getDate();
     const freeDays = daysInMonth - busyDays;
 
     return { totalBookings, busyDays, freeDays };
@@ -62,7 +121,7 @@ const CalendarScreen = () => {
 
   const handleSaveEvent = (eventData: Omit<CalendarEvent, 'id'>) => {
     if (editingEvent) {
-      setEvents(events.map(e => e.id === editingEvent.id ? { ...e, ...eventData } : e));
+      setEvents(events.map(e => (e.id === editingEvent.id ? { ...e, ...eventData } : e)));
     } else {
       const newEvent: CalendarEvent = {
         ...eventData,
@@ -86,186 +145,309 @@ const CalendarScreen = () => {
     setModalVisible(true);
   };
 
-  return (
-    <View style={[styles.mainContainer, { backgroundColor: colors.primary }]}>
-      <CustomHeader
-        title={t('tabs.calendar', 'Calendar')}
-        icon="calendar"
-        showThemeToggle={true}
-        headerBgColor={colors.primary}
-        headerTextColor="#FFF"
-      />
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+  const handleGoToToday = () => {
+    const now = new Date().toISOString().split('T')[0];
+    setSelectedDate(now);
+    setCurrentMonth(now.substring(0, 7));
+  };
 
-          {/* Calendar Grid */}
-          <View style={[styles.calendarWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Calendar
-              key={isDark ? 'dark' : 'light'}
-              current={selectedDate}
-              onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
-              onMonthChange={(month: DateData) => setCurrentMonth(month.dateString.substring(0, 7))}
-              markingType={'multi-dot'}
-              markedDates={markedDates}
-              theme={({
+  const formattedSelectedDate = useMemo(() => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return selectedDate;
+    return d.toLocaleDateString(isHi ? 'hi-IN' : 'en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, [selectedDate, isHi]);
+
+  return (
+    <View style={[styles.mainContainer, { backgroundColor: bgScreen }]}>
+      {isFocused && (
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={surfaceBg}
+        />
+      )}
+
+      {/* Clean White Header matching Reference UI */}
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: Math.max(insets.top, 10),
+            backgroundColor: surfaceBg,
+            borderBottomColor: dividerDynamic,
+          },
+        ]}
+      >
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerTitleCol}>
+            <Text style={[styles.headerTitle, { color: accentColor }]}>
+              {t('tabs.calendar', 'कैलेंडर')}
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: textSecondary }]}>
+              {isHi ? 'बुकिंग, कार्य और आयोजन' : 'Bookings, tasks & events'}
+            </Text>
+          </View>
+
+          <View style={styles.headerRightActions}>
+            <TouchableOpacity
+              style={[
+                styles.themeIconBtn,
+                { backgroundColor: isDark ? '#2B1B1B' : SOFT_ROSE_BG },
+              ]}
+              onPress={() => setTheme(isDark ? 'light' : 'dark')}
+              activeOpacity={0.7}
+            >
+              <Icon name={isDark ? 'sun' : 'moon'} size={15} color={accentColor} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.todayBtn,
+                { backgroundColor: surfaceBg, borderColor: borderDynamic },
+              ]}
+              onPress={handleGoToToday}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.todayBtnText, { color: accentColor }]}>
+                {isHi ? 'आज' : 'Today'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.addTopBtn,
+                {
+                  borderColor: accentColor,
+                  backgroundColor: isDark ? '#2B1B1B' : SOFT_ROSE_BG,
+                },
+              ]}
+              onPress={openAddModal}
+              activeOpacity={0.75}
+            >
+              <Icon name="plus" size={14} color={accentColor} />
+              <Text style={[styles.addTopBtnText, { color: accentColor }]}>
+                {isHi ? 'जोड़ें' : 'Add'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Flat Calendar Grid Container */}
+        <View
+          style={[
+            styles.calendarWrapper,
+            { backgroundColor: surfaceBg, borderColor: borderDynamic },
+          ]}
+        >
+          <Calendar
+            key={`${isDark ? 'dark' : 'light'}-${selectedDate.substring(0, 7)}`}
+            current={selectedDate}
+            onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+            onMonthChange={(month: DateData) =>
+              setCurrentMonth(month.dateString.substring(0, 7))
+            }
+            markingType={'multi-dot'}
+            markedDates={markedDates}
+            theme={
+              {
                 calendarBackground: 'transparent',
-                textSectionTitleColor: colors.textLight,
-                dayTextColor: colors.text,
-                todayTextColor: colors.primary,
-                selectedDayTextColor: colors.primary,
-                monthTextColor: colors.text,
-                arrowColor: colors.primary,
+                textSectionTitleColor: textSecondary,
+                dayTextColor: textPrimary,
+                todayTextColor: accentColor,
+                selectedDayBackgroundColor: PRIMARY_MAROON,
+                selectedDayTextColor: '#FFFFFF',
+                monthTextColor: textPrimary,
+                arrowColor: accentColor,
                 textDayFontWeight: '500',
-                textMonthFontWeight: 'bold',
+                textMonthFontWeight: '700',
                 textDayHeaderFontWeight: '600',
-                textDayFontSize: 12,
+                textDayFontSize: 12.5,
                 textMonthFontSize: 15,
-                textDayHeaderFontSize: 12,
+                textDayHeaderFontSize: 11.5,
                 'stylesheet.calendar.header': {
                   header: {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
-                    paddingLeft: 10,
-                    paddingRight: 10,
+                    paddingLeft: 8,
+                    paddingRight: 8,
                     marginTop: 4,
-                    alignItems: 'center'
+                    marginBottom: 4,
+                    alignItems: 'center',
                   },
                   monthText: {
                     fontSize: 15,
-                    fontWeight: 'bold',
-                    color: colors.text,
+                    fontWeight: '700',
+                    color: textPrimary,
                     margin: 4,
-                  }
+                  },
                 },
                 'stylesheet.day.basic': {
                   base: {
-                    width: 28,
-                    height: 28,
+                    width: 30,
+                    height: 30,
                     alignItems: 'center',
-                    justifyContent: 'center'
-                  }
-                }
-              } as any)}
-              style={styles.calendar}
-            />
-          </View>
+                    justifyContent: 'center',
+                    borderRadius: 6,
+                  },
+                },
+              } as any
+            }
+            style={styles.calendar}
+          />
 
-          {/* Monthly Summary */}
-          <View style={styles.summaryContainer}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('calendar.monthly_summary', 'Monthly Summary')}</Text>
-            <View style={styles.statsRow}>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: colors.primary + '15' }]}>
-                  <Icon name="calendar" size={16} color={colors.primary} />
-                </View>
-                <Text style={[styles.statValue, { color: colors.primary }]}>{monthlyStats.totalBookings}</Text>
-                <Text style={[styles.statLabel, { color: colors.textLight }]}>Total Events</Text>
-              </View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#DC2626' + '15' }]}>
-                  <Icon name="alert-circle" size={16} color="#DC2626" />
-                </View>
-                <Text style={[styles.statValue, { color: '#DC2626' }]}>{monthlyStats.busyDays}</Text>
-                <Text style={[styles.statLabel, { color: colors.textLight }]}>Busy Days</Text>
-              </View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#16A34A' + '15' }]}>
-                  <Icon name="check-circle" size={16} color="#16A34A" />
-                </View>
-                <Text style={[styles.statValue, { color: '#16A34A' }]}>{monthlyStats.freeDays}</Text>
-                <Text style={[styles.statLabel, { color: colors.textLight }]}>Free Days</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Selected Day Summary */}
-          <View style={styles.summaryContainer}>
-            <View style={[styles.daySummaryCard, { backgroundColor: colors.primary }]}>
-              <View style={styles.daySummaryContent}>
-                <View style={styles.daySummaryIconContainer}>
-                  <Icon name="calendar" size={24} color={colors.primary} />
-                </View>
-                <View>
-                  <Text style={styles.daySummaryDate}>
-                    {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                  </Text>
-                  <Text style={styles.daySummaryText}>
-                    {selectedEvents.length === 0
-                      ? 'No tasks scheduled for this day'
-                      : `You have ${selectedEvents.length} task${selectedEvents.length > 1 ? 's' : ''} today`}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Agenda */}
-          <View style={styles.agendaContainer}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('calendar.agenda_for', 'Agenda for')} {selectedDate}
-            </Text>
-
-            {selectedEvents.length === 0 ? (
-              <View style={[styles.noEventsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Icon name="inbox" size={32} color={colors.textLight} />
-                <Text style={[styles.noEventsText, { color: colors.textLight }]}>
-                  No events scheduled for this day.
+          {/* Compact Legend Row inside Calendar Footer */}
+          <View style={[styles.legendRow, { borderTopColor: dividerDynamic }]}>
+            {(['upcoming', 'done', 'festival', 'cancelled'] as EventStatus[]).map(status => (
+              <View key={status} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: STATUS_COLORS[status] }]} />
+                <Text style={[styles.legendLabel, { color: textSecondary }]}>
+                  {isHi ? STATUS_LABELS_HI[status] : status.charAt(0).toUpperCase() + status.slice(1)}
                 </Text>
               </View>
-            ) : (
-              selectedEvents.map(event => (
-                <TouchableOpacity
-                  key={event.id}
-                  style={[styles.eventCard, { backgroundColor: colors.surface, borderLeftColor: STATUS_COLORS[event.status] }]}
-                  onPress={() => openEditModal(event)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.eventHeader}>
-                    <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
-                    <Text style={[styles.eventTime, { color: colors.textLight }]}>{event.time}</Text>
-                  </View>
-                  <View style={styles.eventFooter}>
-                    <Text style={[styles.eventType, { color: colors.textLight }]}>
-                      {event.type.toUpperCase()}
-                    </Text>
-                    <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[event.status] + '20' }]}>
-                      <Text style={[styles.statusText, { color: STATUS_COLORS[event.status] }]}>
-                        {event.status.toUpperCase()}
-                      </Text>
-                    </View>
-                  </View>
-                  {event.yajmanName && (
-                    <View style={styles.yajmanRow}>
-                      <Icon name="user" size={12} color={colors.primary} />
-                      <Text style={[styles.yajmanText, { color: colors.primary }]}>{event.yajmanName}</Text>
-                      {event.yajmanPhone && (
-                        <Text style={[styles.yajmanPhone, { color: colors.textLight }]}>{event.yajmanPhone}</Text>
-                      )}
-                    </View>
-                  )}
-                  {event.description && (
-                    <Text style={[styles.eventDesc, { color: colors.textLight }]} numberOfLines={2}>
-                      {event.description}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              ))
-            )}
+            ))}
+          </View>
+        </View>
+
+        {/* Monthly Summary — Inline Non-Card Ribbon Strip */}
+        <View
+          style={[
+            styles.summaryRibbon,
+            {
+              backgroundColor: subtleBg,
+              borderTopColor: borderDynamic,
+              borderBottomColor: borderDynamic,
+            },
+          ]}
+        >
+          <View style={styles.ribbonItem}>
+            <View style={[styles.ribbonDot, { backgroundColor: accentColor }]} />
+            <Text style={[styles.ribbonLabel, { color: textSecondary }]}>
+              {isHi ? 'कुल' : 'Total'}:
+            </Text>
+            <Text style={[styles.ribbonValue, { color: accentColor }]}>
+              {monthlyStats.totalBookings}
+            </Text>
           </View>
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
+          <View style={[styles.ribbonSep, { backgroundColor: borderDynamic }]} />
 
-        {/* Floating Action Button */}
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={openAddModal}
-          activeOpacity={0.9}
-        >
-          <Icon name="plus" size={24} color="#FFF" />
-        </TouchableOpacity>
+          <View style={styles.ribbonItem}>
+            <View style={[styles.ribbonDot, { backgroundColor: '#DC2626' }]} />
+            <Text style={[styles.ribbonLabel, { color: textSecondary }]}>
+              {isHi ? 'व्यस्त' : 'Busy'}:
+            </Text>
+            <Text style={[styles.ribbonValue, { color: '#DC2626' }]}>
+              {monthlyStats.busyDays}
+            </Text>
+          </View>
 
-      </View>
+          <View style={[styles.ribbonSep, { backgroundColor: borderDynamic }]} />
+
+          <View style={styles.ribbonItem}>
+            <View style={[styles.ribbonDot, { backgroundColor: '#16A34A' }]} />
+            <Text style={[styles.ribbonLabel, { color: textSecondary }]}>
+              {isHi ? 'खाली' : 'Free'}:
+            </Text>
+            <Text style={[styles.ribbonValue, { color: '#16A34A' }]}>
+              {monthlyStats.freeDays}
+            </Text>
+          </View>
+        </View>
+
+        {/* Selected Date Agenda Header & Clean Schedule Rows */}
+        <View style={styles.agendaContainer}>
+          <View style={styles.agendaHeaderRow}>
+            <Text style={[styles.agendaDateTitle, { color: textPrimary }]} numberOfLines={1}>
+              {formattedSelectedDate}
+            </Text>
+            <Text style={[styles.agendaCountText, { color: textSecondary }]}>
+              {selectedEvents.length} {isHi ? 'कार्यक्रम' : selectedEvents.length === 1 ? 'event' : 'events'}
+            </Text>
+          </View>
+
+          {selectedEvents.length === 0 ? (
+            <View
+              style={[
+                styles.noEventsBox,
+                { backgroundColor: surfaceBg, borderColor: borderDynamic },
+              ]}
+            >
+              <Icon name="calendar" size={26} color={textSecondary} />
+              <Text style={[styles.noEventsText, { color: textSecondary }]}>
+                {isHi ? 'इस दिन कोई कार्यक्रम निर्धारित नहीं है।' : 'No events scheduled for this day.'}
+              </Text>
+            </View>
+          ) : (
+            selectedEvents.map(event => {
+              const statusColor = STATUS_COLORS[event.status];
+              const statusBg = isDark ? '#2B1B1B' : STATUS_BG_LIGHT[event.status];
+              return (
+                <TouchableOpacity
+                  key={event.id}
+                  style={[
+                    styles.eventRowCard,
+                    { backgroundColor: surfaceBg, borderColor: borderDynamic },
+                  ]}
+                  onPress={() => openEditModal(event)}
+                  activeOpacity={0.75}
+                >
+                  {/* Time Column */}
+                  <View style={styles.eventTimeCol}>
+                    <Text style={[styles.eventTimeText, { color: textPrimary }]}>
+                      {event.time || '--:--'}
+                    </Text>
+                  </View>
+
+                  {/* Status Dot */}
+                  <View style={[styles.eventStatusDot, { backgroundColor: statusColor }]} />
+
+                  {/* Main Details Column */}
+                  <View style={styles.eventInfoCol}>
+                    <Text style={[styles.eventTitle, { color: textPrimary }]} numberOfLines={1}>
+                      {event.title}
+                    </Text>
+
+                    {event.yajmanName ? (
+                      <View style={styles.eventMetaRow}>
+                        <Icon name="user" size={11} color={textSecondary} />
+                        <Text style={[styles.eventMetaText, { color: textSecondary }]} numberOfLines={1}>
+                          {event.yajmanName}
+                          {event.yajmanPhone ? ` • ${event.yajmanPhone}` : ''}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {event.description ? (
+                      <Text style={[styles.eventDesc, { color: textSecondary }]} numberOfLines={1}>
+                        {event.description}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  {/* Right Status Pill + Chevron */}
+                  <View style={styles.eventRightCol}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+                      <Text style={[styles.statusBadgeText, { color: statusColor }]}>
+                        {isHi ? STATUS_LABELS_HI[event.status] : event.status}
+                      </Text>
+                    </View>
+                    <Icon name="chevron-right" size={15} color={textSecondary} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
+
       <EventModal
         visible={modalVisible}
         selectedDate={selectedDate}
@@ -279,206 +461,227 @@ const CalendarScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1 },
-  mainCard: {
+  mainContainer: {
     flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
   },
-  scrollContent: {
-    paddingBottom: 20,
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
   },
-  calendarWrapper: {
-    margin: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-      },
-      android: { elevation: 1 },
-    }),
-  },
-  calendar: {
-    marginBottom: 0,
-  },
-  summaryContainer: {
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  daySummaryCard: {
-    borderRadius: 12,
-    padding: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-      },
-      android: { elevation: 4 },
-    }),
-  },
-  daySummaryContent: {
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  daySummaryIconContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 8,
-    marginRight: 10,
-  },
-  daySummaryDate: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  daySummaryText: {
-    color: '#FFF',
-    fontSize: 11,
-    opacity: 0.9,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  statCard: {
+  headerTitleCol: {
     flex: 1,
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 10,
-    borderWidth: 1,
+    paddingRight: 8,
   },
-  statIconContainer: {
-    width: 25,
-    height: 25,
-    borderRadius: 8,
+  headerTitle: {
+    fontSize: 16.5,
+    fontWeight: '800',
+  },
+  headerSubtitle: {
+    fontSize: 10.5,
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  themeIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
   },
-  statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 1,
-  },
-  statLabel: {
-    fontSize: 9,
-    fontWeight: '500',
-  },
-  agendaContainer: {
-    paddingHorizontal: 12,
-  },
-  noEventsCard: {
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 12,
+  todayBtn: {
     borderWidth: 1,
-    gap: 6,
-  },
-  noEventsText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  eventCard: {
-    padding: 10,
-    borderRadius: 10,
-    borderLeftWidth: 3,
-    marginBottom: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 2,
-      },
-      android: { elevation: 1 },
-    }),
-  },
-  eventHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  eventTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  eventTime: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  eventFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  eventType: {
-    fontSize: 9,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
     borderRadius: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
   },
-  statusText: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+  todayBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
-  eventDesc: {
-    fontSize: 11,
-    marginTop: 4,
-  },
-  yajmanRow: {
+  addTopBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  yajmanText: {
-    fontSize: 10,
+  addTopBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  calendarWrapper: {
+    marginHorizontal: 14,
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  calendar: {
+    paddingBottom: 4,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  legendLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  summaryRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginTop: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+  },
+  ribbonItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  ribbonDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  ribbonLabel: {
+    fontSize: 11.5,
+    fontWeight: '500',
+  },
+  ribbonValue: {
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  ribbonSep: {
+    width: 1,
+    height: 16,
+  },
+  agendaContainer: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+  },
+  agendaHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  agendaDateTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    flex: 1,
+    marginRight: 8,
+  },
+  agendaCountText: {
+    fontSize: 11.5,
     fontWeight: '600',
   },
-  yajmanPhone: {
-    fontSize: 9,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 90,
-    right: 16,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
+  noEventsBox: {
     alignItems: 'center',
-    zIndex: 999,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1E293B',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.25,
-        shadowRadius: 6,
-      },
-      android: { elevation: 8 },
-    }),
+    paddingVertical: 26,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+  },
+  noEventsText: {
+    fontSize: 11.5,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  eventRowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  eventTimeCol: {
+    width: 54,
+    marginRight: 8,
+  },
+  eventTimeText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  eventStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 9,
+  },
+  eventInfoCol: {
+    flex: 1,
+    marginRight: 8,
+  },
+  eventTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  eventMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
+  },
+  eventMetaText: {
+    fontSize: 11,
+    flex: 1,
+  },
+  eventDesc: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  eventRightCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  statusBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
   },
 });
 

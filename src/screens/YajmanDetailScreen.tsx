@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, StatusBar } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+  Alert,
+  StatusBar,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../theme/ThemeContext';
 import { useYajmans } from '../hooks/useYajmans';
@@ -11,8 +21,34 @@ import { useYajmans } from '../hooks/useYajmans';
 type DetailRouteProp = RouteProp<RootStackParamList, 'YajmanDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const YajmanDetailScreen = () => {
-  const { colors } = useTheme();
+const PRIMARY_MAROON = '#8B1D1D';
+const SOFT_PINK = '#FFF0ED';
+const BADGE_PINK = '#FEE2E2';
+const TEXT_MAROON = '#991B1B';
+const BORDER_COLOR = '#E5E7EB';
+
+const formatHindiDisplayDate = (dateString?: string): string | null => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return dateString;
+  const monthsHindi = [
+    'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+    'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर',
+  ];
+  return `${date.getDate()} ${monthsHindi[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const getAvatarChar = (name: string): string => {
+  if (!name) return 'य';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length > 1 && parts[parts.length - 1].length > 0) {
+    return parts[parts.length - 1].charAt(0);
+  }
+  return name.charAt(0);
+};
+
+const YajmanDetailScreen: React.FC = () => {
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<DetailRouteProp>();
   const insets = useSafeAreaInsets();
@@ -24,327 +60,542 @@ const YajmanDetailScreen = () => {
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete Yajman",
-      "Are you sure you want to remove this yajman? This action cannot be undone.",
+      'यजमान हटाएँ',
+      'क्या आप इस यजमान को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'रद्द करें', style: 'cancel' },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'हटाएँ',
+          style: 'destructive',
           onPress: async () => {
-            await deleteYajman(yajman.id);
-            navigation.goBack();
-          }
-        }
-      ]
+            try {
+              await deleteYajman(yajman.id);
+              Toast.show({
+                type: 'info',
+                text1: 'यजमान हटाया गया',
+                text2: `${yajman.name} को सूची से हटा दिया गया है।`,
+              });
+              navigation.goBack();
+            } catch (err) {
+              console.error('Failed to delete yajman:', err);
+              Toast.show({
+                type: 'error',
+                text1: 'त्रुटि',
+                text2: 'यजमान हटाने में समस्या आई।',
+              });
+            }
+          },
+        },
+      ],
+      { cancelable: true }
     );
   };
 
   const handleCall = () => {
     if (yajman.callingMobile) {
-      Linking.openURL(`tel:${yajman.callingMobile}`);
+      const clean = yajman.callingMobile.replace(/[^\d+]/g, '');
+      Linking.openURL(`tel:${clean}`).catch(() => {
+        Toast.show({ type: 'error', text1: 'कॉल शुरू नहीं हो सकी' });
+      });
+    } else {
+      Toast.show({ type: 'info', text1: 'कॉलिंग नंबर उपलब्ध नहीं है' });
     }
   };
 
   const handleWhatsApp = () => {
-    if (yajman.whatsappMobile || yajman.callingMobile) {
-      const num = yajman.whatsappMobile || yajman.callingMobile;
-      // Remove non-numeric chars
+    const num = yajman.whatsappMobile || yajman.callingMobile;
+    if (num) {
       const cleanNum = num.replace(/\D/g, '');
-      Linking.openURL(`whatsapp://send?phone=91${cleanNum}`);
+      const fullNum = cleanNum.startsWith('91') ? cleanNum : `91${cleanNum}`;
+      Linking.openURL(`whatsapp://send?phone=${fullNum}`).catch(() => {
+        Toast.show({ type: 'error', text1: 'व्हाट्सएप नहीं खुल सका' });
+      });
+    } else {
+      Toast.show({ type: 'info', text1: 'व्हाट्सएप नंबर उपलब्ध नहीं है' });
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Astrology': return '#8b5cf6';
-      case 'Karmkand': return '#D97706';
-      case 'Vaastu': return '#059669';
-      case 'Hastrekha': return '#2563EB';
-      case 'Puja Path': return '#B5451B';
-      case 'Jyotish': return '#7C3AED';
-      case 'Vastu Consulting': return '#0D9488';
-      case 'Hastarekha': return '#2563EB';
-      case 'Numerology': return '#DC2626';
-      case 'Tarot': return '#9333EA';
-      default: return '#6B7280';
-    }
+  const handleEdit = () => {
+    navigation.navigate('YajmanForm', { yajman });
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Not provided';
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-  };
+  const categoryLabel = (yajman.category || 'व्यक्तिगत').includes('परिवार')
+    ? 'परिवार'
+    : (yajman.category || '').includes('संस्था')
+    ? 'संस्था'
+    : 'व्यक्तिगत';
 
-  const InfoRow = ({ icon, label, value }: { icon: string, label: string, value?: string }) => {
+  const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string | null }) => {
     if (!value) return null;
     return (
       <View style={styles.infoRow}>
-        <View style={[styles.infoIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name={icon as any} size={18} color={colors.primary} />
+        <View
+          style={[
+            styles.infoIconBox,
+            { backgroundColor: isDark ? '#2B1B1B' : SOFT_PINK },
+          ]}
+        >
+          <Icon name={icon as any} size={16} color={isDark ? '#FCA5A5' : PRIMARY_MAROON} />
         </View>
         <View style={styles.infoContent}>
-          <Text style={[styles.infoLabel, { color: colors.textLight }]}>{label}</Text>
-          <Text style={[styles.infoValue, { color: colors.text }]}>{value}</Text>
+          <Text style={[styles.infoLabel, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>{label}</Text>
+          <Text style={[styles.infoValue, { color: isDark ? '#F8E6CE' : '#111827' }]}>{value}</Text>
         </View>
       </View>
     );
   };
 
+  const birthdayFormatted = formatHindiDisplayDate(yajman.birthday);
+  const anniversaryFormatted = formatHindiDisplayDate(yajman.anniversary);
+  const yearlyProgramFormatted = formatHindiDisplayDate(yajman.yearlyProgramDate);
+  const kycFormatted = formatHindiDisplayDate(yajman.kycDate);
+
+  const hasDates = Boolean(birthdayFormatted || anniversaryFormatted || yearlyProgramFormatted);
+  const hasAddress = Boolean(yajman.city || yajman.state || yajman.address);
+  const hasOther = Boolean(kycFormatted || yajman.remark);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={true} />
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary, borderBottomColor: colors.primary, paddingTop: Math.max(insets.top, 12) }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
-          <Icon name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
+    <View style={[styles.screenContainer, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={isDark ? '#1E1E1E' : '#FFFFFF'}
+      />
+
+      {/* Top Header */}
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: Math.max(insets.top, 10),
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+            borderBottomColor: isDark ? '#2D2D2D' : BORDER_COLOR,
+          },
+        ]}
+      >
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+          >
+            <Icon name="chevron-left" size={26} color={PRIMARY_MAROON} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+            यजमान विवरण
+          </Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={handleEdit}
+            style={styles.headerActionBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+          >
+            <Icon name="edit-2" size={18} color={isDark ? '#FCA5A5' : PRIMARY_MAROON} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleDelete}
+            style={styles.headerActionBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+          >
+            <Icon name="trash-2" size={18} color="#DC2626" />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scrollContent}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={[styles.avatarBig, { backgroundColor: colors.primary + '15' }]}>
-            <Text style={[styles.avatarBigText, { color: colors.primary }]}>
-              {yajman.name.charAt(0).toUpperCase()}
+
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContainer, { paddingBottom: Math.max(insets.bottom + 20, 40) }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card Header */}
+        <View
+          style={[
+            styles.profileHeroCard,
+            {
+              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+              borderColor: isDark ? '#2D2D2D' : '#FEE2E2',
+            },
+          ]}
+        >
+          {/* Avatar Circle */}
+          <View
+            style={[
+              styles.avatarCircle,
+              { backgroundColor: isDark ? '#2B1B1B' : SOFT_PINK },
+            ]}
+          >
+            <Text style={[styles.avatarText, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+              {getAvatarChar(yajman.name)}
             </Text>
           </View>
-          <View style={styles.profileHeaderTextContainer}>
-            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{yajman.name}</Text>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(yajman.category) + '15' }]}>
-                <Text style={[styles.categoryText, { color: getCategoryColor(yajman.category) }]}>{yajman.category}</Text>
-              </View>
-            </View>
+
+          {/* Name */}
+          <Text style={[styles.yajmanName, { color: isDark ? '#F8E6CE' : '#111827' }]}>
+            {yajman.name}
+          </Text>
+
+          {/* Category Badge */}
+          <View
+            style={[
+              styles.categoryBadge,
+              { backgroundColor: isDark ? '#2B1B1B' : SOFT_PINK },
+            ]}
+          >
+            <Text style={[styles.categoryBadgeText, { color: isDark ? '#FCA5A5' : TEXT_MAROON }]}>
+              {categoryLabel}
+            </Text>
+          </View>
+
+          {/* Call & WhatsApp Quick Buttons */}
+          <View style={styles.actionButtonGroup}>
+            <TouchableOpacity
+              style={[styles.callBtn, { backgroundColor: PRIMARY_MAROON }]}
+              onPress={handleCall}
+              activeOpacity={0.8}
+            >
+              <Icon name="phone" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.actionBtnText}>कॉल करें</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.whatsAppBtn, { backgroundColor: '#16A34A' }]}
+              onPress={handleWhatsApp}
+              activeOpacity={0.8}
+            >
+              <Icon name="message-circle" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.actionBtnText}>व्हाट्सएप</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={handleCall}>
-            <Icon name="phone" size={20} color="#FFF" />
-            <Text style={styles.actionBtnText}>Call</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.success }]} onPress={handleWhatsApp}>
-            <Icon name="message-circle" size={20} color="#FFF" />
-            <Text style={styles.actionBtnText}>WhatsApp</Text>
-          </TouchableOpacity>
+        {/* Section 1: संपर्क विवरण (Contact Details) */}
+        <View
+          style={[
+            styles.detailSectionCard,
+            {
+              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+              borderColor: isDark ? '#2D2D2D' : '#F3F4F6',
+            },
+          ]}
+        >
+          <Text style={[styles.sectionHeading, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+            संपर्क विवरण
+          </Text>
+          <InfoRow icon="phone" label="कॉलिंग नंबर" value={yajman.callingMobile} />
+          <InfoRow
+            icon="message-circle"
+            label="व्हाट्सएप नंबर"
+            value={yajman.whatsappMobile || yajman.callingMobile}
+          />
+          <InfoRow icon="mail" label="ईमेल पता" value={yajman.email} />
         </View>
 
-        {/* Details Card */}
-        <View style={[styles.detailsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Contact Info</Text>
-            <InfoRow icon="phone" label="Calling Number" value={yajman.callingMobile} />
-            <InfoRow icon="message-circle" label="WhatsApp" value={yajman.whatsappMobile || 'Same as calling'} />
-            <InfoRow icon="mail" label="Email Address" value={yajman.email} />
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Important Dates</Text>
-            <InfoRow icon="gift" label="Birthday" value={formatDate(yajman.birthday)} />
-            <InfoRow icon="heart" label="Anniversary" value={formatDate(yajman.anniversary)} />
+        {/* Section 2: महत्वपूर्ण तिथियाँ (Important Dates) */}
+        {hasDates && (
+          <View
+            style={[
+              styles.detailSectionCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#F3F4F6',
+              },
+            ]}
+          >
+            <Text style={[styles.sectionHeading, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+              महत्वपूर्ण तिथियाँ
+            </Text>
+            <InfoRow icon="gift" label="जन्मदिन" value={birthdayFormatted} />
+            <InfoRow icon="heart" label="विवाह वर्षगांठ" value={anniversaryFormatted} />
             <InfoRow
               icon="calendar"
-              label={yajman.yearlyProgramName || 'Yearly Program'}
-              value={formatDate(yajman.yearlyProgramDate)}
+              label={yajman.yearlyProgramName || 'वार्षिक कार्यक्रम'}
+              value={yearlyProgramFormatted}
             />
           </View>
+        )}
 
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Address</Text>
-            <InfoRow icon="map-pin" label="City" value={yajman.city} />
-            <InfoRow icon="map" label="State" value={yajman.state} />
-            <InfoRow icon="home" label="Full Address" value={yajman.address} />
+        {/* Section 3: निवास एवं पता (Address) */}
+        {hasAddress && (
+          <View
+            style={[
+              styles.detailSectionCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#F3F4F6',
+              },
+            ]}
+          >
+            <Text style={[styles.sectionHeading, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+              निवास एवं पता
+            </Text>
+            <InfoRow icon="map-pin" label="शहर" value={yajman.city} />
+            <InfoRow icon="map" label="राज्य" value={yajman.state} />
+            <InfoRow icon="home" label="पूरा पता" value={yajman.address} />
           </View>
+        )}
 
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.primary }]}>Other</Text>
-            <InfoRow icon="file-text" label="KYC Date" value={formatDate(yajman.kycDate)} />
-            {yajman.remark && (
-              <View style={styles.remarkContainer}>
-                <Text style={[styles.infoLabel, { color: colors.textLight, marginBottom: 4 }]}>Remarks / Notes</Text>
-                <Text style={[styles.remarkText, { color: colors.text }]}>{yajman.remark}</Text>
+        {/* Section 4: अन्य विवरण एवं टिप्पणी (Other & Notes) */}
+        {hasOther && (
+          <View
+            style={[
+              styles.detailSectionCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                borderColor: isDark ? '#2D2D2D' : '#F3F4F6',
+              },
+            ]}
+          >
+            <Text style={[styles.sectionHeading, { color: isDark ? '#FCA5A5' : PRIMARY_MAROON }]}>
+              अन्य विवरण एवं टिप्पणी
+            </Text>
+            <InfoRow icon="file-text" label="पंजीकरण तिथि" value={kycFormatted} />
+            {yajman.remark ? (
+              <View
+                style={[
+                  styles.remarkBox,
+                  {
+                    backgroundColor: isDark ? '#2B1B1B' : '#FFFDF9',
+                    borderColor: isDark ? '#3D2626' : '#FEE2E2',
+                  },
+                ]}
+              >
+                <Text style={[styles.remarkLabel, { color: isDark ? '#FCA5A5' : TEXT_MAROON }]}>
+                  विशेष टिप्पणी / नोट:
+                </Text>
+                <Text style={[styles.remarkBody, { color: isDark ? '#E5E7EB' : '#374151' }]}>
+                  {yajman.remark}
+                </Text>
               </View>
-            )}
+            ) : null}
           </View>
+        )}
 
+        {/* Bottom Actions Row */}
+        <View style={styles.bottomActionsRow}>
+          <TouchableOpacity
+            style={[
+              styles.bottomEditBtn,
+              {
+                borderColor: PRIMARY_MAROON,
+                backgroundColor: isDark ? 'rgba(139,29,29,0.15)' : '#FFF6F6',
+              },
+            ]}
+            onPress={handleEdit}
+            activeOpacity={0.8}
+          >
+            <Icon name="edit-2" size={16} color={PRIMARY_MAROON} style={{ marginRight: 6 }} />
+            <Text style={[styles.bottomEditBtnText, { color: PRIMARY_MAROON }]}>
+              यजमान विवरण संपादित करें
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomDeleteBtn}
+            onPress={handleDelete}
+            activeOpacity={0.7}
+          >
+            <Icon name="trash-2" size={15} color="#DC2626" style={{ marginRight: 6 }} />
+            <Text style={styles.bottomDeleteBtnText}>यजमान सूची से हटाएँ</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
   },
-  mainCard: {
-    flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-  },
-  header: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  headerRight: {
+  headerLeft: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'center',
+    flex: 1,
   },
-  headerBtn: {
-    padding: 8,
-    borderRadius: 20,
+  backButton: {
+    marginRight: 8,
+    padding: 2,
+  },
+  headerTitle: {
+    fontSize: 16.5,
+    fontWeight: '700',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerActionBtn: {
+    padding: 4,
   },
   scrollContent: {
     flex: 1,
   },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+  scrollContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
   },
-  avatarBig: {
-    width: 60,
-    height: 60,
+  profileHeroCard: {
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  avatarCircle: {
+    width: 64,
+    height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  avatarBigText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  profileHeaderTextContainer: {
-    marginLeft: 16,
     justifyContent: 'center',
-    flexShrink: 1, // Ensures long names wrap or truncate properly without breaking layout
+    marginBottom: 10,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    textAlign: 'center'
+  avatarText: {
+    fontSize: 26,
+    fontWeight: '700',
+  },
+  yajmanName: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 6,
   },
   categoryBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 16,
   },
-  categoryText: {
-    fontSize: 12,
+  categoryBadgeText: {
+    fontSize: 11.5,
     fontWeight: '700',
-    textTransform: 'uppercase',
   },
-  actionsContainer: {
+  actionButtonGroup: {
     flexDirection: 'row',
+    gap: 12,
+    width: '100%',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 16,
-    marginBottom: 10,
   },
-  actionBtn: {
+  callBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     flex: 1,
     maxWidth: 160,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  },
+  whatsAppBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    maxWidth: 160,
   },
   actionBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  detailsCard: {
-    margin: 16,
-    marginBottom: 40,
-    borderRadius: 24,
+  detailSectionCard: {
+    borderRadius: 12,
     borderWidth: 1,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
-  section: {
-    paddingVertical: 8,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 10,
+  sectionHeading: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    marginBottom: 12,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
+  infoIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     alignItems: 'center',
-    borderWidth: 1,
+    justifyContent: 'center',
     marginRight: 12,
   },
   infoContent: {
     flex: 1,
   },
   infoLabel: {
-    fontSize: 12,
-    marginBottom: 2,
+    fontSize: 11,
+    fontWeight: '500',
+    marginBottom: 1,
   },
   infoValue: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 12.5,
+    fontWeight: '600',
   },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    marginVertical: 8,
+  remarkBox: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 4,
   },
-  remarkContainer: {
-    backgroundColor: 'rgba(0,0,0,0.02)',
-    padding: 12,
-    borderRadius: 12,
+  remarkLabel: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  remarkBody: {
+    fontSize: 11.5,
+    lineHeight: 18,
+  },
+  bottomActionsRow: {
     marginTop: 8,
+    gap: 10,
+    alignItems: 'center',
   },
-  remarkText: {
-    fontSize: 14,
-    lineHeight: 22,
-  }
+  bottomEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 11,
+    width: '100%',
+  },
+  bottomEditBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  bottomDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  bottomDeleteBtnText: {
+    color: '#DC2626',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 });
 
 export default YajmanDetailScreen;

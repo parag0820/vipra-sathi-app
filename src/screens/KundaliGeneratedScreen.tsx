@@ -372,44 +372,51 @@ const KundaliGeneratedScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 4-Tab Bar */}
-        <View style={styles.tabsRow}>
-          {[
-            { id: 'basic', label: 'मूल विवरण' },
-            { id: 'kundli', label: 'कुंडली' },
-            { id: 'dasha', label: 'दशा' },
-            { id: 'planets', label: 'ग्रह स्थिति' },
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[
-                  styles.tabBtn,
-                  isActive
-                    ? { backgroundColor: PRIMARY_MAROON, borderColor: PRIMARY_MAROON }
-                    : { backgroundColor: cardBg, borderColor: borderDynamic },
-                ]}
-                onPress={() => {
-                  setActiveTab(tab.id as MainTabType);
-                  setChartDropdownOpen(false);
-                  setDashaDropdownOpen(false);
-                  setPlanetDropdownOpen(false);
-                }}
-                activeOpacity={0.75}
-              >
-                <Text
+        {/* 4-Tab Bar (Panchang-style Underline Tabs) */}
+        <View style={[styles.tabBar, { borderBottomColor: borderDynamic }]}>
+          <View style={styles.tabsRow}>
+            {[
+              { id: 'basic', label: 'मूल विवरण' },
+              { id: 'kundli', label: 'कुंडली' },
+              { id: 'dasha', label: 'दशा' },
+              { id: 'planets', label: 'ग्रह स्थिति' },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <TouchableOpacity
+                  key={tab.id}
                   style={[
-                    styles.tabBtnText,
-                    { color: isActive ? '#FFFFFF' : textPrimary },
+                    styles.tabBtn,
+                    isActive && { borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON },
                   ]}
-                  numberOfLines={1}
+                  onPress={() => {
+                    setActiveTab(tab.id as MainTabType);
+                    setChartDropdownOpen(false);
+                    setDashaDropdownOpen(false);
+                    setPlanetDropdownOpen(false);
+                  }}
+                  activeOpacity={0.75}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.tabBtnText,
+                      isActive && styles.tabBtnTextActive,
+                      {
+                        color: isActive
+                          ? isDark
+                            ? '#FCA5A5'
+                            : PRIMARY_MAROON
+                          : textSecondary,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {/* Demo Disclaimer Strip */}
@@ -809,37 +816,45 @@ const KundaliGeneratedScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* Level Pills: महादेशा | अंतर्दशा | प्रत्यंतर */}
-              <View style={styles.dashaLevelRow}>
-                {[
-                  { id: 'mahadasha', label: 'महादशा' },
-                  { id: 'antardasha', label: 'अंतर्दशा' },
-                  { id: 'pratyantar', label: 'प्रत्यंतर' },
-                ].map((lvl) => {
-                  const active = dashaLevel === lvl.id;
-                  return (
-                    <TouchableOpacity
-                      key={lvl.id}
-                      style={[
-                        styles.dashaLevelPill,
-                        active
-                          ? { backgroundColor: PRIMARY_MAROON, borderColor: PRIMARY_MAROON }
-                          : { backgroundColor: cardBg, borderColor: borderDynamic },
-                      ]}
-                      onPress={() => setDashaLevel(lvl.id as any)}
-                      activeOpacity={0.75}
-                    >
-                      <Text
+              {/* Level Tabs (Panchang-style Underline): महादशा | अंतर्दशा | प्रत्यंतर */}
+              <View style={[styles.dashaTabBar, { borderBottomColor: lineDivider }]}>
+                <View style={styles.dashaLevelRow}>
+                  {[
+                    { id: 'mahadasha', label: 'महादशा' },
+                    { id: 'antardasha', label: 'अंतर्दशा' },
+                    { id: 'pratyantar', label: 'प्रत्यंतर' },
+                  ].map((lvl) => {
+                    const active = dashaLevel === lvl.id;
+                    return (
+                      <TouchableOpacity
+                        key={lvl.id}
                         style={[
-                          styles.dashaLevelText,
-                          { color: active ? '#FFFFFF' : textPrimary },
+                          styles.dashaLevelPill,
+                          active && { borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON },
                         ]}
+                        onPress={() => setDashaLevel(lvl.id as any)}
+                        activeOpacity={0.75}
                       >
-                        {lvl.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text
+                          style={[
+                            styles.dashaLevelText,
+                            active && styles.dashaLevelTextActive,
+                            {
+                              color: active
+                                ? isDark
+                                  ? '#FCA5A5'
+                                  : PRIMARY_MAROON
+                                : textSecondary,
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {lvl.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
               {/* Tap Hint */}
@@ -1275,22 +1290,32 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 10.5,
   },
+  tabBar: {
+    borderBottomWidth: 1,
+    marginBottom: 10,
+  },
   tabsRow: {
     flexDirection: 'row',
-    gap: 6,
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 4,
-    borderRadius: 7,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginHorizontal: 2,
   },
   tabBtnText: {
-    fontSize: 10.5,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tabBtnTextActive: {
     fontWeight: '700',
   },
   demoBanner: {
@@ -1491,21 +1516,30 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     overflow: 'hidden',
   },
+  dashaTabBar: {
+    borderBottomWidth: 1,
+    marginHorizontal: 12,
+    marginBottom: 8,
+  },
   dashaLevelRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    gap: 6,
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
   dashaLevelPill: {
     flex: 1,
-    paddingVertical: 6,
-    borderRadius: 7,
-    borderWidth: 1,
+    paddingVertical: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     alignItems: 'center',
+    marginHorizontal: 2,
   },
   dashaLevelText: {
-    fontSize: 10.5,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  dashaLevelTextActive: {
     fontWeight: '700',
   },
   dashaHintRow: {

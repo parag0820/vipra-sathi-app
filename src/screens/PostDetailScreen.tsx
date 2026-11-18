@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  headerTitle: { fontSize: 16.5, fontWeight: 'bold' },
   scrollContent: { padding: 16 },
   
   postSection: { marginBottom: 24 },
@@ -226,31 +226,31 @@ const styles = StyleSheet.create({
   avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   avatarText: { fontSize: 20, fontWeight: 'bold' },
   nameRow: { flexDirection: 'row', alignItems: 'center' },
-  authorName: { fontSize: 16, fontWeight: 'bold' },
+  authorName: { fontSize: 12.5, fontWeight: 'bold' },
   verified: { marginLeft: 4 },
   time: { fontSize: 12, marginTop: 2 },
   
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 12 },
-  badgeText: { fontSize: 12, fontWeight: 'bold', letterSpacing: 0.5 },
+  badgeText: { fontSize: 11.5, fontWeight: 'bold', letterSpacing: 0.5 },
   
-  postTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  postContent: { fontSize: 16, lineHeight: 24, marginBottom: 16 },
+  postTitle: { fontSize: 13.5, fontWeight: 'bold', marginBottom: 12 },
+  postContent: { fontSize: 12, lineHeight: 24, marginBottom: 16 },
   
   tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', paddingBottom: 16, borderBottomWidth: 1 },
   tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16, borderWidth: 1, marginRight: 8, marginBottom: 8 },
-  tagText: { fontSize: 12 },
+  tagText: { fontSize: 11.5 },
 
   actionRow: { flexDirection: 'row', paddingTop: 16 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', marginRight: 24 },
-  actionText: { marginLeft: 8, fontSize: 14, fontWeight: '500' },
+  actionText: { marginLeft: 8, fontSize: 12, fontWeight: '500' },
   
-  commentsHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
+  commentsHeader: { fontSize: 12.5, fontWeight: 'bold', marginBottom: 16 },
   commentCard: { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 12 },
   avatarSmall: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  avatarTextSmall: { fontSize: 14, fontWeight: 'bold' },
-  authorNameSmall: { fontSize: 14, fontWeight: 'bold' },
+  avatarTextSmall: { fontSize: 12, fontWeight: 'bold' },
+  authorNameSmall: { fontSize: 12.5, fontWeight: 'bold' },
   timeSmall: { fontSize: 10, marginTop: 2 },
-  commentContent: { fontSize: 15, lineHeight: 22, marginTop: 12 },
+  commentContent: { fontSize: 12, lineHeight: 22, marginTop: 12 },
 
   inputBar: {
     flexDirection: 'row',
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
     maxHeight: 100,
     marginRight: 12,
-    fontSize: 16,
+    fontSize: 12,
   },
   sendButton: {
     width: 44,

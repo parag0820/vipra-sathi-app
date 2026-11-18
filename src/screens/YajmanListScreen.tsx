@@ -39,122 +39,6 @@ interface DisplayYajman extends Yajman {
   subInfoColor?: string;
 }
 
-// Sample items matching the reference screenshot exactly
-const DEFAULT_SAMPLE_YAJMANS: DisplayYajman[] = [
-  {
-    id: 'sample_1',
-    name: 'राजेश शर्मा',
-    avatarChar: 'श',
-    category: 'परिवार',
-    categoryTag: 'परिवार',
-    callingMobile: '+91 98765 4821',
-    whatsappMobile: '+91 98765 4821',
-    city: 'वाराणसी',
-    subInfo: 'अगली बुकिंग: गृह प्रवेश • 5 नव',
-    subInfoIcon: 'calendar',
-    subInfoColor: '#991B1B',
-    kycDate: '2026-10-01',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_2',
-    name: 'सुनीता वर्मा',
-    avatarChar: 'व',
-    category: 'व्यक्तिगत',
-    categoryTag: 'व्यक्तिगत',
-    callingMobile: '+91 98765 7316',
-    whatsappMobile: '+91 98765 7316',
-    city: 'लखनऊ',
-    subInfo: 'अंतिम पूजा: सत्यनारायण • 22 अक्टू',
-    subInfoIcon: 'clock',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-02',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_3',
-    name: 'मोहन मिश्रा',
-    avatarChar: 'म',
-    category: 'परिवार',
-    categoryTag: 'परिवार',
-    callingMobile: '+91 98765 2048',
-    whatsappMobile: '+91 98765 2048',
-    city: 'प्रयागराज',
-    subInfo: 'गोत्र: भारद्वाज • परिवार: 5 सदस्य',
-    subInfoIcon: 'users',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-03',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_4',
-    name: 'शिव मंदिर ट्रस्ट',
-    avatarChar: 'त',
-    category: 'संस्था',
-    categoryTag: 'संस्था',
-    callingMobile: '+91 98765 9652',
-    whatsappMobile: '+91 98765 9652',
-    city: 'वाराणसी',
-    subInfo: 'संपर्क: अशोक जी • मासिक हवन',
-    subInfoIcon: 'briefcase',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-04',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_5',
-    name: 'अमित गुप्ता',
-    avatarChar: 'ग',
-    category: 'व्यक्तिगत',
-    categoryTag: 'व्यक्तिगत',
-    callingMobile: '+91 98765 3187',
-    whatsappMobile: '+91 98765 3187',
-    city: 'जौनपुर',
-    subInfo: 'अंतिम पूजा: रुद्राभिषेक • 18 अक्टू',
-    subInfoIcon: 'clock',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-05',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_6',
-    name: 'दीपक पांडेय',
-    avatarChar: 'प',
-    category: 'परिवार',
-    categoryTag: 'परिवार',
-    callingMobile: '+91 98765 6549',
-    whatsappMobile: '+91 98765 6549',
-    city: 'चंदौली',
-    subInfo: 'गोत्र: कश्यप • परिवार: 4 सदस्य',
-    subInfoIcon: 'users',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-06',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-  {
-    id: 'sample_7',
-    name: 'अन्नपूर्णा सेवा समिति',
-    avatarChar: 'अ',
-    category: 'संस्था',
-    categoryTag: 'संस्था',
-    callingMobile: '+91 98765 8274',
-    whatsappMobile: '+91 98765 8274',
-    city: 'मिर्ज़ापुर',
-    subInfo: 'संपर्क: विनोद जी • वार्षिक आयोजन',
-    subInfoIcon: 'briefcase',
-    subInfoColor: '#6B7280',
-    kycDate: '2026-10-07',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  },
-];
-
 const YajmanListScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
@@ -198,10 +82,10 @@ const YajmanListScreen = () => {
     return `+91 ******* ${last4}`;
   };
 
-  // Combine live API yajmans with default samples
+  // Map live API yajmans
   const allYajmans: DisplayYajman[] = useMemo(() => {
     if (yajmans && yajmans.length > 0) {
-      const mapped = yajmans.map((y, idx) => {
+      return yajmans.map((y) => {
         const cat = (y.category || 'व्यक्तिगत').includes('परिवार')
           ? 'परिवार'
           : (y.category || '').includes('संस्था')
@@ -217,17 +101,8 @@ const YajmanListScreen = () => {
           subInfoColor: '#6B7280',
         };
       });
-
-      // Merge samples if count is small so UI matches reference density
-      if (mapped.length < 5) {
-        const remainingSamples = DEFAULT_SAMPLE_YAJMANS.filter(
-          s => !mapped.some(m => m.name.toLowerCase() === s.name.toLowerCase())
-        );
-        return [...mapped, ...remainingSamples];
-      }
-      return mapped;
     }
-    return DEFAULT_SAMPLE_YAJMANS;
+    return [];
   }, [yajmans]);
 
   // Dynamic category counts
@@ -700,9 +575,17 @@ const YajmanListScreen = () => {
             </View>
           ) : (
             <View style={styles.emptyContainer}>
-              <Icon name="users" size={32} color="#D1D5DB" />
+              <Icon name="users" size={36} color="#D1D5DB" />
               <Text style={styles.emptyTitle}>कोई यजमान नहीं मिला</Text>
-              <Text style={styles.emptySubtitle}>कृपया खोज शब्द बदलें या नया यजमान जोड़ें।</Text>
+              <Text style={styles.emptySubtitle}>पूजा और अनुष्ठान के लिए यजमान जोड़ें</Text>
+              <TouchableOpacity
+                style={styles.emptyAddBtn}
+                onPress={() => navigation.navigate('YajmanForm', {})}
+                activeOpacity={0.8}
+              >
+                <Icon name="plus" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.emptyAddBtnText}>नया यजमान जोड़ें</Text>
+              </TouchableOpacity>
             </View>
           )
         }
@@ -851,13 +734,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 16.5,
     fontWeight: '800',
     color: PRIMARY_MAROON,
     letterSpacing: -0.2,
   },
   headerSubtitle: {
-    fontSize: 11.5,
+    fontSize: 10.5,
     color: '#6B7280',
     marginTop: 1,
   },
@@ -900,7 +783,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#1F2937',
     paddingVertical: 0,
   },
@@ -932,7 +815,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   categoryPillText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   categoryPillTextActive: {
@@ -1154,16 +1037,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#4B5563',
     marginTop: 8,
   },
   emptySubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 4,
+    marginBottom: 14,
+  },
+  emptyAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: PRIMARY_MAROON,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  emptyAddBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   modalBackdrop: {
     flex: 1,
@@ -1173,48 +1070,52 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   menuPopupCard: {
-    width: 220,
+    width: 230,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     paddingVertical: 6,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F3EFEA',
   },
   menuItemText: {
-    fontSize: 12.5,
-    color: '#374151',
+    fontSize: 11.5,
+    color: '#1F2937',
+    fontWeight: '500',
   },
   filterModalCard: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 360,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     padding: 18,
   },
   filterModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingBottom: 12,
     marginBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3EFEA',
   },
   filterModalTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontWeight: '800',
+    color: PRIMARY_MAROON,
   },
   filterSectionLabel: {
     fontSize: 12,
+    fontWeight: '600',
     color: '#6B7280',
     marginBottom: 8,
   },
@@ -1222,23 +1123,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 18,
   },
   filterChoicePill: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
+    borderRadius: 9,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
+    borderColor: '#EFECE8',
+    backgroundColor: '#FAF7F3',
   },
   filterChoicePillActive: {
     backgroundColor: SOFT_PINK,
     borderColor: PRIMARY_MAROON,
   },
   filterChoiceText: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#4B5563',
+    fontWeight: '500',
   },
   filterChoiceTextActive: {
     color: PRIMARY_MAROON,
@@ -1246,33 +1148,35 @@ const styles = StyleSheet.create({
   },
   filterApplyBtn: {
     backgroundColor: PRIMARY_MAROON,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 11,
+    borderRadius: 10,
     alignItems: 'center',
   },
   filterApplyBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   confirmDeleteCard: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFECE8',
     padding: 18,
   },
   confirmDeleteTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 14,
+    fontWeight: '800',
+    color: PRIMARY_MAROON,
     marginBottom: 8,
   },
   confirmDeleteSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#4B5563',
-    lineHeight: 18,
-    marginBottom: 16,
+    lineHeight: 19,
+    marginBottom: 18,
   },
   confirmDeleteActions: {
     flexDirection: 'row',
@@ -1280,10 +1184,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cancelDeleteBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    backgroundColor: '#F3F4F6',
+    paddingVertical: 9,
+    paddingHorizontal: 15,
+    borderRadius: 9,
+    backgroundColor: '#FAF7F3',
+    borderWidth: 1,
+    borderColor: '#EFECE8',
   },
   cancelDeleteBtnText: {
     fontSize: 12,
@@ -1291,9 +1197,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteConfirmBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 9,
     backgroundColor: PRIMARY_MAROON,
   },
   deleteConfirmBtnText: {

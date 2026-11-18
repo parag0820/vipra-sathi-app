@@ -10,14 +10,27 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
+  StatusBar,
+  Share,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import CustomHeader from '../components/CustomHeader';
 import CustomDropdown from '../components/CustomDropdown';
-import { Feather as Icon } from '@expo/vector-icons';
+import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+
+const PRIMARY_MAROON = '#8B1D1D';
+const SOFT_ROSE_BG = '#FFF0ED';
+const BADGE_ROSE = '#FEE2E2';
+const CARD_BORDER = '#EFECE8';
+const ROW_DIVIDER = '#F3EFEA';
+const WARM_BG = '#FDFBF8';
+const SUBTLE_CREAM = '#FAF7F3';
+const DARK_TEXT = '#1F2937';
+const MUTED_TEXT = '#6B7280';
 
 export interface SamagriItem {
   id: string;
@@ -119,11 +132,16 @@ const HAWAN_SAMAGRI: SamagriItem[] = [
 ];
 
 const SamagriScreen = () => {
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { t, i18n } = useTranslation();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const isHi = i18n.language === 'hi';
+
   const [selectedPooja, setSelectedPooja] = useState('Satyanarayan Pooja');
   const [includeHawan, setIncludeHawan] = useState(false);
   const [filter, setFilter] = useState<'all' | 'yajman' | 'pandit'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
   // Default responsibility: yajman
@@ -166,12 +184,20 @@ const SamagriScreen = () => {
   }, [currentSamagri, includeHawan]);
 
   const filteredList = useMemo(() => {
-    if (filter === 'all') return fullList;
+    const q = searchQuery.trim().toLowerCase();
     return fullList.filter(item => {
-      const resp = itemStates[item.id]?.responsibility || 'yajman';
-      return resp === filter;
+      if (filter !== 'all') {
+        const resp = itemStates[item.id]?.responsibility || 'yajman';
+        if (resp !== filter) return false;
+      }
+      if (q) {
+        const matchHi = item.name_hi.toLowerCase().includes(q);
+        const matchEn = item.name_en.toLowerCase().includes(q);
+        if (!matchHi && !matchEn) return false;
+      }
+      return true;
     });
-  }, [fullList, filter, itemStates]);
+  }, [fullList, filter, itemStates, searchQuery]);
 
   const yajmanCount = useMemo(() => {
     return fullList.filter(item => (itemStates[item.id]?.responsibility || 'yajman') === 'yajman').length;
@@ -433,358 +459,388 @@ const SamagriScreen = () => {
     }
   };
 
+  const handleShareText = async () => {
+    try {
+      const poojaTitle = getPoojaLabel(selectedPooja);
+      const selectedItems = fullList.filter(i => itemStates[i.id]?.checked);
+      const itemsToShare = selectedItems.length > 0 ? selectedItems : fullList;
+      const lines = itemsToShare.map((item, idx) => {
+        const resp = itemStates[item.id]?.responsibility || 'yajman';
+        const who = resp === 'pandit' ? (isHi ? 'पंडित' : 'Pandit') : (isHi ? 'यजमान' : 'Yajman');
+        return `${idx + 1}. ${getItemName(item)} (${getItemQty(item)}) — ${who}`;
+      });
+      await Share.share({
+        message: `${poojaTitle} — ${isHi ? 'सामग्री सूची' : 'Samagri List'}\n\n${lines.join('\n')}`,
+      });
+    } catch (error) {
+      console.error('Failed to share samagri list', error);
+    }
+  };
+
+  const bgScreen = isDark ? '#121212' : WARM_BG;
+  const surfaceBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const subtleBg = isDark ? '#252525' : SUBTLE_CREAM;
+  const borderDynamic = isDark ? '#2D2D2D' : CARD_BORDER;
+  const dividerDynamic = isDark ? '#2A2A2A' : ROW_DIVIDER;
+  const accentColor = isDark ? '#FCA5A5' : PRIMARY_MAROON;
+  const textPrimary = isDark ? '#F8E6CE' : DARK_TEXT;
+  const textSecondary = isDark ? '#9CA3AF' : MUTED_TEXT;
+  const allSelected = fullList.length > 0 && fullList.every(i => itemStates[i.id]?.checked);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <CustomHeader
-        title={t('samagri.header_title', 'Samagri Planner')}
-        showBack={true}
-        headerBgColor={colors.primary}
-        headerTextColor="#FFF"
+    <View style={[styles.container, { backgroundColor: bgScreen }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={surfaceBg}
       />
 
-      <View style={[styles.mainCard, { backgroundColor: colors.background }]}>
-        {/* Configuration Section */}
-        <View style={[styles.configSection, { backgroundColor: isDark ? colors.surface : '#FFF', borderBottomColor: colors.border }]}>
-          <View style={styles.configRow}>
-            {/* Pooja Dropdown */}
-            <View style={styles.dropdownCol}>
-              <CustomDropdown
-                label={t('samagri.select_pooja', 'Select Pooja')}
-                value={selectedPooja}
-                options={poojaOptionsWithLabels}
-                onSelect={setSelectedPooja}
-                containerStyle={styles.dropdownContainer}
-                triggerStyle={styles.dropdownTrigger}
-              />
-            </View>
+      {/* Clean White Top Header matching Reference Image */}
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: Math.max(insets.top, 10),
+            backgroundColor: surfaceBg,
+            borderBottomColor: dividerDynamic,
+          },
+        ]}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Icon name="chevron-left" size={24} color={accentColor} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: accentColor }]}>
+            {t('samagri.header_title', 'सामग्री सूची')}
+          </Text>
+          <TouchableOpacity
+            onPress={handleExportPDF}
+            disabled={isExporting}
+            style={styles.headerSaveBtn}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.headerSaveText, { color: accentColor }]}>
+              {isHi ? 'सहेजें' : 'Save'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-            {/* Hawan Samagri Toggle */}
-            <View style={styles.hawanCol}>
-              <Text style={[styles.controlLabel, { color: colors.text }]}>{t('samagri.hawan_samagri', 'Hawan Samagri')}</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setIncludeHawan(prev => !prev)}
-                style={[
-                  styles.hawanToggleCard,
-                  {
-                    backgroundColor: includeHawan
-                      ? (isDark ? colors.primary + '22' : colors.primary + '12')
-                      : (isDark ? 'rgba(255,255,255,0.03)' : colors.background),
-                    borderColor: includeHawan ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.hawanCardContent}>
-                  <View
-                    style={[
-                      styles.hawanIconWrap,
-                      {
-                        backgroundColor: includeHawan ? colors.primary : colors.primary + '18',
-                      },
-                    ]}
-                  >
-                    <Icon name="sun" size={13} color={includeHawan ? '#FFF' : colors.primary} />
-                  </View>
-                  <Text
-                    style={[
-                      styles.hawanStatusText,
-                      {
-                        color: includeHawan ? colors.primary : colors.text,
-                        fontWeight: includeHawan ? '700' : '500',
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {includeHawan ? t('samagri.added', 'Added') : t('samagri.include', 'Include')}
-                  </Text>
-                </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Config Card: Pooja Dropdown + Hawan Toggle */}
+        <View style={[styles.configCard, { backgroundColor: surfaceBg, borderColor: borderDynamic }]}>
+          <CustomDropdown
+            label={t('samagri.select_pooja', 'पूजा का नाम')}
+            value={selectedPooja}
+            options={poojaOptionsWithLabels}
+            onSelect={setSelectedPooja}
+            containerStyle={styles.dropdownContainer}
+            triggerStyle={styles.dropdownTrigger}
+          />
 
-                <View pointerEvents="none" style={styles.switchContainer}>
-                  <Switch
-                    value={includeHawan}
-                    onValueChange={setIncludeHawan}
-                    trackColor={{ false: colors.border, true: colors.primary + '75' }}
-                    thumbColor={includeHawan ? colors.primary : '#f4f3f4'}
-                    style={
-                      Platform.OS === 'ios'
-                        ? { transform: [{ scaleX: 0.68 }, { scaleY: 0.68 }] }
-                        : { transform: [{ scaleX: 0.78 }, { scaleY: 0.78 }] }
-                    }
-                  />
-                </View>
-              </TouchableOpacity>
+          <View style={[styles.hawanRow, { borderTopColor: dividerDynamic }]}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <Text style={[styles.hawanTitle, { color: textPrimary }]}>
+                {t('samagri.hawan_samagri', 'हवन सामग्री शामिल करें')}
+              </Text>
+              <Text style={[styles.hawanSubtitle, { color: textSecondary }]}>
+                {isHi ? 'हवन की वस्तुएँ भी इसी सूची में जोड़ें' : 'Include hawan items in this list'}
+              </Text>
             </View>
-          </View>
-
-          {/* Quick Summary Bar */}
-          <View style={[styles.summaryBar, { borderColor: colors.border, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : '#FDFBF7' }]}>
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryVal, { color: colors.text }]}>{fullList.length}</Text>
-              <Text style={[styles.summaryLbl, { color: colors.textLight }]}>{t('samagri.filter_all', 'All')}</Text>
-            </View>
-            <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryVal, { color: colors.primary }]}>{yajmanCount}</Text>
-              <Text style={[styles.summaryLbl, { color: colors.textLight }]}>{t('samagri.yajman', 'Yajman')}</Text>
-            </View>
-            <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryVal, { color: '#B3541E' }]}>{panditCount}</Text>
-              <Text style={[styles.summaryLbl, { color: colors.textLight }]}>{t('samagri.pandit', 'Pandit')}</Text>
-            </View>
-            <View style={[styles.summaryDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryVal, { color: '#27AE60' }]}>{collectedCount}</Text>
-              <Text style={[styles.summaryLbl, { color: colors.textLight }]}>{t('samagri.collected', 'Done')}</Text>
-            </View>
+            <Switch
+              value={includeHawan}
+              onValueChange={setIncludeHawan}
+              trackColor={{ false: isDark ? '#3F3F46' : '#E5E7EB', true: PRIMARY_MAROON }}
+              thumbColor="#FFFFFF"
+            />
           </View>
         </View>
 
-        {/* Filter and Bulk Action Bar */}
-        <View style={[styles.filterBar, { backgroundColor: isDark ? colors.background : '#FAF7F2' }]}>
-          {/* Segmented Filter */}
-          <View style={styles.filterPills}>
-            <TouchableOpacity
-              onPress={() => setFilter('all')}
-              style={[
-                styles.filterPill,
-                filter === 'all' && [styles.filterPillActive, { backgroundColor: colors.primary }],
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterPillText, filter === 'all' ? styles.filterPillTextActive : { color: colors.textLight }]}>
-                {t('samagri.filter_all', 'All')} ({fullList.length})
-              </Text>
+        {/* Search Input */}
+        <View style={[styles.searchBox, { backgroundColor: surfaceBg, borderColor: borderDynamic }]}>
+          <Icon name="search" size={15} color={textSecondary} style={{ marginRight: 8 }} />
+          <TextInput
+            style={[styles.searchInput, { color: textPrimary }]}
+            placeholder={isHi ? 'सामग्री खोजें' : 'Search samagri item'}
+            placeholderTextColor={textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="x" size={15} color={textSecondary} />
             </TouchableOpacity>
+          )}
+        </View>
 
-            <TouchableOpacity
-              onPress={() => setFilter('yajman')}
-              style={[
-                styles.filterPill,
-                filter === 'yajman' && [styles.filterPillActive, { backgroundColor: colors.primary }],
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterPillText, filter === 'yajman' ? styles.filterPillTextActive : { color: colors.textLight }]}>
-                {t('samagri.filter_yajman', 'Yajman')} ({yajmanCount})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setFilter('pandit')}
-              style={[
-                styles.filterPill,
-                filter === 'pandit' && [styles.filterPillActive, { backgroundColor: colors.primary }],
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterPillText, filter === 'pandit' ? styles.filterPillTextActive : { color: colors.textLight }]}>
-                {t('samagri.filter_pandit', 'Pandit')} ({panditCount})
-              </Text>
-            </TouchableOpacity>
+        {/* Filter Underline Tabs (Panchang-style) + Select All Link */}
+        <View style={[styles.filterHeaderRow, { borderBottomColor: dividerDynamic }]}>
+          <View style={styles.filterTabsRow}>
+            {[
+              { id: 'all' as const, label: `${t('samagri.filter_all', 'सभी')} (${fullList.length})` },
+              { id: 'yajman' as const, label: `${t('samagri.filter_yajman', 'यजमान')} (${yajmanCount})` },
+              { id: 'pandit' as const, label: `${t('samagri.filter_pandit', 'पंडित')} (${panditCount})` },
+            ].map(tab => {
+              const active = filter === tab.id;
+              return (
+                <TouchableOpacity
+                  key={tab.id}
+                  style={[
+                    styles.filterTabBtn,
+                    active && { borderBottomColor: accentColor },
+                  ]}
+                  onPress={() => setFilter(tab.id)}
+                  activeOpacity={0.75}
+                >
+                  <Text
+                    style={[
+                      styles.filterTabText,
+                      active && styles.filterTabTextActive,
+                      { color: active ? accentColor : textSecondary },
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-          {/* Quick Select All Button */}
-          <TouchableOpacity
-            onPress={toggleSelectAll}
-            style={[styles.selectAllBtn, { borderColor: colors.border }]}
-            activeOpacity={0.7}
-          >
-            <Icon
-              name={fullList.every(i => itemStates[i.id]?.checked) ? 'check-square' : 'square'}
-              size={13}
-              color={colors.primary}
-            />
-            <Text style={[styles.selectAllText, { color: colors.primary }]}>
-              {fullList.every(i => itemStates[i.id]?.checked)
-                ? t('samagri.unselect_all', 'Unselect All')
-                : t('samagri.select_all', 'Select All')}
+          <TouchableOpacity onPress={toggleSelectAll} activeOpacity={0.7} style={styles.selectAllLink}>
+            <Text style={[styles.selectAllLinkText, { color: accentColor }]}>
+              {allSelected
+                ? t('samagri.unselect_all', 'हटाएँ')
+                : t('samagri.select_all', 'सभी चुनें')}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Samagri List in Table Format */}
-        <ScrollView
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Table Container Card */}
-          <View style={[styles.tableContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            {/* Table Header Row */}
-            <View style={[styles.tableHeaderRow, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#F5ECE1', borderBottomColor: colors.border }]}>
-              <View style={styles.colCheck}>
-                <Icon name="check" size={13} color={colors.textLight} />
-              </View>
-              <View style={styles.colName}>
-                <Text style={[styles.tableHeaderText, { color: colors.text }]}>
-                  {t('samagri.table_header_name', 'Samagri Name')}
-                </Text>
-              </View>
-              <View style={styles.colQty}>
-                <Text style={[styles.tableHeaderText, { color: colors.text }]}>
-                  {t('samagri.table_header_qty', 'Qty')}
-                </Text>
-              </View>
-              <View style={styles.colAssigned}>
-                <Text style={[styles.tableHeaderText, { color: colors.text }]}>
-                  {t('samagri.table_header_assigned', 'Arranged By')}
-                </Text>
-              </View>
+        {/* Clean Flat Table */}
+        <View style={[styles.tableContainer, { backgroundColor: surfaceBg, borderColor: borderDynamic }]}>
+          {/* Table Header Row */}
+          <View style={[styles.tableHeaderRow, { backgroundColor: subtleBg, borderBottomColor: dividerDynamic }]}>
+            <TouchableOpacity onPress={toggleSelectAll} style={styles.colCheck} activeOpacity={0.7}>
+              <MaterialCommunityIcons
+                name={allSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={18}
+                color={allSelected ? accentColor : textSecondary}
+              />
+            </TouchableOpacity>
+            <View style={styles.colName}>
+              <Text style={[styles.tableHeaderText, { color: textPrimary }]}>
+                {t('samagri.table_header_name', 'सामग्री')}
+              </Text>
             </View>
-
-            {/* Table Body Rows */}
-            {filteredList.map((item, index) => {
-              const state = itemStates[item.id] || { checked: false, responsibility: 'yajman' };
-              const itemName = getItemName(item);
-              const isEven = index % 2 === 0;
-
-              return (
-                <View
-                  key={item.id}
-                  style={[
-                    styles.tableRow,
-                    {
-                      borderBottomColor: colors.border,
-                      backgroundColor: isEven
-                        ? (isDark ? colors.surface : '#FFFFFF')
-                        : (isDark ? 'rgba(255,255,255,0.015)' : '#FCFAF7'),
-                    },
-                  ]}
-                >
-                  {/* Col 1: Checkbox */}
-                  <TouchableOpacity
-                    onPress={() => toggleCheck(item.id)}
-                    style={styles.colCheck}
-                    activeOpacity={0.7}
-                  >
-                    <Icon
-                      name={state.checked ? 'check-square' : 'square'}
-                      size={18}
-                      color={state.checked ? colors.primary : colors.textLight}
-                    />
-                  </TouchableOpacity>
-
-                  {/* Col 2: Name */}
-                  <TouchableOpacity
-                    onPress={() => toggleCheck(item.id)}
-                    style={styles.colName}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.itemNameText,
-                        {
-                          color: state.checked ? colors.textLight : colors.text,
-                          textDecorationLine: state.checked ? 'line-through' : 'none',
-                        },
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {itemName}
-                    </Text>
-                    {item.isHawan && (
-                      <View style={styles.hawanBadge}>
-                        <Text style={styles.hawanBadgeText}>
-                          {i18n.language === 'hi' ? 'हवन' : 'Hawan'}
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-
-                  {/* Col 3: Qty (Editable) */}
-                  <View style={styles.colQty}>
-                    <TextInput
-                      style={[
-                        styles.qtyInput,
-                        {
-                          color: colors.text,
-                          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F5EFE6',
-                          borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#DFD4C4',
-                        },
-                      ]}
-                      value={getItemQty(item)}
-                      onChangeText={(val) => handleQtyChange(item.id, val)}
-                      placeholder={t('samagri.qty', 'Qty')}
-                      placeholderTextColor={colors.textLight}
-                      selectTextOnFocus
-                    />
-                  </View>
-
-                  {/* Col 4: Yajman / Pandit Toggle */}
-                  <View style={styles.colAssigned}>
-                    <View style={[styles.toggleWrap, { borderColor: colors.border, backgroundColor: isDark ? '#141414' : '#EFEAE3' }]}>
-                      <TouchableOpacity
-                        style={[
-                          styles.toggleBtn,
-                          state.responsibility === 'yajman' && [styles.toggleActiveYajman, { backgroundColor: colors.primary }],
-                        ]}
-                        onPress={() => setResponsibility(item.id, 'yajman')}
-                        activeOpacity={0.8}
-                      >
-                        <Text
-                          style={[
-                            styles.toggleBtnText,
-                            state.responsibility === 'yajman' ? styles.toggleBtnTextActive : { color: colors.textLight },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {t('samagri.yajman', 'Yajman')}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.toggleBtn,
-                          state.responsibility === 'pandit' && [styles.toggleActivePandit, { backgroundColor: '#B3541E' }],
-                        ]}
-                        onPress={() => setResponsibility(item.id, 'pandit')}
-                        activeOpacity={0.8}
-                      >
-                        <Text
-                          style={[
-                            styles.toggleBtnText,
-                            state.responsibility === 'pandit' ? styles.toggleBtnTextActive : { color: colors.textLight },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {t('samagri.pandit', 'Pandit')}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
-
-            {filteredList.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <Icon name="inbox" size={32} color={colors.textLight} />
-                <Text style={[styles.emptyText, { color: colors.textLight }]}>
-                  {i18n.language === 'hi' ? 'कोई सामग्री नहीं मिली' : 'No items match current filter'}
-                </Text>
-              </View>
-            )}
+            <View style={styles.colQty}>
+              <Text style={[styles.tableHeaderText, { color: textPrimary }]}>
+                {t('samagri.table_header_qty', 'मात्रा')}
+              </Text>
+            </View>
+            <View style={styles.colAssigned}>
+              <Text style={[styles.tableHeaderText, { color: textPrimary }]}>
+                {t('samagri.table_header_assigned', 'कौन लाएगा')}
+              </Text>
+            </View>
           </View>
 
-          <View style={{ height: 24 }} />
-        </ScrollView>
+          {/* Table Rows */}
+          {filteredList.map((item, idx) => {
+            const state = itemStates[item.id] || { checked: false, responsibility: 'yajman' };
+            const itemName = getItemName(item);
+            const isLast = idx === filteredList.length - 1;
 
-        {/* Bottom Bar for Export PDF */}
-        <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+            return (
+              <View
+                key={item.id}
+                style={[
+                  styles.tableRow,
+                  !isLast && { borderBottomWidth: 1, borderBottomColor: dividerDynamic },
+                ]}
+              >
+                {/* Col 1: Maroon Checkbox */}
+                <TouchableOpacity
+                  onPress={() => toggleCheck(item.id)}
+                  style={styles.colCheck}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name={state.checked ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                    size={20}
+                    color={state.checked ? PRIMARY_MAROON : textSecondary}
+                  />
+                </TouchableOpacity>
+
+                {/* Col 2: Name */}
+                <TouchableOpacity
+                  onPress={() => toggleCheck(item.id)}
+                  style={styles.colName}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.itemNameText,
+                      {
+                        color: state.checked ? textSecondary : textPrimary,
+                        textDecorationLine: state.checked ? 'line-through' : 'none',
+                      },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {itemName}
+                  </Text>
+                  {item.isHawan && (
+                    <Text style={[styles.hawanTagText, { color: '#B45309' }]}>
+                      {isHi ? 'हवन' : 'Hawan'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                {/* Col 3: Qty Input */}
+                <View style={styles.colQty}>
+                  <TextInput
+                    style={[
+                      styles.qtyInput,
+                      {
+                        color: textPrimary,
+                        backgroundColor: isDark ? '#181818' : '#FFFFFF',
+                        borderColor: borderDynamic,
+                      },
+                    ]}
+                    value={getItemQty(item)}
+                    onChangeText={val => handleQtyChange(item.id, val)}
+                    placeholder={t('samagri.qty', 'मात्रा')}
+                    placeholderTextColor={textSecondary}
+                    selectTextOnFocus
+                  />
+                </View>
+
+                {/* Col 4: Pandit / Yajman Soft-Rose Toggle (Matching Reference Image) */}
+                <View style={styles.colAssigned}>
+                  <View
+                    style={[
+                      styles.toggleWrap,
+                      {
+                        borderColor: borderDynamic,
+                        backgroundColor: isDark ? '#181818' : '#F3F4F6',
+                      },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleBtn,
+                        state.responsibility === 'pandit' && {
+                          backgroundColor: isDark ? '#3D1F1F' : BADGE_ROSE,
+                        },
+                      ]}
+                      onPress={() => setResponsibility(item.id, 'pandit')}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleBtnText,
+                          state.responsibility === 'pandit'
+                            ? { color: accentColor, fontWeight: '700' }
+                            : { color: textSecondary },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {t('samagri.pandit', 'पंडित')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleBtn,
+                        state.responsibility === 'yajman' && {
+                          backgroundColor: isDark ? '#3D1F1F' : BADGE_ROSE,
+                        },
+                      ]}
+                      onPress={() => setResponsibility(item.id, 'yajman')}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleBtnText,
+                          state.responsibility === 'yajman'
+                            ? { color: accentColor, fontWeight: '700' }
+                            : { color: textSecondary },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {t('samagri.yajman', 'यजमान')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+
+          {filteredList.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Icon name="inbox" size={28} color={textSecondary} />
+              <Text style={[styles.emptyText, { color: textSecondary }]}>
+                {isHi ? 'कोई सामग्री नहीं मिली' : 'No items match current filter'}
+              </Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Bottom Summary Line & Flat Export / Share Footer (Matching Reference Image) */}
+      <View
+        style={[
+          styles.bottomBar,
+          {
+            backgroundColor: surfaceBg,
+            borderTopColor: borderDynamic,
+            paddingBottom: Math.max(insets.bottom, 10),
+          },
+        ]}
+      >
+        <Text style={[styles.bottomSummaryLine, { color: textSecondary }]}>
+          {isHi
+            ? `${collectedCount} चयनित • पंडित: ${panditCount} • यजमान: ${yajmanCount}`
+            : `${collectedCount} selected • Pandit: ${panditCount} • Yajman: ${yajmanCount}`}
+        </Text>
+
+        <View style={styles.bottomButtonsRow}>
           <TouchableOpacity
-            style={[styles.pdfBtn, { backgroundColor: '#B03A2E' }]}
+            style={[styles.exportOutlineBtn, { backgroundColor: surfaceBg, borderColor: borderDynamic }]}
             onPress={handleExportPDF}
             disabled={isExporting}
-            activeOpacity={0.85}
+            activeOpacity={0.75}
           >
             {isExporting ? (
-              <ActivityIndicator size="small" color="#FFF" />
+              <ActivityIndicator size="small" color={accentColor} />
             ) : (
               <>
-                <Icon name="file-text" size={18} color="#FFF" />
-                <Text style={styles.bottomBtnText}>{t('samagri.export_pdf', 'Export PDF')}</Text>
+                <Icon name="download" size={15} color={accentColor} />
+                <Text style={[styles.exportOutlineText, { color: accentColor }]}>
+                  {t('samagri.export_pdf', 'एक्सपोर्ट')}
+                </Text>
               </>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sharePrimaryBtn, { backgroundColor: PRIMARY_MAROON }]}
+            onPress={handleShareText}
+            activeOpacity={0.8}
+          >
+            <Icon name="share-2" size={15} color="#FFFFFF" />
+            <Text style={styles.sharePrimaryText}>
+              {isHi ? 'शेयर करें' : 'Share'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -796,185 +852,137 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  mainCard: {
-    flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-  },
-  configSection: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
+  headerContainer: {
+    paddingHorizontal: 14,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    zIndex: 10,
   },
-  configRow: {
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
+    alignItems: 'center',
   },
-  dropdownCol: {
-    flex: 1.25,
+  backButton: {
+    marginRight: 6,
+    padding: 2,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 16.5,
+    fontWeight: '800',
+  },
+  headerSaveBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  headerSaveText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 20,
+  },
+  configCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 10,
   },
   dropdownContainer: {
-    marginBottom: 0,
+    marginBottom: 10,
   },
   dropdownTrigger: {
     paddingHorizontal: 10,
-    height: 42,
+    height: 40,
   },
-  hawanCol: {
-    flex: 1,
-  },
-  controlLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginBottom: 4,
-    marginLeft: 4,
-  },
-  hawanToggleCard: {
-    height: 42,
-    borderWidth: 1,
-    borderRadius: 12,
+  hawanRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
   },
-  hawanCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 4,
+  hawanTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
   },
-  hawanIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 5,
-  },
-  hawanStatusText: {
+  hawanSubtitle: {
     fontSize: 11,
-    flexShrink: 1,
+    marginTop: 2,
   },
-  switchContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  summaryBar: {
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
     borderWidth: 1,
     borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
+    height: 38,
+    marginBottom: 10,
   },
-  summaryItem: {
+  searchInput: {
     flex: 1,
-    alignItems: 'center',
+    fontSize: 12,
+    paddingVertical: 0,
   },
-  summaryVal: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  summaryLbl: {
-    fontSize: 10,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-  summaryDivider: {
-    width: 1,
-    height: 20,
-  },
-  filterBar: {
+  filterHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderBottomWidth: 1,
+    marginBottom: 10,
   },
-  filterPills: {
+  filterTabsRow: {
     flexDirection: 'row',
-    gap: 6,
-  },
-  filterPill: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  filterPillActive: {
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-  },
-  filterPillText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  filterPillTextActive: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  selectAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
     gap: 4,
-    paddingVertical: 4,
+  },
+  filterTabBtn: {
+    paddingVertical: 8,
     paddingHorizontal: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  selectAllText: {
-    fontSize: 11,
-    fontWeight: '600',
+  filterTabText: {
+    fontSize: 11.5,
+    fontWeight: '500',
   },
-  listContent: {
-    padding: 12,
+  filterTabTextActive: {
+    fontWeight: '700',
+  },
+  selectAllLink: {
+    paddingVertical: 6,
+    paddingLeft: 8,
+  },
+  selectAllLinkText: {
+    fontSize: 11.5,
+    fontWeight: '700',
   },
   tableContainer: {
     borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
   },
   tableHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 9,
     paddingHorizontal: 8,
-    borderBottomWidth: 1.5,
+    borderBottomWidth: 1,
   },
   tableHeaderText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    fontSize: 11.5,
+    fontWeight: '700',
   },
   tableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: 8,
     paddingHorizontal: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    minHeight: 48,
+    minHeight: 46,
   },
   colCheck: {
     width: 28,
@@ -982,12 +990,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   colName: {
-    flex: 1.4,
+    flex: 1.35,
     paddingHorizontal: 6,
     justifyContent: 'center',
   },
   colQty: {
-    width: 72,
+    width: 68,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 2,
@@ -998,52 +1006,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 4,
-    paddingVertical: 2,
+    paddingVertical: 0,
     textAlign: 'center',
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   colAssigned: {
-    width: 114,
+    width: 110,
     alignItems: 'center',
     justifyContent: 'center',
   },
   itemNameText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     lineHeight: 16,
   },
-  hawanBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#FDEED9',
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    marginTop: 2,
-  },
-  hawanBadgeText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#D35400',
-  },
-  qtyBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
-    minWidth: 42,
-    alignItems: 'center',
-  },
-  qtyBadgeText: {
-    fontSize: 10.5,
-    fontWeight: '600',
+  hawanTagText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    marginTop: 1,
   },
   toggleWrap: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 7,
     overflow: 'hidden',
     height: 27,
-    width: 110,
+    width: 106,
   },
   toggleBtn: {
     flex: 1,
@@ -1051,55 +1040,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 2,
   },
-  toggleActiveYajman: {
-    elevation: 2,
-  },
-  toggleActivePandit: {
-    elevation: 2,
-  },
   toggleBtnText: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '600',
-  },
-  toggleBtnTextActive: {
-    color: '#FFF',
-    fontWeight: 'bold',
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 32,
     gap: 8,
   },
   emptyText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '500',
   },
   bottomBar: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    paddingHorizontal: 14,
+    paddingTop: 8,
     borderTopWidth: 1,
   },
-  pdfBtn: {
-    width: '100%',
-    flexDirection: 'row',
-    height: 38,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    gap: 8,
+  bottomSummaryLine: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    marginBottom: 8,
   },
-  bottomBtnText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-    letterSpacing: 0.3,
+  bottomButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  exportOutlineBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  exportOutlineText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  sharePrimaryBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  sharePrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
   },
 });
 

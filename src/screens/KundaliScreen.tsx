@@ -204,83 +204,113 @@ const KundaliScreen = () => {
         <View style={styles.headerRightSpacer} />
       </View>
 
-      {/* Top Segmented Tabs */}
-      <View style={[styles.tabContainer, { backgroundColor: bgMain }]}>
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === 'create'
-              ? { backgroundColor: PRIMARY_MAROON, borderColor: PRIMARY_MAROON }
-              : { backgroundColor: cardBg, borderColor: borderDynamic },
-          ]}
-          onPress={() => setActiveTab('create')}
-          activeOpacity={0.8}
-        >
-          <Icon
-            name="plus-circle"
-            size={13}
-            color={activeTab === 'create' ? '#FFFFFF' : textSecondary}
-            style={{ marginRight: 5 }}
-          />
-          <Text
+      {/* Top Underline Tabs (Panchang-style Tab Bar) */}
+      <View
+        style={[
+          styles.tabBar,
+          { backgroundColor: bgMain, borderBottomColor: borderDynamic },
+        ]}
+      >
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
             style={[
-              styles.tabText,
-              { color: activeTab === 'create' ? '#FFFFFF' : textSecondary },
+              styles.tabButton,
+              activeTab === 'create' && {
+                borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON,
+              },
             ]}
+            onPress={() => setActiveTab('create')}
+            activeOpacity={0.75}
           >
-            {t('kundali.create_tab', 'कुंडली बनाएँ')}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === 'saved'
-              ? { backgroundColor: PRIMARY_MAROON, borderColor: PRIMARY_MAROON }
-              : { backgroundColor: cardBg, borderColor: borderDynamic },
-          ]}
-          onPress={() => setActiveTab('saved')}
-          activeOpacity={0.8}
-        >
-          <Icon
-            name="bookmark"
-            size={13}
-            color={activeTab === 'saved' ? '#FFFFFF' : textSecondary}
-            style={{ marginRight: 5 }}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'saved' ? '#FFFFFF' : textSecondary },
-            ]}
-          >
-            {t('kundali.saved_tab', 'सहेजी गई')}
-          </Text>
-          {savedKundalis.length > 0 && (
-            <View
+            <Icon
+              name="plus-circle"
+              size={14}
+              color={
+                activeTab === 'create'
+                  ? isDark
+                    ? '#FCA5A5'
+                    : PRIMARY_MAROON
+                  : textSecondary
+              }
+              style={{ marginRight: 5 }}
+            />
+            <Text
               style={[
-                styles.tabBadge,
+                styles.tabText,
+                activeTab === 'create' && styles.tabTextActive,
                 {
-                  backgroundColor:
-                    activeTab === 'saved'
-                      ? 'rgba(255,255,255,0.22)'
-                      : isDark
-                      ? '#2D2D2D'
-                      : SOFT_ROSE_BG,
+                  color:
+                    activeTab === 'create'
+                      ? isDark
+                        ? '#FCA5A5'
+                        : PRIMARY_MAROON
+                      : textSecondary,
                 },
               ]}
             >
-              <Text
+              {t('kundali.create_tab', 'कुंडली बनाएँ')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'saved' && {
+                borderBottomColor: isDark ? '#FCA5A5' : PRIMARY_MAROON,
+              },
+            ]}
+            onPress={() => setActiveTab('saved')}
+            activeOpacity={0.75}
+          >
+            <Icon
+              name="bookmark"
+              size={14}
+              color={
+                activeTab === 'saved'
+                  ? isDark
+                    ? '#FCA5A5'
+                    : PRIMARY_MAROON
+                  : textSecondary
+              }
+              style={{ marginRight: 5 }}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'saved' && styles.tabTextActive,
+                {
+                  color:
+                    activeTab === 'saved'
+                      ? isDark
+                        ? '#FCA5A5'
+                        : PRIMARY_MAROON
+                      : textSecondary,
+                },
+              ]}
+            >
+              {t('kundali.saved_tab', 'सहेजी गई')}
+            </Text>
+            {savedKundalis.length > 0 && (
+              <View
                 style={[
-                  styles.tabBadgeText,
-                  { color: activeTab === 'saved' ? '#FFFFFF' : PRIMARY_MAROON },
+                  styles.tabBadge,
+                  {
+                    backgroundColor: isDark ? '#2B1B1B' : SOFT_ROSE_BG,
+                  },
                 ]}
               >
-                {savedKundalis.length}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.tabBadgeText,
+                    { color: isDark ? '#FCA5A5' : PRIMARY_MAROON },
+                  ]}
+                >
+                  {savedKundalis.length}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Scroll Content */}
@@ -1122,25 +1152,33 @@ const styles = StyleSheet.create({
   headerRightSpacer: {
     width: 32,
   },
+  tabBar: {
+    borderBottomWidth: 1,
+    paddingHorizontal: 12,
+  },
   tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 6,
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
   tabButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginHorizontal: 2,
   },
   tabText: {
-    fontSize: 11.5,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tabTextActive: {
     fontWeight: '700',
   },
   tabBadge: {
@@ -1184,13 +1222,13 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 12.5,
+    fontSize: 12,
     paddingVertical: 0,
     height: '100%',
   },
   pickerText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11.5,
   },
   rowInputs: {
     flexDirection: 'row',
@@ -1225,7 +1263,7 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY_MAROON,
   },
   genderPillText: {
-    fontSize: 12,
+    fontSize: 11.5,
   },
   saveToggleRow: {
     flexDirection: 'row',
@@ -1286,7 +1324,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   generateBtnText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -1408,7 +1446,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   emptyTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontWeight: '700',
     marginBottom: 4,
   },
@@ -1428,7 +1466,7 @@ const styles = StyleSheet.create({
   },
   emptyCtaText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
   },
   savedList: {
@@ -1458,7 +1496,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   savedName: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   savedGenderSub: {

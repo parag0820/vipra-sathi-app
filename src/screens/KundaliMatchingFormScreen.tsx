@@ -519,12 +519,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
   headerSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: MUTED_TEXT,
     marginTop: 1,
   },
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: PRIMARY_MAROON,
   },
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
   },
   submitBtnIcon: {

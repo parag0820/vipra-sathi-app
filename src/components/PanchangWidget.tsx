@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   itemValue: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   eventsContainer: {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   eventText: {
-    fontSize: 14,
+    fontSize: 12,
   }
 });
 

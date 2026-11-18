@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Feather as Icon } from '@expo/vector-icons';
 import { PostType } from '../types/community';
+
+const PRIMARY_MAROON = '#8B1D1D';
+const SOFT_ROSE_BG = '#FFF0ED';
+const CARD_BORDER = '#EFECE8';
+const ROW_DIVIDER = '#F3EFEA';
+const DARK_TEXT = '#1F2937';
+const MUTED_TEXT = '#6B7280';
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -10,8 +29,16 @@ interface CreatePostModalProps {
   onSubmit: (title: string, content: string, type: PostType) => void;
 }
 
+const POST_TYPES: { id: PostType; labelHi: string; labelEn: string }[] = [
+  { id: 'question', labelHi: 'प्रश्न', labelEn: 'Question' },
+  { id: 'knowledge', labelHi: 'ज्ञान', labelEn: 'Knowledge' },
+  { id: 'suggestion', labelHi: 'सुझाव', labelEn: 'Suggestion' },
+];
+
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, onSubmit }) => {
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
+  const { i18n } = useTranslation();
+  const isHi = i18n.language === 'hi';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -26,96 +53,158 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, onS
     onClose();
   };
 
+  const surfaceBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const inputBg = isDark ? '#141414' : '#FFFFFF';
+  const borderDynamic = isDark ? '#2D2D2D' : CARD_BORDER;
+  const dividerDynamic = isDark ? '#2A2A2A' : ROW_DIVIDER;
+  const accentColor = isDark ? '#FCA5A5' : PRIMARY_MAROON;
+  const roseTintBg = isDark ? '#2B1B1B' : SOFT_ROSE_BG;
+  const textPrimary = isDark ? '#F8E6CE' : DARK_TEXT;
+  const textSecondary = isDark ? '#9CA3AF' : MUTED_TEXT;
+  const canSubmit = Boolean(title.trim() && content.trim());
+
   return (
     <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
-          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
-
-            {/* Header with accent */}
-            <View style={[styles.header, { borderBottomColor: colors.border }]}>
-              <View style={styles.headerLeft}>
-                <View style={[styles.headerIcon, { backgroundColor: colors.primary + '15' }]}>
-                  <Icon name="edit-3" size={18} color={colors.primary} />
-                </View>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Create Post</Text>
-              </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <Icon name="x" size={20} color={colors.textLight} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.content}>
-              <Text style={[styles.label, { color: colors.text }]}>Post Type</Text>
-              <View style={[styles.segmentedControl, { borderColor: colors.border }]}>
-                {(['question', 'knowledge', 'suggestion'] as PostType[]).map((t) => (
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <KeyboardAvoidingView
+              style={styles.keyboardView}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+              <View
+                style={[
+                  styles.modalContainer,
+                  { backgroundColor: surfaceBg, borderColor: borderDynamic },
+                ]}
+              >
+                {/* Clean Flat Header */}
+                <View style={[styles.header, { borderBottomColor: dividerDynamic }]}>
+                  <View style={styles.headerLeft}>
+                    <View style={[styles.headerIcon, { backgroundColor: roseTintBg }]}>
+                      <Icon name="edit-3" size={16} color={accentColor} />
+                    </View>
+                    <Text style={[styles.headerTitle, { color: accentColor }]}>
+                      {isHi ? 'नई पोस्ट लिखें' : 'Create Post'}
+                    </Text>
+                  </View>
                   <TouchableOpacity
-                    key={t}
-                    style={[
-                      styles.segmentButton,
-                      type === t && { backgroundColor: colors.primary },
-                      { borderColor: colors.border },
-                    ]}
-                    onPress={() => setType(t)}
+                    onPress={onClose}
+                    style={[styles.closeBtn, { backgroundColor: isDark ? '#2A2A2A' : '#F3F4F6' }]}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[
-                      styles.segmentText,
-                      { color: type === t ? '#FFF' : colors.text },
-                    ]}>
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    <Icon name="x" size={16} color={textSecondary} />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  contentContainerStyle={styles.content}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text style={[styles.label, { color: textPrimary }]}>
+                    {isHi ? 'पोस्ट का प्रकार' : 'Post Type'}
+                  </Text>
+                  <View style={styles.chipRow}>
+                    {POST_TYPES.map(item => {
+                      const active = type === item.id;
+                      return (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={[
+                            styles.chipBtn,
+                            {
+                              backgroundColor: active ? roseTintBg : inputBg,
+                              borderColor: active ? accentColor : borderDynamic,
+                            },
+                          ]}
+                          onPress={() => setType(item.id)}
+                          activeOpacity={0.75}
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              {
+                                color: active ? accentColor : textSecondary,
+                                fontWeight: active ? '700' : '500',
+                              },
+                            ]}
+                          >
+                            {isHi ? item.labelHi : item.labelEn}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.label, { color: textPrimary }]}>
+                    {isHi ? 'शीर्षक' : 'Title'} <Text style={styles.requiredAsterisk}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { color: textPrimary, borderColor: borderDynamic, backgroundColor: inputBg },
+                    ]}
+                    placeholder={isHi ? 'विषय लिखें...' : 'What is this about?'}
+                    placeholderTextColor={textSecondary}
+                    value={title}
+                    onChangeText={setTitle}
+                  />
+
+                  <Text style={[styles.label, { color: textPrimary }]}>
+                    {isHi ? 'विवरण' : 'Content'} <Text style={styles.requiredAsterisk}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.textArea,
+                      { color: textPrimary, borderColor: borderDynamic, backgroundColor: inputBg },
+                    ]}
+                    placeholder={isHi ? 'अपने विचार या प्रश्न लिखें...' : 'Share your thoughts...'}
+                    placeholderTextColor={textSecondary}
+                    value={content}
+                    onChangeText={setContent}
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </ScrollView>
+
+                <View style={[styles.actionRow, { borderTopColor: dividerDynamic }]}>
+                  <TouchableOpacity
+                    style={[
+                      styles.cancelBtn,
+                      { borderColor: borderDynamic, backgroundColor: surfaceBg },
+                    ]}
+                    onPress={onClose}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.cancelText, { color: textSecondary }]}>
+                      {isHi ? 'रद्द करें' : 'Cancel'}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.submitBtn,
+                      {
+                        backgroundColor: canSubmit
+                          ? PRIMARY_MAROON
+                          : isDark
+                            ? '#3A2323'
+                            : '#D6B4B4',
+                      },
+                    ]}
+                    onPress={handleSubmit}
+                    disabled={!canSubmit}
+                    activeOpacity={0.8}
+                  >
+                    <Icon name="send" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.submitText}>{isHi ? 'पोस्ट करें' : 'Post'}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-
-              <Text style={[styles.label, { color: colors.text }]}>Title</Text>
-              <TextInput
-                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                placeholder="What is this about?"
-                placeholderTextColor={colors.textLight + '80'}
-                value={title}
-                onChangeText={setTitle}
-              />
-
-              <Text style={[styles.label, { color: colors.text }]}>Content</Text>
-              <TextInput
-                style={[styles.textArea, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                placeholder="Share your thoughts..."
-                placeholderTextColor={colors.textLight + '80'}
-                value={content}
-                onChangeText={setContent}
-                multiline
-                textAlignVertical="top"
-              />
-
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={[styles.cancelBtn, { borderColor: colors.border }]}
-                  onPress={onClose}
-                >
-                  <Text style={[styles.cancelText, { color: colors.textLight }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.submitBtn, {
-                    backgroundColor: title.trim() && content.trim() ? colors.primary : colors.border,
-                  }]}
-                  onPress={handleSubmit}
-                  disabled={!title.trim() || !content.trim()}
-                >
-                  <Icon name="send" size={16} color="#FFF" style={{ marginRight: 6 }} />
-                  <Text style={[styles.submitText, {
-                    color: title.trim() && content.trim() ? '#FFF' : colors.textLight,
-                  }]}>Post</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -123,29 +212,27 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, onS
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
-    padding: 20,
+    padding: 16,
   },
   keyboardView: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   modalContainer: {
-    borderRadius: 20,
-    maxHeight: '90%',
+    borderRadius: 14,
+    borderWidth: 1,
+    maxHeight: '88%',
     overflow: 'hidden',
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   headerLeft: {
@@ -156,69 +243,97 @@ const styles = StyleSheet.create({
   headerIcon: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerTitle: {
+    fontSize: 15.5,
+    fontWeight: '700',
+  },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: { padding: 20 },
-  label: { fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 16 },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 14,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  requiredAsterisk: {
+    color: '#DC2626',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chipBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipText: {
+    fontSize: 11.5,
+  },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    fontSize: 12,
   },
   textArea: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
-    minHeight: 120,
-  },
-  segmentedControl: {
-    flexDirection: 'row',
-    borderRadius: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  segmentButton: {
-    flex: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    alignItems: 'center',
-    borderRightWidth: 1,
+    fontSize: 12,
+    minHeight: 105,
   },
-  segmentText: { fontSize: 13, fontWeight: '600' },
   actionRow: {
     flexDirection: 'row',
-    marginTop: 24,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    gap: 10,
   },
   cancelBtn: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
   },
-  cancelText: { fontSize: 15, fontWeight: '600' },
+  cancelText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
   submitBtn: {
-    flex: 1.5,
+    flex: 1.4,
     flexDirection: 'row',
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitText: { fontSize: 15, fontWeight: '700' },
+  submitText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
 });
 
 export default CreatePostModal;

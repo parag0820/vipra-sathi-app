@@ -52,6 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkInitialState = async () => {
     try {
+      const seenOnboarding = await AsyncStorage.getItem('has_seen_onboarding');
+      if (seenOnboarding === 'true') {
+        setHasSeenOnboarding(true);
+      }
+
       const guestStatus = await AsyncStorage.getItem('is_guest');
       if (guestStatus === 'true') {
         let guestId = await AsyncStorage.getItem('user_id');
@@ -69,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setIsGuest(true);
         setIsAuthenticated(false);
+        setHasSeenOnboarding(true);
         return;
       }
 
@@ -192,6 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('auth_token', authToken);
       }
       await AsyncStorage.removeItem('is_guest');
+      await AsyncStorage.setItem('has_seen_onboarding', 'true');
     } catch (e) {
       console.warn('Failed to save auth state to AsyncStorage', e);
     }
@@ -199,6 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userProfile);
     setIsAuthenticated(true);
     setIsGuest(false);
+    setHasSeenOnboarding(true);
   };
 
   const logout = async () => {
@@ -211,14 +219,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.removeItem('user_email');
       await AsyncStorage.removeItem('user_role');
       await AsyncStorage.removeItem('is_guest');
-      await AsyncStorage.removeItem('has_seen_onboarding');
+      // Keep has_seen_onboarding persisted so the user returns to Login screen rather than introductory onboarding
     } catch (e) {
       // Continue without persistence
     }
     setUser(null);
     setIsAuthenticated(false);
     setIsGuest(false);
-    setHasSeenOnboarding(false);
+    setHasSeenOnboarding(true);
   };
 
   const continueAsGuest = async () => {
@@ -230,6 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('user_id', guestId);
       }
       await AsyncStorage.setItem('is_guest', 'true');
+      await AsyncStorage.setItem('has_seen_onboarding', 'true');
     } catch (e) {
       guestId = generateMongoObjectId();
     }
@@ -246,12 +255,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const completeOnboardingFlow = async () => {
+    try {
+      await AsyncStorage.setItem('has_seen_onboarding', 'true');
+    } catch (e) {
+      // Continue without persistence
+    }
     setHasSeenOnboarding(true);
   };
 
   const exitGuestToLogin = async () => {
     try {
       await AsyncStorage.removeItem('is_guest');
+      await AsyncStorage.setItem('has_seen_onboarding', 'true');
     } catch (e) {
       // Continue without persistence
     }

@@ -1,6 +1,61 @@
 import { axiosInstance } from './axios';
 import { GodCategory } from '../data/godCategories';
-import { Pooja, PoojaApiItem } from '../types/pooja';
+import {
+  Pooja,
+  PoojaApiItem,
+  PoojaNoteApiItem,
+  PoojaPersonalNote,
+  CreatePoojaNotePayload,
+  UpdatePoojaNotePayload,
+} from '../types/pooja';
+
+interface PoojaNoteListApiResponse {
+  success?: boolean;
+  message?: string;
+  count?: number;
+  data?: PoojaNoteApiItem[];
+}
+
+interface PoojaNoteDetailApiResponse {
+  success?: boolean;
+  message?: string;
+  data?: PoojaNoteApiItem;
+}
+
+export const formatHindiDate = (date: Date = new Date()): string => {
+  const monthsHindi = [
+    'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+    'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर',
+  ];
+  const day = date.getDate();
+  const month = monthsHindi[date.getMonth()];
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${day} ${month} • ${hours}:${minutes}`;
+};
+
+export const mapApiNoteToPersonalNote = (
+  item: PoojaNoteApiItem,
+  pinnedSet?: Set<string>
+): PoojaPersonalNote => {
+  const id = item._id || item.id || '';
+  const dateSource = item.updatedAt || item.createdAt;
+  const parsedDate = dateSource ? new Date(dateSource) : new Date();
+  const safeDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+
+  return {
+    id,
+    poojaId: item.poojaId,
+    userId: item.userId,
+    title: item.title || '',
+    content: item.description || '',
+    isPinned: pinnedSet ? pinnedSet.has(id) : false,
+    updatedAt: formatHindiDate(safeDate),
+    timestamp: safeDate.getTime(),
+    createdAt: item.createdAt,
+    isApiNote: true,
+  };
+};
 
 interface PoojaListApiResponse {
   success?: boolean;
@@ -185,5 +240,80 @@ export const poojaApi = {
     }
 
     return mapApiToPooja(rawItem);
+  },
+};
+
+export const poojaNotesApi = {
+  getByPoojaId: async (poojaId: string): Promise<PoojaPersonalNote[]> => {
+    const response = await axiosInstance.get<PoojaNoteListApiResponse | PoojaNoteApiItem[]>(
+      `/pooja/notes/${poojaId}`
+    );
+    const payload = response.data;
+    const rawList: PoojaNoteApiItem[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+
+    return rawList
+      .map((item) => mapApiNoteToPersonalNote(item))
+      .filter((note) => Boolean(note.id));
+  },
+
+  getById: async (noteId: string): Promise<PoojaPersonalNote> => {
+    const response = await axiosInstance.get<PoojaNoteDetailApiResponse | PoojaNoteApiItem>(
+      `/pooja/notes/detail/${noteId}`
+    );
+    const payload = response.data;
+    const rawItem: PoojaNoteApiItem =
+      payload && typeof payload === 'object' && 'data' in payload && payload.data
+        ? (payload as PoojaNoteDetailApiResponse).data!
+        : (payload as PoojaNoteApiItem);
+
+    if (!rawItem || (!rawItem._id && !rawItem.id)) {
+      throw new Error('Pooja note details not found');
+    }
+
+    return mapApiNoteToPersonalNote(rawItem);
+  },
+
+  create: async (data: CreatePoojaNotePayload): Promise<PoojaPersonalNote> => {
+    const response = await axiosInstance.post<PoojaNoteDetailApiResponse | PoojaNoteApiItem>(
+      '/pooja/notes/create',
+      data
+    );
+    const payload = response.data;
+    const rawItem: PoojaNoteApiItem =
+      payload && typeof payload === 'object' && 'data' in payload && payload.data
+        ? (payload as PoojaNoteDetailApiResponse).data!
+        : (payload as PoojaNoteApiItem);
+
+    if (!rawItem || (!rawItem._id && !rawItem.id)) {
+      throw new Error('Failed to create pooja note');
+    }
+
+    return mapApiNoteToPersonalNote(rawItem);
+  },
+
+  update: async (noteId: string, data: UpdatePoojaNotePayload): Promise<PoojaPersonalNote> => {
+    const response = await axiosInstance.put<PoojaNoteDetailApiResponse | PoojaNoteApiItem>(
+      `/pooja/notes/update/${noteId}`,
+      data
+    );
+    const payload = response.data;
+    const rawItem: PoojaNoteApiItem =
+      payload && typeof payload === 'object' && 'data' in payload && payload.data
+        ? (payload as PoojaNoteDetailApiResponse).data!
+        : (payload as PoojaNoteApiItem);
+
+    if (!rawItem || (!rawItem._id && !rawItem.id)) {
+      throw new Error('Failed to update pooja note');
+    }
+
+    return mapApiNoteToPersonalNote(rawItem);
+  },
+
+  delete: async (noteId: string): Promise<void> => {
+    await axiosInstance.delete(`/pooja/notes/delete/${noteId}`);
   },
 };

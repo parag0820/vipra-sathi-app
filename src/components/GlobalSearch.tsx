@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 12,
   },
   resultsContainer: {
     marginTop: 8,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   resultTitle: {
-    fontSize: 16,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   resultCategory: {

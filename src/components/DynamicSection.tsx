@@ -108,11 +108,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   heading: {
-    fontSize: 15,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   description: {
-    fontSize: 13,
+    fontSize: 11.5,
     lineHeight: 18,
     marginBottom: 10,
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   sanskritText: {
-    fontSize: 13,
+    fontSize: 11.5,
     lineHeight: 20,
     fontWeight: '600',
     fontStyle: 'italic',
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   vidhiHeader: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 'bold',
   },
   vidhiRow: {
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   vidhiText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 11.5,
     lineHeight: 18,
   },
   audioContainer: {
