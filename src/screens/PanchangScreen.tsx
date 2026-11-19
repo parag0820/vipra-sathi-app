@@ -1,12 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Modal, FlatList, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Modal,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import { Feather as Icon, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from '../theme/ThemeContext';
-import { calculateDetailedPanchang, DetailedPanchangData } from '../utils/panchangCalculator';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
+import { useTheme } from '../theme/ThemeContext';
+import {
+  calculateDetailedPanchang,
+  DetailedPanchangData,
+} from '../utils/panchangCalculator';
+
+const PRIMARY_MAROON = '#8B1D1D';
 
 const LOCATIONS = [
   { id: '1', name: { en: 'Ujjain, India', hi: 'उज्जैन, भारत' }, lat: 23.1765, lon: 75.7885 },
@@ -91,11 +106,11 @@ const getMuhuratData = (isHi: boolean) => ({
 });
 
 const PanchangScreen = () => {
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
-  const isHi = i18n.language === 'hi';
+  const isHi = i18n.language === 'hi' || i18n.language?.startsWith('hi');
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [panchangData, setPanchangData] = useState<DetailedPanchangData | null>(null);
@@ -107,13 +122,16 @@ const PanchangScreen = () => {
 
   const muhuratData = useMemo(() => getMuhuratData(isHi), [isHi]);
 
-  const TABS = [
-    { key: 'summary', label: t('panchang_screen.tabs.summary') },
-    { key: 'choghadiya', label: t('panchang_screen.tabs.choghadiya') },
-    { key: 'hora', label: t('panchang_screen.tabs.hora') },
-    { key: 'muhurat', label: t('panchang_screen.tabs.muhurat') },
-    { key: 'lagna', label: t('panchang_screen.tabs.lagna') },
-  ];
+  const TABS = useMemo(
+    () => [
+      { key: 'summary', label: t('panchang_screen.tabs.summary', isHi ? 'सारांश' : 'Summary') },
+      { key: 'choghadiya', label: t('panchang_screen.tabs.choghadiya', isHi ? 'चौघड़िया' : 'Choghadiya') },
+      { key: 'hora', label: t('panchang_screen.tabs.hora', isHi ? 'होरा' : 'Hora') },
+      { key: 'muhurat', label: t('panchang_screen.tabs.muhurat', isHi ? 'मुहूर्त' : 'Muhurat') },
+      { key: 'lagna', label: t('panchang_screen.tabs.lagna', isHi ? 'लग्न' : 'Lagna') },
+    ],
+    [t, isHi],
+  );
 
   useEffect(() => {
     (async () => {
@@ -132,7 +150,11 @@ const PanchangScreen = () => {
 
         if (geocode && geocode.length > 0) {
           const currentGeo = geocode[0];
-          const city = currentGeo.city || currentGeo.district || currentGeo.subregion || 'Current Location';
+          const city =
+            currentGeo.city ||
+            currentGeo.district ||
+            currentGeo.subregion ||
+            'Current Location';
           const region = currentGeo.region || 'India';
           const newLocText = `${city}, ${region}`;
 
@@ -162,7 +184,7 @@ const PanchangScreen = () => {
       currentDate,
       location.lat || 23.1765,
       location.lon || 75.7885,
-      location.name
+      location.name,
     );
     setPanchangData(data);
   }, [currentDate, location]);
@@ -179,18 +201,43 @@ const PanchangScreen = () => {
     setCurrentDate(next);
   };
 
+  const isToday = useMemo(() => {
+    const today = new Date();
+    return (
+      currentDate.getDate() === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear()
+    );
+  }, [currentDate]);
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Flat Maroon/White theme tokens
+  const screenBg = isDark ? '#121212' : '#FDFBF8';
+  const headerBg = isDark ? '#161616' : '#FFFFFF';
+  const cardBg = isDark ? '#1E1E1E' : '#FFFFFF';
+  const subtleBg = isDark ? '#252525' : '#FAF7F3';
+  const roseBg = isDark ? '#2B1B1B' : '#FFF0ED';
+  const roseBorder = isDark ? '#5C2424' : '#F2D8D5';
+  const accentColor = isDark ? '#FCA5A5' : PRIMARY_MAROON;
+  const borderCol = isDark ? '#2D2D2D' : '#EFECE8';
+  const dividerCol = isDark ? '#262626' : '#F3EFEA';
+  const textPrimary = isDark ? '#F8E6CE' : '#1F2937';
+  const textMuted = isDark ? '#9CA3AF' : '#6B7280';
+  const shubhColor = isDark ? '#34D399' : '#047857';
+  const shubhBg = isDark ? '#122920' : '#ECFDF5';
+  const ashubhColor = isDark ? '#F87171' : '#B91C1C';
+  const ashubhBg = isDark ? '#2E1616' : '#FEE2E2';
+
   if (!panchangData) return null;
 
-  const headerColor = colors.primary;
-  const cardBg = colors.background;
-  const textColor = colors.text;
-  const borderColor = colors.border;
-
   const renderListItem = (item: any, index: number, totalLength: number) => {
-    let statusColor = colors.text;
-    if (item.type === 'shubh') statusColor = '#10B981';
-    if (item.type === 'ashubh') statusColor = '#EF4444';
-
+    const isShubh = item.type === 'shubh';
+    const isAshubh = item.type === 'ashubh';
+    const statusColor = isShubh ? shubhColor : isAshubh ? ashubhColor : textMuted;
+    const statusBg = isShubh ? shubhBg : isAshubh ? ashubhBg : subtleBg;
     const isCurrent = item.current;
 
     return (
@@ -198,21 +245,40 @@ const PanchangScreen = () => {
         key={index}
         style={[
           styles.listItem,
-          { borderBottomColor: index === totalLength - 1 ? 'transparent' : borderColor },
-          isCurrent && { backgroundColor: colors.primary + '15', borderLeftWidth: 4, borderLeftColor: colors.primary }
+          {
+            borderBottomColor: index === totalLength - 1 ? 'transparent' : dividerCol,
+            backgroundColor: isCurrent ? roseBg : 'transparent',
+          },
+          isCurrent && { borderLeftWidth: 3, borderLeftColor: accentColor },
         ]}
       >
         <View style={styles.listLeft}>
-          <Text style={[styles.itemName, { color: isCurrent ? colors.primary : textColor }]}>
+          <Text
+            style={[
+              styles.itemName,
+              { color: isCurrent ? accentColor : textPrimary, fontWeight: isCurrent ? '700' : '600' },
+            ]}
+          >
             {item.name}
           </Text>
           {item.type && (
-            <Text style={[styles.itemType, { color: statusColor }]}>
-              {item.type === 'shubh' ? t('panchang_screen.labels.shubh') : t('panchang_screen.labels.ashubh')}
-            </Text>
+            <View style={[styles.miniStatusBadge, { backgroundColor: statusBg }]}>
+              <Text style={[styles.miniStatusText, { color: statusColor }]}>
+                {isShubh
+                  ? t('panchang_screen.labels.shubh', 'शुभ')
+                  : t('panchang_screen.labels.ashubh', 'अशुभ')}
+              </Text>
+            </View>
           )}
         </View>
-        <Text style={[styles.itemTime, { color: isCurrent ? colors.primary : textColor }]}>{item.time}</Text>
+        <Text
+          style={[
+            styles.itemTime,
+            { color: isCurrent ? accentColor : textPrimary, fontWeight: isCurrent ? '700' : '500' },
+          ]}
+        >
+          {item.time}
+        </Text>
       </View>
     );
   };
@@ -223,412 +289,796 @@ const PanchangScreen = () => {
     value: string,
     subValue?: string,
     isLast: boolean = false,
-    badgeType?: 'shubh' | 'ashubh'
-  ) => (
-    <View style={[styles.dataRow, { borderBottomColor: isLast ? 'transparent' : borderColor }]}>
-      <View style={styles.iconLabelContainer}>
-        <MaterialCommunityIcons name={iconName as any} size={18} color={colors.secondary} style={styles.rowIcon} />
-        <Text style={[styles.rowLabel, { color: textColor }]}>{label}</Text>
-      </View>
-      <View style={styles.valueContainer}>
-        <Text style={[styles.rowValue, { color: textColor }]}>{value}</Text>
-        {subValue && (
-          <Text style={[styles.rowSubValue, { color: colors.textLight }]}>
-            {subValue}
-          </Text>
-        )}
-        {badgeType && (
-          <View style={[styles.miniBadge, { backgroundColor: badgeType === 'shubh' ? '#10B98120' : '#EF444420' }]}>
-            <Text style={[styles.miniBadgeText, { color: badgeType === 'shubh' ? '#10B981' : '#EF4444' }]}>
-              {badgeType === 'shubh' ? t('panchang_screen.labels.shubh') : t('panchang_screen.labels.ashubh')}
+    badgeType?: 'shubh' | 'ashubh',
+  ) => {
+    const isShubh = badgeType === 'shubh';
+    const isAshubh = badgeType === 'ashubh';
+    const badgeColor = isShubh ? shubhColor : isAshubh ? ashubhColor : textMuted;
+    const badgeBg = isShubh ? shubhBg : isAshubh ? ashubhBg : subtleBg;
+
+    return (
+      <View
+        style={[
+          styles.dataRow,
+          { borderBottomColor: isLast ? 'transparent' : dividerCol },
+        ]}
+      >
+        <View style={styles.iconLabelContainer}>
+          <MaterialCommunityIcons
+            name={iconName as any}
+            size={16}
+            color={accentColor}
+            style={styles.rowIcon}
+          />
+          <Text style={[styles.rowLabel, { color: textMuted }]}>{label}</Text>
+        </View>
+        <View style={styles.valueContainer}>
+          <Text style={[styles.rowValue, { color: textPrimary }]}>{value}</Text>
+          {subValue && (
+            <Text style={[styles.rowSubValue, { color: textMuted }]}>
+              {subValue}
             </Text>
-          </View>
-        )}
+          )}
+          {badgeType && (
+            <View style={[styles.miniBadge, { backgroundColor: badgeBg }]}>
+              <Text style={[styles.miniBadgeText, { color: badgeColor }]}>
+                {isShubh
+                  ? t('panchang_screen.labels.shubh', 'शुभ')
+                  : t('panchang_screen.labels.ashubh', 'अशुभ')}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: headerColor }]}>
-      <StatusBar backgroundColor={headerColor} barStyle="light-content" translucent={true} />
+    <View style={[styles.container, { backgroundColor: screenBg }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={headerBg}
+      />
 
-      {/* Red Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('panchang_screen.title')}</Text>
-        <View style={{ width: 32 }} />
-      </View>
-
-      {/* Main White Card Area */}
-      <View style={[styles.mainCard, { backgroundColor: cardBg }]}>
-        {/* Date Selector */}
-        <View style={styles.dateSelector}>
-          <TouchableOpacity onPress={goToPreviousDay}>
-            <Icon name="chevron-left" size={24} color={textColor} />
+      {/* Flat Maroon/White Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: headerBg,
+            paddingTop: Math.max(insets.top, 12) + 4,
+            borderBottomColor: dividerCol,
+          },
+        ]}
+      >
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Icon name="chevron-left" size={22} color={accentColor} />
           </TouchableOpacity>
-          <Text style={[styles.dateText, { color: textColor }]}>
-            {isHi ? panchangData.dateStr.hi : panchangData.dateStr.en}
-          </Text>
-          <TouchableOpacity onPress={goToNextDay}>
-            <Icon name="chevron-right" size={24} color={textColor} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Location Dropdown */}
-        <TouchableOpacity
-          style={[styles.locationSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => setShowLocationPicker(true)}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialCommunityIcons name="map-marker" size={18} color={colors.primary} style={{ marginRight: 8 }} />
-            <Text style={[styles.locationText, { color: textColor }]}>
-              {isHi ? location.name.hi : location.name.en}
+          <View>
+            <Text style={[styles.headerTitle, { color: accentColor }]}>
+              {t('panchang_screen.title', isHi ? 'पंचांग' : 'Panchang')}
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: textMuted }]}>
+              {isHi ? 'दैनिक पञ्चाङ्ग, चौघड़िया एवं मुहूर्त' : 'Daily Panchang, Choghadiya & Muhurat'}
             </Text>
           </View>
-          <Icon name="chevron-down" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-
-        {/* Custom Tab Bar */}
-        <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
-          <View style={styles.tabContainer}>
-            {TABS.map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <TouchableOpacity
-                  key={tab.key}
-                  style={[
-                    styles.tabBtn,
-                    isActive && styles.tabBtnActive,
-                    isActive && { borderBottomColor: colors.primary }
-                  ]}
-                  onPress={() => setActiveTab(tab.key)}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      isActive && styles.tabTextActive,
-                      { color: isActive ? colors.primary : colors.textLight }
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {tab.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {activeTab === 'summary' && (
-            <>
-              {/* Top Hero Card: Location, Moon phase, Tithi, Paksha, Month */}
-              <View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.heroRow}>
-                  <View style={[styles.moonIconWrapper, { backgroundColor: colors.primary + '15' }]}>
-                    <MaterialCommunityIcons name="moon-waning-crescent" size={28} color={colors.primary} />
-                  </View>
-                  <View style={styles.heroTextContainer}>
-                    <Text style={[styles.heroLocation, { color: colors.textLight }]}>
-                      {isHi ? location.name.hi : location.name.en}
-                    </Text>
-                    <Text style={[styles.heroSummary, { color: textColor }]}>
-                      {isHi ? panchangData.headerSummary.hi : panchangData.headerSummary.en}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Festival / Vrat Pill if present */}
-                {panchangData.festivals.length > 0 && (
-                  <View style={[styles.festivalBanner, { backgroundColor: '#F59E0B15', borderColor: '#F59E0B40' }]}>
-                    <MaterialCommunityIcons name="star-face" size={16} color="#D97706" style={{ marginRight: 6 }} />
-                    <Text style={[styles.festivalBannerText, { color: '#B45309' }]}>
-                      {panchangData.festivals.map(f => (isHi ? f.hi : f.en)).join(', ')}
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* 1. Core Panchanga (मुख्य पञ्चाङ्ग) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="book-open-page-variant" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.core')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow(
-                  'moon-waning-crescent',
-                  t('panchang_screen.labels.tithi'),
-                  isHi ? panchangData.tithi.name.hi : panchangData.tithi.name.en,
-                  isHi ? panchangData.tithi.tillText.hi : panchangData.tithi.tillText.en
-                )}
-                {renderDataRow(
-                  'brightness-6',
-                  t('panchang_screen.labels.paksha'),
-                  isHi ? panchangData.paksha.hi : panchangData.paksha.en
-                )}
-                {renderDataRow(
-                  'star-four-points-outline',
-                  t('panchang_screen.labels.nakshatra'),
-                  isHi ? panchangData.nakshatra.name.hi : panchangData.nakshatra.name.en,
-                  isHi ? panchangData.nakshatra.tillText.hi : panchangData.nakshatra.tillText.en
-                )}
-                {renderDataRow(
-                  'meditation',
-                  t('panchang_screen.labels.yoga'),
-                  isHi ? panchangData.yoga.name.hi : panchangData.yoga.name.en,
-                  isHi ? panchangData.yoga.tillText.hi : panchangData.yoga.tillText.en
-                )}
-                {renderDataRow(
-                  'hands-pray',
-                  t('panchang_screen.labels.karana1'),
-                  isHi ? panchangData.karana1.name.hi : panchangData.karana1.name.en,
-                  isHi ? panchangData.karana1.tillText.hi : panchangData.karana1.tillText.en
-                )}
-                {renderDataRow(
-                  'hands-pray',
-                  t('panchang_screen.labels.karana2'),
-                  isHi ? panchangData.karana2.name.hi : panchangData.karana2.name.en,
-                  isHi ? panchangData.karana2.tillText.hi : panchangData.karana2.tillText.en
-                )}
-                {renderDataRow(
-                  'calendar-today',
-                  t('panchang_screen.labels.waar'),
-                  isHi ? panchangData.waar.hi : panchangData.waar.en,
-                  undefined,
-                  true
-                )}
-              </View>
-
-              {/* 2. Sun & Moon Timings (सूर्य एवं चंद्र समय) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="weather-sunset-up" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.sun_moon')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow('weather-sunset-up', t('panchang_screen.labels.sunrise'), panchangData.sunrise)}
-                {renderDataRow('weather-sunset-down', t('panchang_screen.labels.sunset'), panchangData.sunset)}
-                {renderDataRow('timer-sand', t('panchang_screen.labels.din_kaal'), panchangData.dinKaal)}
-                {renderDataRow('moon-waning-gibbous', t('panchang_screen.labels.ratri_kaal'), panchangData.ratriKaal)}
-                {renderDataRow('weather-night', t('panchang_screen.labels.moonrise'), panchangData.moonrise)}
-                {renderDataRow('weather-night-partly-cloudy', t('panchang_screen.labels.moonset'), panchangData.moonset, undefined, true)}
-              </View>
-
-              {/* 3. Sunrise Details (सूर्योदय लग्न एवं नक्षत्र) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="compass-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.sunrise')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow(
-                  'zodiac-virgo',
-                  t('panchang_screen.labels.lagna'),
-                  isHi ? panchangData.sunriseLagna.hi : panchangData.sunriseLagna.en
-                )}
-                {renderDataRow(
-                  'weather-sunny',
-                  t('panchang_screen.labels.sun_nakshatra'),
-                  isHi ? panchangData.sunNakshatra.hi : panchangData.sunNakshatra.en
-                )}
-                {renderDataRow(
-                  'moon-waxing-crescent',
-                  t('panchang_screen.labels.moon_nakshatra'),
-                  isHi ? panchangData.moonNakshatra.hi : panchangData.moonNakshatra.en,
-                  undefined,
-                  true
-                )}
-              </View>
-
-              {/* 4. Month & Zodiac (माह एवं राशि) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="zodiac-cancer" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.month_rashi')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow(
-                  'calendar-month-outline',
-                  t('panchang_screen.labels.amanta_month'),
-                  isHi ? panchangData.amantaMonth.hi : panchangData.amantaMonth.en
-                )}
-                {renderDataRow(
-                  'calendar-month-outline',
-                  t('panchang_screen.labels.purnimanta_month'),
-                  isHi ? panchangData.purnimantaMonth.hi : panchangData.purnimantaMonth.en
-                )}
-                {renderDataRow(
-                  'zodiac-aquarius',
-                  t('panchang_screen.labels.chandra_rashi'),
-                  isHi ? panchangData.chandraRashi.display.hi : panchangData.chandraRashi.display.en
-                )}
-                {renderDataRow(
-                  'zodiac-virgo',
-                  t('panchang_screen.labels.surya_rashi'),
-                  isHi ? panchangData.suryaRashi.display.hi : panchangData.suryaRashi.display.en
-                )}
-                {renderDataRow(
-                  'leaf',
-                  t('panchang_screen.labels.ritu'),
-                  isHi ? panchangData.ritu.hi : panchangData.ritu.en
-                )}
-                {renderDataRow(
-                  'earth',
-                  t('panchang_screen.labels.ayan'),
-                  isHi ? panchangData.ayan.hi : panchangData.ayan.en,
-                  undefined,
-                  true
-                )}
-              </View>
-
-              {/* 5. Samvat & Eras (संवत एवं वर्ष) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="history" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.samvat')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow(
-                  'numeric',
-                  t('panchang_screen.labels.vikram_samvat'),
-                  isHi ? panchangData.vikramSamvat.hi : panchangData.vikramSamvat.en
-                )}
-                {renderDataRow(
-                  'numeric',
-                  t('panchang_screen.labels.shaka_samvat'),
-                  isHi ? panchangData.shakaSamvat.hi : panchangData.shakaSamvat.en
-                )}
-                {renderDataRow(
-                  'numeric',
-                  t('panchang_screen.labels.gujarati_samvat'),
-                  isHi ? panchangData.gujaratiSamvat.hi : panchangData.gujaratiSamvat.en
-                )}
-                {renderDataRow(
-                  'numeric',
-                  t('panchang_screen.labels.kali_samvat'),
-                  isHi ? panchangData.kaliSamvat.hi : panchangData.kaliSamvat.en
-                )}
-                {renderDataRow(
-                  'orbit',
-                  t('panchang_screen.labels.samvatsar'),
-                  isHi ? panchangData.samvatsar.hi : panchangData.samvatsar.en
-                )}
-                {renderDataRow(
-                  'orbit',
-                  t('panchang_screen.labels.samvatsar_north'),
-                  isHi ? panchangData.samvatsarNorth.hi : panchangData.samvatsarNorth.en
-                )}
-                {renderDataRow(
-                  'weather-sunny-alert',
-                  t('panchang_screen.labels.saur_pravishte'),
-                  isHi ? panchangData.saurPravishte.hi : panchangData.saurPravishte.en,
-                  undefined,
-                  true
-                )}
-              </View>
-
-              {/* 6. Auspicious & Inauspicious Muhurats (शुभ एवं अशुभ समय) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="clock-check-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.muhurat')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {renderDataRow('clock-outline', t('panchang_screen.labels.abhijit'), panchangData.abhijitMuhurat, undefined, false, 'shubh')}
-                {renderDataRow('clock-outline', t('panchang_screen.labels.amrit_kaal'), panchangData.amritKaal, undefined, false, 'shubh')}
-                {renderDataRow('alert-circle-outline', t('panchang_screen.labels.rahukaal'), panchangData.rahuKaal, undefined, false, 'ashubh')}
-                {renderDataRow('clock-alert-outline', t('panchang_screen.labels.yamaganda'), panchangData.yamaganda, undefined, false, 'ashubh')}
-                {renderDataRow('clock-outline', t('panchang_screen.labels.gulika_kaal'), panchangData.gulikaKaal, undefined, false, 'ashubh')}
-                {renderDataRow('clock-alert-outline', t('panchang_screen.labels.dur_muhurat'), panchangData.durMuhurat, undefined, true, 'ashubh')}
-              </View>
-
-              {/* 7. Pada / Charan (पद, चरण) */}
-              <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons name="format-list-numbered" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <Text style={[styles.sectionTitle, { color: colors.primary }]}>{t('panchang_screen.sections.pada_charan')}</Text>
-              </View>
-              <View style={[styles.cardBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {panchangData.padaCharan.map((item, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.padaRow,
-                      { borderBottomColor: idx === panchangData.padaCharan.length - 1 ? 'transparent' : borderColor }
-                    ]}
-                  >
-                    <View style={styles.padaLeft}>
-                      <View style={[styles.padaBadge, { backgroundColor: colors.primary + '15' }]}>
-                        <Text style={[styles.padaNumber, { color: colors.primary }]}>
-                          {item.pada} {isHi ? item.syllable.hi : item.syllable.en}
-                        </Text>
-                      </View>
-                      <Text style={[styles.padaNakshatra, { color: textColor }]}>
-                        {isHi ? item.nakshatra.hi : item.nakshatra.en}
-                      </Text>
-                    </View>
-                    <Text style={[styles.padaTime, { color: colors.textLight }]}>{item.time}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* 8. Festivals / Vrat Details Section */}
-              {panchangData.festivals.length > 0 && (
-                <View style={[styles.festivalsCard, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-                  <Text style={[styles.festivalsTitle, { color: colors.primary }]}>
-                    {t('panchang_screen.festivals_title')}
-                  </Text>
-                  {panchangData.festivals.map((fest, index) => (
-                    <View key={index} style={styles.festivalItem}>
-                      <MaterialCommunityIcons name="star-circle" size={16} color={colors.secondary} style={{ marginRight: 8 }} />
-                      <Text style={[styles.festivalText, { color: textColor }]}>
-                        {isHi ? fest.hi : fest.en}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </>
+        {/* Location selector pill in header */}
+        <TouchableOpacity
+          style={[styles.locationHeaderPill, { backgroundColor: roseBg, borderColor: roseBorder }]}
+          onPress={() => setShowLocationPicker(true)}
+          activeOpacity={0.75}
+        >
+          {isFetchingLocation ? (
+            <ActivityIndicator size="small" color={accentColor} style={{ marginRight: 4 }} />
+          ) : (
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={13}
+              color={accentColor}
+              style={{ marginRight: 3 }}
+            />
           )}
+          <Text
+            style={[styles.locationHeaderPillText, { color: accentColor }]}
+            numberOfLines={1}
+          >
+            {isHi ? location.name.hi.split(',')[0] : location.name.en.split(',')[0]}
+          </Text>
+          <Icon name="chevron-down" size={12} color={accentColor} style={{ marginLeft: 2 }} />
+        </TouchableOpacity>
+      </View>
 
-          {activeTab === 'choghadiya' && (
-            <View style={styles.muhuratTabContainer}>
-              <Text style={[styles.sectionTitle, { color: colors.primary }]}>{isHi ? 'दिन का चौघड़िया' : 'Day Choghadiya'}</Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {muhuratData.choghadiya.day.map((item: any, idx: number) => renderListItem(item, idx, muhuratData.choghadiya.day.length))}
-              </View>
+      {/* Date Navigator Strip */}
+      <View
+        style={[
+          styles.dateNavStrip,
+          { backgroundColor: headerBg, borderBottomColor: dividerCol },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={goToPreviousDay}
+          style={styles.navArrowBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 10, right: 10 }}
+          activeOpacity={0.7}
+        >
+          <Icon name="chevron-left" size={18} color={accentColor} />
+        </TouchableOpacity>
 
-              <Text style={[styles.sectionTitle, { color: colors.primary, marginTop: 20 }]}>{isHi ? 'रात का चौघड़िया' : 'Night Choghadiya'}</Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {muhuratData.choghadiya.night.map((item: any, idx: number) => renderListItem(item, idx, muhuratData.choghadiya.night.length))}
-              </View>
-            </View>
-          )}
+        <View style={styles.dateDisplayCol}>
+          <Text style={[styles.dateText, { color: textPrimary }]}>
+            {isHi ? panchangData.dateStr.hi : panchangData.dateStr.en}
+          </Text>
+        </View>
 
-          {activeTab === 'hora' && (
-            <View style={styles.muhuratTabContainer}>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {muhuratData.hora.map((item: any, index: number) => renderListItem(item, index, muhuratData.hora.length))}
-              </View>
-            </View>
-          )}
+        <TouchableOpacity
+          onPress={goToNextDay}
+          style={styles.navArrowBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 10, right: 10 }}
+          activeOpacity={0.7}
+        >
+          <Icon name="chevron-right" size={18} color={accentColor} />
+        </TouchableOpacity>
 
-          {activeTab === 'muhurat' && (
-            <View style={styles.muhuratTabContainer}>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {muhuratData.muhurat.map((item: any, index: number) => renderListItem(item, index, muhuratData.muhurat.length))}
-              </View>
-            </View>
-          )}
+        {!isToday && (
+          <TouchableOpacity
+            onPress={goToToday}
+            style={[styles.todayBtn, { backgroundColor: roseBg, borderColor: roseBorder }]}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.todayBtnText, { color: accentColor }]}>
+              {isHi ? 'आज' : 'Today'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
-          {activeTab === 'lagna' && (
-            <View style={styles.muhuratTabContainer}>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {muhuratData.lagna.map((item: any, index: number) => renderListItem(item, index, muhuratData.lagna.length))}
-              </View>
-            </View>
-          )}
-          <View style={{ height: 40 }} />
+      {/* Panchang Underline Tab Bar */}
+      <View
+        style={[
+          styles.tabBar,
+          { backgroundColor: headerBg, borderBottomColor: borderCol },
+        ]}
+      >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabContainer}
+        >
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                activeOpacity={0.75}
+                style={[
+                  styles.tabBtn,
+                  isActive && { borderBottomColor: accentColor, borderBottomWidth: 2 },
+                ]}
+                onPress={() => setActiveTab(tab.key)}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    {
+                      color: isActive ? accentColor : textMuted,
+                      fontWeight: isActive ? '700' : '500',
+                    },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
-      {/* Location Picker Modal (Flat Maroon/White UI) */}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 20) + 24 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {activeTab === 'summary' && (
+          <>
+            {/* Top Hero Card: Location, Moon phase, Tithi, Paksha, Month */}
+            <View
+              style={[
+                styles.heroCard,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              <View style={styles.heroRow}>
+                <View style={[styles.moonIconWrapper, { backgroundColor: roseBg }]}>
+                  <MaterialCommunityIcons
+                    name="moon-waning-crescent"
+                    size={22}
+                    color={accentColor}
+                  />
+                </View>
+                <View style={styles.heroTextContainer}>
+                  <Text style={[styles.heroLocation, { color: textMuted }]}>
+                    {isHi ? location.name.hi : location.name.en}
+                  </Text>
+                  <Text style={[styles.heroSummary, { color: textPrimary }]}>
+                    {isHi ? panchangData.headerSummary.hi : panchangData.headerSummary.en}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Festival / Vrat Pill if present */}
+              {panchangData.festivals.length > 0 && (
+                <View
+                  style={[
+                    styles.festivalBanner,
+                    { backgroundColor: roseBg, borderColor: roseBorder },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="star-four-points"
+                    size={13}
+                    color={accentColor}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[styles.festivalBannerText, { color: accentColor }]}
+                    numberOfLines={2}
+                  >
+                    {panchangData.festivals
+                      .map((f) => (isHi ? f.hi : f.en))
+                      .join(', ')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* 1. Core Panchanga (मुख्य पञ्चाङ्ग) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="book-open-page-variant"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.core', 'मुख्य पञ्चाङ्ग')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'moon-waning-crescent',
+                t('panchang_screen.labels.tithi', 'तिथि'),
+                isHi ? panchangData.tithi.name.hi : panchangData.tithi.name.en,
+                isHi ? panchangData.tithi.tillText.hi : panchangData.tithi.tillText.en,
+              )}
+              {renderDataRow(
+                'brightness-6',
+                t('panchang_screen.labels.paksha', 'पक्ष'),
+                isHi ? panchangData.paksha.hi : panchangData.paksha.en,
+              )}
+              {renderDataRow(
+                'star-four-points-outline',
+                t('panchang_screen.labels.nakshatra', 'नक्षत्र'),
+                isHi ? panchangData.nakshatra.name.hi : panchangData.nakshatra.name.en,
+                isHi ? panchangData.nakshatra.tillText.hi : panchangData.nakshatra.tillText.en,
+              )}
+              {renderDataRow(
+                'meditation',
+                t('panchang_screen.labels.yoga', 'योग'),
+                isHi ? panchangData.yoga.name.hi : panchangData.yoga.name.en,
+                isHi ? panchangData.yoga.tillText.hi : panchangData.yoga.tillText.en,
+              )}
+              {renderDataRow(
+                'hands-pray',
+                t('panchang_screen.labels.karana1', 'करण 1'),
+                isHi ? panchangData.karana1.name.hi : panchangData.karana1.name.en,
+                isHi ? panchangData.karana1.tillText.hi : panchangData.karana1.tillText.en,
+              )}
+              {renderDataRow(
+                'hands-pray',
+                t('panchang_screen.labels.karana2', 'करण 2'),
+                isHi ? panchangData.karana2.name.hi : panchangData.karana2.name.en,
+                isHi ? panchangData.karana2.tillText.hi : panchangData.karana2.tillText.en,
+              )}
+              {renderDataRow(
+                'calendar-today',
+                t('panchang_screen.labels.waar', 'वार'),
+                isHi ? panchangData.waar.hi : panchangData.waar.en,
+                undefined,
+                true,
+              )}
+            </View>
+
+            {/* 2. Sun & Moon Timings (सूर्य एवं चंद्र समय) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="weather-sunset-up"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.sun_moon', 'सूर्य एवं चंद्र समय')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'weather-sunset-up',
+                t('panchang_screen.labels.sunrise', 'सूर्योदय'),
+                panchangData.sunrise,
+              )}
+              {renderDataRow(
+                'weather-sunset-down',
+                t('panchang_screen.labels.sunset', 'सूर्यास्त'),
+                panchangData.sunset,
+              )}
+              {renderDataRow(
+                'timer-sand',
+                t('panchang_screen.labels.din_kaal', 'दिन काल'),
+                panchangData.dinKaal,
+              )}
+              {renderDataRow(
+                'moon-waning-gibbous',
+                t('panchang_screen.labels.ratri_kaal', 'रात्रि काल'),
+                panchangData.ratriKaal,
+              )}
+              {renderDataRow(
+                'weather-night',
+                t('panchang_screen.labels.moonrise', 'चन्द्रोदय'),
+                panchangData.moonrise,
+              )}
+              {renderDataRow(
+                'weather-night-partly-cloudy',
+                t('panchang_screen.labels.moonset', 'चन्द्रास्त'),
+                panchangData.moonset,
+                undefined,
+                true,
+              )}
+            </View>
+
+            {/* 3. Sunrise Details (सूर्योदय लग्न एवं नक्षत्र) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="compass-outline"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.sunrise', 'सूर्योदय लग्न एवं नक्षत्र')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'zodiac-virgo',
+                t('panchang_screen.labels.lagna', 'सूर्योदय लग्न'),
+                isHi ? panchangData.sunriseLagna.hi : panchangData.sunriseLagna.en,
+              )}
+              {renderDataRow(
+                'weather-sunny',
+                t('panchang_screen.labels.sun_nakshatra', 'सूर्य नक्षत्र'),
+                isHi ? panchangData.sunNakshatra.hi : panchangData.sunNakshatra.en,
+              )}
+              {renderDataRow(
+                'moon-waxing-crescent',
+                t('panchang_screen.labels.moon_nakshatra', 'चन्द्र नक्षत्र'),
+                isHi ? panchangData.moonNakshatra.hi : panchangData.moonNakshatra.en,
+                undefined,
+                true,
+              )}
+            </View>
+
+            {/* 4. Month & Zodiac (माह एवं राशि) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="zodiac-cancer"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.month_rashi', 'माह एवं राशि')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'calendar-month-outline',
+                t('panchang_screen.labels.amanta_month', 'अमान्त माह'),
+                isHi ? panchangData.amantaMonth.hi : panchangData.amantaMonth.en,
+              )}
+              {renderDataRow(
+                'calendar-month-outline',
+                t('panchang_screen.labels.purnimanta_month', 'पूर्णिमान्त माह'),
+                isHi ? panchangData.purnimantaMonth.hi : panchangData.purnimantaMonth.en,
+              )}
+              {renderDataRow(
+                'zodiac-aquarius',
+                t('panchang_screen.labels.chandra_rashi', 'चन्द्र राशि'),
+                isHi ? panchangData.chandraRashi.display.hi : panchangData.chandraRashi.display.en,
+              )}
+              {renderDataRow(
+                'zodiac-virgo',
+                t('panchang_screen.labels.surya_rashi', 'सूर्य राशि'),
+                isHi ? panchangData.suryaRashi.display.hi : panchangData.suryaRashi.display.en,
+              )}
+              {renderDataRow(
+                'leaf',
+                t('panchang_screen.labels.ritu', 'ऋतु'),
+                isHi ? panchangData.ritu.hi : panchangData.ritu.en,
+              )}
+              {renderDataRow(
+                'earth',
+                t('panchang_screen.labels.ayan', 'अयन'),
+                isHi ? panchangData.ayan.hi : panchangData.ayan.en,
+                undefined,
+                true,
+              )}
+            </View>
+
+            {/* 5. Samvat & Eras (संवत एवं वर्ष) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="history"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.samvat', 'संवत एवं वर्ष')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'numeric',
+                t('panchang_screen.labels.vikram_samvat', 'विक्रम संवत'),
+                isHi ? panchangData.vikramSamvat.hi : panchangData.vikramSamvat.en,
+              )}
+              {renderDataRow(
+                'numeric',
+                t('panchang_screen.labels.shaka_samvat', 'शक संवत'),
+                isHi ? panchangData.shakaSamvat.hi : panchangData.shakaSamvat.en,
+              )}
+              {renderDataRow(
+                'numeric',
+                t('panchang_screen.labels.gujarati_samvat', 'गुजराती संवत'),
+                isHi ? panchangData.gujaratiSamvat.hi : panchangData.gujaratiSamvat.en,
+              )}
+              {renderDataRow(
+                'numeric',
+                t('panchang_screen.labels.kali_samvat', 'कलि संवत'),
+                isHi ? panchangData.kaliSamvat.hi : panchangData.kaliSamvat.en,
+              )}
+              {renderDataRow(
+                'orbit',
+                t('panchang_screen.labels.samvatsar', 'संवत्सर'),
+                isHi ? panchangData.samvatsar.hi : panchangData.samvatsar.en,
+              )}
+              {renderDataRow(
+                'orbit',
+                t('panchang_screen.labels.samvatsar_north', 'संवत्सर (उत्तर)'),
+                isHi ? panchangData.samvatsarNorth.hi : panchangData.samvatsarNorth.en,
+              )}
+              {renderDataRow(
+                'weather-sunny-alert',
+                t('panchang_screen.labels.saur_pravishte', 'सौर प्रविष्टे'),
+                isHi ? panchangData.saurPravishte.hi : panchangData.saurPravishte.en,
+                undefined,
+                true,
+              )}
+            </View>
+
+            {/* 6. Auspicious & Inauspicious Muhurats (शुभ एवं अशुभ समय) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="clock-check-outline"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.muhurat', 'शुभ एवं अशुभ समय')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {renderDataRow(
+                'clock-outline',
+                t('panchang_screen.labels.abhijit', 'अभिजित मुहूर्त'),
+                panchangData.abhijitMuhurat,
+                undefined,
+                false,
+                'shubh',
+              )}
+              {renderDataRow(
+                'clock-outline',
+                t('panchang_screen.labels.amrit_kaal', 'अमृत काल'),
+                panchangData.amritKaal,
+                undefined,
+                false,
+                'shubh',
+              )}
+              {renderDataRow(
+                'alert-circle-outline',
+                t('panchang_screen.labels.rahukaal', 'राहु काल'),
+                panchangData.rahuKaal,
+                undefined,
+                false,
+                'ashubh',
+              )}
+              {renderDataRow(
+                'clock-alert-outline',
+                t('panchang_screen.labels.yamaganda', 'यमगण्ड'),
+                panchangData.yamaganda,
+                undefined,
+                false,
+                'ashubh',
+              )}
+              {renderDataRow(
+                'clock-outline',
+                t('panchang_screen.labels.gulika_kaal', 'गुलिक काल'),
+                panchangData.gulikaKaal,
+                undefined,
+                false,
+                'ashubh',
+              )}
+              {renderDataRow(
+                'clock-alert-outline',
+                t('panchang_screen.labels.dur_muhurat', 'दुर्मुहूर्त'),
+                panchangData.durMuhurat,
+                undefined,
+                true,
+                'ashubh',
+              )}
+            </View>
+
+            {/* 7. Pada / Charan (पद, चरण) */}
+            <View style={styles.sectionHeaderRow}>
+              <MaterialCommunityIcons
+                name="format-list-numbered"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.sectionTitle, { color: accentColor }]}>
+                {t('panchang_screen.sections.pada_charan', 'पद एवं चरण')}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {panchangData.padaCharan.map((item, idx) => (
+                <View
+                  key={idx}
+                  style={[
+                    styles.padaRow,
+                    {
+                      borderBottomColor:
+                        idx === panchangData.padaCharan.length - 1
+                          ? 'transparent'
+                          : dividerCol,
+                    },
+                  ]}
+                >
+                  <View style={styles.padaLeft}>
+                    <View
+                      style={[
+                        styles.padaBadge,
+                        { backgroundColor: roseBg, borderColor: roseBorder },
+                      ]}
+                    >
+                      <Text style={[styles.padaNumber, { color: accentColor }]}>
+                        {item.pada} {isHi ? item.syllable.hi : item.syllable.en}
+                      </Text>
+                    </View>
+                    <Text style={[styles.padaNakshatra, { color: textPrimary }]}>
+                      {isHi ? item.nakshatra.hi : item.nakshatra.en}
+                    </Text>
+                  </View>
+                  <Text style={[styles.padaTime, { color: textMuted }]}>
+                    {item.time}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            {/* 8. Festivals / Vrat Details Section */}
+            {panchangData.festivals.length > 0 && (
+              <View
+                style={[
+                  styles.festivalsCard,
+                  { backgroundColor: cardBg, borderColor: borderCol },
+                ]}
+              >
+                <Text style={[styles.festivalsTitle, { color: accentColor }]}>
+                  {t('panchang_screen.festivals_title', 'त्यौहार एवं व्रत')}
+                </Text>
+                {panchangData.festivals.map((fest, index) => (
+                  <View key={index} style={styles.festivalItem}>
+                    <MaterialCommunityIcons
+                      name="star-four-points"
+                      size={13}
+                      color={accentColor}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={[styles.festivalText, { color: textPrimary }]}>
+                      {isHi ? fest.hi : fest.en}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        {activeTab === 'choghadiya' && (
+          <View style={styles.tabContentWrap}>
+            <View style={styles.subSectionHeader}>
+              <MaterialCommunityIcons
+                name="weather-sunny"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subSectionTitle, { color: accentColor }]}>
+                {isHi ? 'दिन का चौघड़िया' : 'Day Choghadiya'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol, marginBottom: 14 },
+              ]}
+            >
+              {muhuratData.choghadiya.day.map((item: any, idx: number) =>
+                renderListItem(item, idx, muhuratData.choghadiya.day.length),
+              )}
+            </View>
+
+            <View style={styles.subSectionHeader}>
+              <MaterialCommunityIcons
+                name="weather-night"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subSectionTitle, { color: accentColor }]}>
+                {isHi ? 'रात का चौघड़िया' : 'Night Choghadiya'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {muhuratData.choghadiya.night.map((item: any, idx: number) =>
+                renderListItem(item, idx, muhuratData.choghadiya.night.length),
+              )}
+            </View>
+          </View>
+        )}
+
+        {activeTab === 'hora' && (
+          <View style={styles.tabContentWrap}>
+            <View style={styles.subSectionHeader}>
+              <MaterialCommunityIcons
+                name="clock-time-four-outline"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subSectionTitle, { color: accentColor }]}>
+                {isHi ? 'होरा चक्र' : 'Hora Cycle'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {muhuratData.hora.map((item: any, index: number) =>
+                renderListItem(item, index, muhuratData.hora.length),
+              )}
+            </View>
+          </View>
+        )}
+
+        {activeTab === 'muhurat' && (
+          <View style={styles.tabContentWrap}>
+            <View style={styles.subSectionHeader}>
+              <MaterialCommunityIcons
+                name="clock-check-outline"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subSectionTitle, { color: accentColor }]}>
+                {isHi ? 'शुभ एवं अशुभ मुहूर्त' : 'Auspicious & Inauspicious Muhurats'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {muhuratData.muhurat.map((item: any, index: number) =>
+                renderListItem(item, index, muhuratData.muhurat.length),
+              )}
+            </View>
+          </View>
+        )}
+
+        {activeTab === 'lagna' && (
+          <View style={styles.tabContentWrap}>
+            <View style={styles.subSectionHeader}>
+              <MaterialCommunityIcons
+                name="zodiac-virgo"
+                size={14}
+                color={accentColor}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.subSectionTitle, { color: accentColor }]}>
+                {isHi ? 'दैनिक लग्न समय' : 'Daily Lagna Timings'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.cardBox,
+                { backgroundColor: cardBg, borderColor: borderCol },
+              ]}
+            >
+              {muhuratData.lagna.map((item: any, index: number) =>
+                renderListItem(item, index, muhuratData.lagna.length),
+              )}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Location Picker Modal (Flat Maroon/White UI, zero shadows) */}
       <Modal
         visible={showLocationPicker}
         animationType="fade"
@@ -645,53 +1095,35 @@ const PanchangScreen = () => {
             style={[
               styles.modalContent,
               {
-                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                borderColor: isDark ? '#2D2D2D' : '#EFECE8',
+                backgroundColor: cardBg,
+                borderColor: borderCol,
               },
             ]}
-            onPress={() => { }}
+            onPress={() => {}}
           >
-            <View
-              style={[
-                styles.modalHeader,
-                { borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA' },
-              ]}
-            >
+            <View style={[styles.modalHeader, { borderBottomColor: dividerCol }]}>
               <View style={styles.modalHeaderLeft}>
-                <View
-                  style={[
-                    styles.modalIconBox,
-                    { backgroundColor: isDark ? '#2B1B1B' : '#FFF0ED' },
-                  ]}
-                >
+                <View style={[styles.modalIconBox, { backgroundColor: roseBg }]}>
                   <MaterialCommunityIcons
                     name="map-marker"
-                    size={16}
-                    color={isDark ? '#FCA5A5' : '#8B1D1D'}
+                    size={15}
+                    color={accentColor}
                   />
                 </View>
-                <Text
-                  style={[
-                    styles.modalTitle,
-                    { color: isDark ? '#FCA5A5' : '#8B1D1D' },
-                  ]}
-                >
-                  {t('panchang_screen.change_location')}
+                <Text style={[styles.modalTitle, { color: accentColor }]}>
+                  {t('panchang_screen.change_location', isHi ? 'स्थान बदलें' : 'Change Location')}
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setShowLocationPicker(false)}
-                style={[
-                  styles.modalCloseBtn,
-                  { backgroundColor: isDark ? '#2A2A2A' : '#F3F4F6' },
-                ]}
+                style={[styles.modalCloseBtn, { backgroundColor: subtleBg, borderColor: borderCol }]}
               >
-                <Icon name="x" size={16} color={colors.textLight} />
+                <Icon name="x" size={14} color={textMuted} />
               </TouchableOpacity>
             </View>
             <FlatList
               data={availableLocations}
-              keyExtractor={item => item.id}
+              keyExtractor={(item) => item.id}
               renderItem={({ item, index }) => {
                 const isSelected = item.id === location.id;
                 const isLast = index === availableLocations.length - 1;
@@ -701,10 +1133,10 @@ const PanchangScreen = () => {
                       styles.locationOption,
                       !isLast && {
                         borderBottomWidth: 1,
-                        borderBottomColor: isDark ? '#2A2A2A' : '#F3EFEA',
+                        borderBottomColor: dividerCol,
                       },
                       isSelected && {
-                        backgroundColor: isDark ? '#2B1B1B' : '#FFF0ED',
+                        backgroundColor: roseBg,
                       },
                     ]}
                     onPress={() => {
@@ -717,11 +1149,7 @@ const PanchangScreen = () => {
                       style={[
                         styles.locationOptionText,
                         {
-                          color: isSelected
-                            ? isDark
-                              ? '#FCA5A5'
-                              : '#8B1D1D'
-                            : textColor,
+                          color: isSelected ? accentColor : textPrimary,
                           fontWeight: isSelected ? '700' : '500',
                         },
                       ]}
@@ -729,11 +1157,7 @@ const PanchangScreen = () => {
                       {isHi ? item.name.hi : item.name.en}
                     </Text>
                     {isSelected && (
-                      <Icon
-                        name="check"
-                        size={16}
-                        color={isDark ? '#FCA5A5' : '#8B1D1D'}
-                      />
+                      <Icon name="check" size={15} color={accentColor} />
                     )}
                   </TouchableOpacity>
                 );
@@ -754,161 +1178,192 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
   },
   backBtn: {
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
   },
   headerTitle: {
-    color: '#FFF',
     fontSize: 16.5,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
-  mainCard: {
-    flex: 1,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
+  headerSubtitle: {
+    fontSize: 10.5,
+    marginTop: 1,
   },
-  dateSelector: {
+  locationHeaderPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 40,
-    paddingVertical: 14,
-  },
-  dateText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  locationSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 12,
+    maxWidth: 130,
   },
-  locationText: {
-    fontSize: 12,
-    fontWeight: '500',
+  locationHeaderPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  dateNavStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
+  navArrowBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateDisplayCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  todayBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginLeft: 6,
+  },
+  todayBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
   },
   tabBar: {
     borderBottomWidth: 1,
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    paddingHorizontal: 14,
+    gap: 16,
   },
   tabBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 2,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    marginHorizontal: 2,
-  },
-  tabBtnActive: {
-    borderBottomColor: '#C53030',
   },
   tabText: {
     fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#C53030',
-    fontWeight: 'bold',
   },
   scrollContent: {
-    padding: 12,
+    paddingHorizontal: 14,
+    paddingTop: 12,
   },
   heroCard: {
     borderRadius: 12,
     borderWidth: 1,
-    padding: 14,
-    marginBottom: 14,
+    padding: 12,
+    marginBottom: 10,
   },
   heroRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   moonIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   heroTextContainer: {
     flex: 1,
   },
   heroLocation: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: '500',
     marginBottom: 2,
   },
   heroSummary: {
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 12.5,
+    fontWeight: '700',
+    lineHeight: 18,
   },
   festivalBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    marginTop: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 7,
     borderWidth: 1,
   },
   festivalBannerText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '600',
+    flex: 1,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 6,
-    marginLeft: 4,
+    marginTop: 10,
+    marginBottom: 5,
+    paddingHorizontal: 2,
   },
   sectionTitle: {
     fontSize: 12.5,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  subSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    paddingHorizontal: 2,
+  },
+  subSectionTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
   },
   cardBox: {
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 2,
     marginBottom: 6,
   },
   dataRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderBottomWidth: 1,
   },
   iconLabelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: 135,
+    width: 130,
   },
   rowIcon: {
-    marginRight: 8,
+    marginRight: 7,
   },
   rowLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11.5,
+    fontWeight: '500',
   },
   valueContainer: {
     flex: 1,
@@ -923,24 +1378,24 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   rowSubValue: {
-    fontSize: 11,
+    fontSize: 10.5,
     marginLeft: 6,
   },
   miniBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 1.5,
+    borderRadius: 5,
     marginLeft: 6,
   },
   miniBadgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontSize: 9.5,
+    fontWeight: '700',
   },
   padaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderBottomWidth: 1,
   },
   padaLeft: {
@@ -948,74 +1403,76 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   padaBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 6,
-    marginRight: 10,
+    borderWidth: 1,
+    marginRight: 8,
   },
   padaNumber: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 11,
+    fontWeight: '700',
   },
   padaNakshatra: {
     fontSize: 11.5,
     fontWeight: '500',
   },
   padaTime: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   festivalsCard: {
     borderRadius: 12,
-    padding: 14,
-    marginTop: 10,
-    marginBottom: 10,
+    borderWidth: 1,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
   },
   festivalsTitle: {
     fontSize: 12.5,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   festivalItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   festivalText: {
     fontSize: 11.5,
     fontWeight: '500',
   },
-  muhuratTabContainer: {
-    paddingVertical: 8,
-  },
-  card: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
+  tabContentWrap: {
+    paddingTop: 4,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
   },
   listLeft: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   itemName: {
-    fontSize: 12.5,
-    fontWeight: '600',
+    fontSize: 12,
   },
-  itemType: {
-    fontSize: 11,
-    marginTop: 4,
-    fontWeight: '500',
+  miniStatusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+  },
+  miniStatusText: {
+    fontSize: 9.5,
+    fontWeight: '700',
   },
   itemTime: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 11.5,
   },
   modalOverlay: {
     flex: 1,
@@ -1026,7 +1483,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 360,
     borderRadius: 14,
     borderWidth: 1,
     overflow: 'hidden',
@@ -1037,30 +1494,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderBottomWidth: 1,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     flex: 1,
   },
   modalIconBox: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   modalCloseBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1068,11 +1526,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   locationOptionText: {
-    fontSize: 11.5,
+    fontSize: 12,
   },
 });
 
